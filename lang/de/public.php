@@ -63,6 +63,19 @@ return [
 
         'social_proof' => 'Vertraut von kleinen Teams, die über ihrer Gewichtsklasse kämpfen',
 
+        'pricing_title' => 'Einfache Preise',
+        'pricing_subtitle' => 'Laborobo ist in der öffentlichen Beta. Alles ist kostenlos, während wir gemeinsam mit frühen Nutzern bauen.',
+        'pricing_badge' => 'Öffentliche Beta',
+        'pricing_price' => '0 €',
+        'pricing_description' => 'Voller Zugang zu allen Funktionen. Keine Kreditkarte erforderlich. Keine Nutzungslimits während der Beta.',
+        'pricing_feature_1' => 'Unbegrenzte Projekte & Arbeitsaufträge',
+        'pricing_feature_2' => 'KI-Agenten (Dispatcher, PM-Copilot)',
+        'pricing_feature_3' => 'Playbooks, Budgets & Rentabilitätsberichte',
+        'pricing_feature_4' => 'Bis zu 10 Teammitglieder',
+        'pricing_cta' => 'Beta beitreten — Kostenlos',
+        'pricing_note' => 'Bezahlpläne kommen später. Beta-Nutzer erhalten Early-Adopter-Preise.',
+        'pricing_ai_disclaimer' => 'KI-Funktionen erfordern Ihren eigenen API-Schlüssel (z.B. OpenAI). Die KI-Nutzungskosten werden direkt vom Anbieter abgerechnet, nicht von Laborobo.',
+
         'cta_title' => 'Bereit, Ordnung ins Chaos zu bringen?',
         'cta_text' => 'Starte kostenlos. Keine Kreditkarte erforderlich. Richte dein erstes Projekt in Minuten ein.',
     ],

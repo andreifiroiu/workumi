@@ -63,6 +63,19 @@ return [
 
         'social_proof' => 'Trusted by small teams who punch above their weight',
 
+        'pricing_title' => 'Simple pricing',
+        'pricing_subtitle' => 'Laborobo is in public beta. Everything is free while we build alongside early users.',
+        'pricing_badge' => 'Public Beta',
+        'pricing_price' => '$0',
+        'pricing_description' => 'Full access to every feature. No credit card required. No usage limits during beta.',
+        'pricing_feature_1' => 'Unlimited projects & work orders',
+        'pricing_feature_2' => 'AI agents (Dispatcher, PM Copilot)',
+        'pricing_feature_3' => 'Playbooks, budgets & profitability reports',
+        'pricing_feature_4' => 'Up to 10 team members',
+        'pricing_cta' => 'Join the Beta — It\'s Free',
+        'pricing_note' => 'We\'ll introduce paid plans later. Beta users will get early-adopter pricing.',
+        'pricing_ai_disclaimer' => 'AI features require your own API key (e.g. OpenAI). AI usage costs are billed directly by the provider, not by Laborobo.',
+
         'cta_title' => 'Ready to bring order to the chaos?',
         'cta_text' => 'Start for free. No credit card required. Set up your first project in minutes.',
     ],

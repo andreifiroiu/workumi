@@ -139,8 +139,54 @@
         </div>
     </section>
 
-    {{-- CTA --}}
+    {{-- Pricing --}}
     <section class="py-20 md:py-28">
+        <div class="mx-auto max-w-6xl px-6">
+            <div class="mx-auto max-w-2xl text-center">
+                <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{{ __('public.home.pricing_title') }}</h2>
+                <p class="mt-4 text-muted-foreground">{{ __('public.home.pricing_subtitle') }}</p>
+            </div>
+            <div class="mx-auto mt-12 max-w-md">
+                <div class="rounded-xl border-2 border-lime-600 bg-card p-8 text-center shadow-sm">
+                    <div class="inline-flex items-center rounded-full bg-lime-600/10 px-3 py-1 text-xs font-semibold text-lime-600">
+                        {{ __('public.home.pricing_badge') }}
+                    </div>
+                    <div class="mt-6">
+                        <span class="text-5xl font-bold tracking-tight">{{ __('public.home.pricing_price') }}</span>
+                    </div>
+                    <p class="mt-4 text-muted-foreground">{{ __('public.home.pricing_description') }}</p>
+                    <ul class="mt-8 space-y-3 text-left text-sm">
+                        <li class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-lime-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            {{ __('public.home.pricing_feature_1') }}
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-lime-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            {{ __('public.home.pricing_feature_2') }}
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-lime-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            {{ __('public.home.pricing_feature_3') }}
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 text-lime-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            {{ __('public.home.pricing_feature_4') }}
+                        </li>
+                    </ul>
+                    <div class="mt-8">
+                        <a href="/register" class="inline-flex h-11 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
+                            {{ __('public.home.pricing_cta') }}
+                        </a>
+                    </div>
+                    <p class="mt-4 text-xs text-muted-foreground">{{ __('public.home.pricing_note') }}</p>
+                    <p class="mt-2 text-xs text-muted-foreground">{{ __('public.home.pricing_ai_disclaimer') }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- CTA --}}
+    <section class="border-t border-border bg-secondary/30 py-20 md:py-28">
         <div class="mx-auto max-w-6xl px-6 text-center">
             <h2 class="text-3xl font-bold tracking-tight md:text-4xl">{{ __('public.home.cta_title') }}</h2>
             <p class="mx-auto mt-4 max-w-xl text-muted-foreground">{{ __('public.home.cta_text') }}</p>

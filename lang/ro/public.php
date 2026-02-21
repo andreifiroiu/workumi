@@ -63,6 +63,19 @@ return [
 
         'social_proof' => 'Ales de echipe mici care livrează peste așteptări',
 
+        'pricing_title' => 'Prețuri simple',
+        'pricing_subtitle' => 'Laborobo este în beta publică. Totul este gratuit cât timp construim alături de primii utilizatori.',
+        'pricing_badge' => 'Beta Publică',
+        'pricing_price' => '0 lei',
+        'pricing_description' => 'Acces complet la toate funcționalitățile. Fără card de credit. Fără limite de utilizare în timpul beta.',
+        'pricing_feature_1' => 'Proiecte și comenzi de lucru nelimitate',
+        'pricing_feature_2' => 'Agenți IA (Dispatcher, Copilot PM)',
+        'pricing_feature_3' => 'Playbook-uri, bugete și rapoarte de profitabilitate',
+        'pricing_feature_4' => 'Până la 10 membri în echipă',
+        'pricing_cta' => 'Intră în Beta — Este Gratis',
+        'pricing_note' => 'Vom introduce planuri plătite mai târziu. Utilizatorii beta vor primi prețuri de early-adopter.',
+        'pricing_ai_disclaimer' => 'Funcționalitățile AI necesită propria cheie API (ex. OpenAI). Costurile de utilizare AI sunt facturate direct de furnizor, nu de Laborobo.',
+
         'cta_title' => 'Pregătit să aduci ordine în haos?',
         'cta_text' => 'Începe gratuit. Fără card de credit. Configurează primul tău proiect în câteva minute.',
     ],

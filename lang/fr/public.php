@@ -63,6 +63,19 @@ return [
 
         'social_proof' => 'Adopté par les petites équipes qui visent plus haut',
 
+        'pricing_title' => 'Tarification simple',
+        'pricing_subtitle' => 'Laborobo est en bêta publique. Tout est gratuit pendant que nous construisons aux côtés des premiers utilisateurs.',
+        'pricing_badge' => 'Bêta Publique',
+        'pricing_price' => '0 €',
+        'pricing_description' => 'Accès complet à toutes les fonctionnalités. Sans carte bancaire. Sans limites d\'utilisation pendant la bêta.',
+        'pricing_feature_1' => 'Projets et ordres de travail illimités',
+        'pricing_feature_2' => 'Agents IA (Dispatcher, Copilote PM)',
+        'pricing_feature_3' => 'Playbooks, budgets et rapports de rentabilité',
+        'pricing_feature_4' => 'Jusqu\'à 10 membres d\'équipe',
+        'pricing_cta' => 'Rejoindre la Bêta — C\'est Gratuit',
+        'pricing_note' => 'Nous introduirons des plans payants plus tard. Les utilisateurs bêta bénéficieront de tarifs early-adopter.',
+        'pricing_ai_disclaimer' => 'Les fonctionnalités IA nécessitent votre propre clé API (ex. OpenAI). Les coûts d\'utilisation de l\'IA sont facturés directement par le fournisseur, pas par Laborobo.',
+
         'cta_title' => 'Prêt à mettre de l\'ordre dans le chaos ?',
         'cta_text' => 'Commencez gratuitement. Pas de carte de crédit requise. Configurez votre premier projet en quelques minutes.',
     ],
