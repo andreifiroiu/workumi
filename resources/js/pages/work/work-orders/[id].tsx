@@ -578,9 +578,10 @@ export default function WorkOrderDetail({
     );
     const [pmCopilotFeedback, setPmCopilotFeedback] = useState<string | null>(null);
     const [pmCopilotError, setPmCopilotError] = useState<string | null>(null);
+    const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
     // PM Copilot hooks
-    const { trigger: triggerPMCopilot, isLoading: isPMCopilotRunning } = useTriggerPMCopilot();
+    const { trigger: triggerPMCopilot } = useTriggerPMCopilot();
     const { data: pmCopilotData, fetch: fetchSuggestions } = usePMCopilotSuggestions(workOrder.id);
     const { approve: approveSuggestion, isLoading: isApproving } = useApproveSuggestion(workOrder.id);
     const { reject: rejectSuggestion, isLoading: isRejecting } = useRejectSuggestion(workOrder.id);
@@ -1080,50 +1081,55 @@ export default function WorkOrderDetail({
     const handlePMCopilotTrigger = useCallback(async () => {
         setPmCopilotFeedback(null);
         setPmCopilotError(null);
+        setIsGeneratingPlan(true);
 
-        const result = await triggerPMCopilot(workOrder.id);
-        if (!result.success) {
-            setPmCopilotError(`Failed to generate plan: ${result.error || 'Unknown error'}`);
-            return;
-        }
+        try {
+            const result = await triggerPMCopilot(workOrder.id);
+            if (!result.success) {
+                setPmCopilotError(`Failed to generate plan: ${result.error || 'Unknown error'}`);
+                return;
+            }
 
-        // Workflow runs asynchronously — poll for completion
-        setPmCopilotFeedback('Generating plan…');
+            // Workflow runs asynchronously — poll for completion
+            setPmCopilotFeedback('Generating plan…');
 
-        const maxAttempts = 60; // ~2 minutes with 2s intervals
-        const pollInterval = 2000;
+            const maxAttempts = 60; // ~2 minutes with 2s intervals
+            const pollInterval = 2000;
 
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                await new Promise((resolve) => setTimeout(resolve, pollInterval));
 
-            const suggestionsResult = await fetchSuggestions();
-            const status = suggestionsResult?.data?.workflowState?.status;
+                const suggestionsResult = await fetchSuggestions();
+                const status = suggestionsResult?.data?.workflowState?.status;
 
-            if (status === 'completed' || status === 'paused') {
-                const alternatives = suggestionsResult?.data?.alternatives ?? [];
-                if (alternatives.length > 0) {
-                    const totalDeliverables = alternatives.reduce((sum: number, alt: { deliverables?: unknown[] }) => sum + (alt.deliverables?.length ?? 0), 0);
-                    const totalTasks = alternatives.reduce((sum: number, alt: { tasks?: unknown[] }) => sum + (alt.tasks?.length ?? 0), 0);
-                    const parts: string[] = [`${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`];
-                    if (totalDeliverables > 0) parts.push(`${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`);
-                    if (totalTasks > 0) parts.push(`${totalTasks} task${totalTasks !== 1 ? 's' : ''}`);
-                    setPmCopilotFeedback(`Plan generated — ${parts.join(' with ')} suggested.`);
-                } else {
-                    setPmCopilotFeedback('Plan generated — review the suggestions below.');
+                if (status === 'completed' || status === 'paused') {
+                    const alternatives = suggestionsResult?.data?.alternatives ?? [];
+                    if (alternatives.length > 0) {
+                        const totalDeliverables = alternatives.reduce((sum: number, alt: { deliverables?: unknown[] }) => sum + (alt.deliverables?.length ?? 0), 0);
+                        const totalTasks = alternatives.reduce((sum: number, alt: { tasks?: unknown[] }) => sum + (alt.tasks?.length ?? 0), 0);
+                        const parts: string[] = [`${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`];
+                        if (totalDeliverables > 0) parts.push(`${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`);
+                        if (totalTasks > 0) parts.push(`${totalTasks} task${totalTasks !== 1 ? 's' : ''}`);
+                        setPmCopilotFeedback(`Plan generated — ${parts.join(' with ')} suggested.`);
+                    } else {
+                        setPmCopilotFeedback('Plan generated — review the suggestions below.');
+                    }
+                    return;
                 }
-                return;
+
+                // Check for error in state data
+                if (suggestionsResult?.data?.workflowState?.error) {
+                    setPmCopilotError(`Plan generation failed: ${suggestionsResult.data.workflowState.error}`);
+                    setPmCopilotFeedback(null);
+                    return;
+                }
             }
 
-            // Check for error in state data
-            if (suggestionsResult?.data?.workflowState?.error) {
-                setPmCopilotError(`Plan generation failed: ${suggestionsResult.data.workflowState.error}`);
-                setPmCopilotFeedback(null);
-                return;
-            }
+            setPmCopilotError('Plan generation timed out. Please check back later.');
+            setPmCopilotFeedback(null);
+        } finally {
+            setIsGeneratingPlan(false);
         }
-
-        setPmCopilotError('Plan generation timed out. Please check back later.');
-        setPmCopilotFeedback(null);
     }, [triggerPMCopilot, workOrder.id, fetchSuggestions]);
 
     /**
@@ -1758,7 +1764,7 @@ export default function WorkOrderDetail({
                                     <PMCopilotTriggerButton
                                         workOrderId={workOrder.id}
                                         onTrigger={handlePMCopilotTrigger}
-                                        isRunning={isPMCopilotRunning}
+                                        isRunning={isGeneratingPlan}
                                         disabled={isApproving || isRejecting}
                                         feedbackMessage={pmCopilotFeedback}
                                         feedbackError={pmCopilotError}
@@ -1768,7 +1774,7 @@ export default function WorkOrderDetail({
                                         workOrderId={workOrder.id}
                                         currentMode={pmCopilotMode}
                                         onChange={handlePMCopilotModeChange}
-                                        disabled={isPMCopilotRunning}
+                                        disabled={isGeneratingPlan}
                                     />
 
                                     {suggestions?.alternatives && suggestions.alternatives.length > 0 && (

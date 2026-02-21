@@ -43,11 +43,22 @@ class PMCopilotController extends Controller
      */
     public function trigger(TriggerPMCopilotRequest $request, WorkOrder $workOrder): JsonResponse
     {
+        ray('PM Copilot trigger called', [
+            'work_order_id' => $workOrder->id,
+            'user_id' => $request->user()->id,
+            'accept_header' => $request->header('Accept'),
+            'content_type' => $request->header('Content-Type'),
+        ])->blue();
+
         $this->authorize('view', $workOrder);
 
         try {
             // Create the workflow state
             $workflowState = $this->orchestrator->invokePMCopilot($workOrder);
+
+            ray('Workflow state created', [
+                'workflow_state_id' => $workflowState->id,
+            ])->green();
 
             Log::info('PM Copilot triggered via API', [
                 'work_order_id' => $workOrder->id,
@@ -58,13 +69,22 @@ class PMCopilotController extends Controller
             // Dispatch workflow execution to the queue to avoid HTTP timeouts
             \App\Jobs\RunPMCopilotWorkflow::dispatch($workflowState);
 
-            return response()->json([
+            $responseData = [
                 'success' => true,
                 'message' => 'PM Copilot workflow started',
                 'workflow_state_id' => $workflowState->id,
                 'status' => 'running',
-            ]);
+            ];
+
+            ray('Returning JSON response', $responseData)->green();
+
+            return response()->json($responseData);
         } catch (\Throwable $e) {
+            ray('PM Copilot trigger FAILED', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ])->red();
+
             Log::error('PM Copilot trigger failed', [
                 'work_order_id' => $workOrder->id,
                 'error' => $e->getMessage(),

@@ -26,16 +26,31 @@ export function useTriggerPMCopilot() {
         setError(null);
 
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
             const response = await fetch(`/work/work-orders/${workOrderId}/pm-copilot/trigger`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
+
+            // Guard against non-JSON responses (e.g. HTML error pages, redirects)
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('PM Copilot trigger: non-JSON response', {
+                    status: response.status,
+                    contentType,
+                    body: text.substring(0, 500),
+                    csrfToken: csrfToken ? 'present' : 'missing',
+                });
+                setError(`Server returned ${response.status} (${contentType || 'no content-type'})`);
+                return { success: false, error: `Server error: ${response.status}` };
+            }
 
             const data = await response.json();
 
