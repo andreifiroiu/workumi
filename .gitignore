@@ -27,3 +27,10 @@ yarn-error.log
 /.vscode
 /.zed
 /.playwright-mcp/*
+/.ai/mcp/mcp.json
+/.cursor/rules/laravel-boost.mdc
+/.cursor/mcp.json
+/.gemini/settings.json
+/.github/copilot-instructions.md
+/.junie/mcp/mcp.json
+/.mcp.json
