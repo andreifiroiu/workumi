@@ -29,6 +29,7 @@ export function useTriggerPMCopilot() {
             const response = await fetch(`/work/work-orders/${workOrderId}/pm-copilot/trigger`, {
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN':

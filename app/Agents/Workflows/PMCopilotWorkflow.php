@@ -234,33 +234,51 @@ class PMCopilotWorkflow extends BaseAgentWorkflow
     protected function generateTaskBreakdown(AgentWorkflowState $state): array
     {
         $context = $state->state_data['context'] ?? [];
-        $deliverables = $this->getApprovedDeliverables($state);
+        $alternatives = $state->state_data['deliverable_alternatives'] ?? [];
         $playbooks = $context['playbooks'] ?? [];
 
-        $taskBreakdown = null;
+        // Generate task breakdowns for ALL alternatives in a single LLM call
+        $taskBreakdownByAlternative = [];
 
-        // Try LLM-based generation
-        $llmResponse = $this->callLLM($state, $this->buildTaskBreakdownPrompt($deliverables, $playbooks));
+        // Try LLM-based generation for all alternatives at once
+        $llmResponse = $this->callLLM($state, $this->buildAllAlternativesTaskBreakdownPrompt($alternatives, $playbooks));
         if ($llmResponse !== null) {
             $parsed = $this->extractJson($llmResponse);
-            if ($parsed !== null && isset($parsed['task_breakdown']) && is_array($parsed['task_breakdown'])) {
-                $taskBreakdown = $parsed['task_breakdown'];
+            if ($parsed !== null && isset($parsed['alternatives']) && is_array($parsed['alternatives'])) {
+                foreach ($parsed['alternatives'] as $altBreakdown) {
+                    $altId = (string) ($altBreakdown['alternative_id'] ?? '');
+                    if ($altId !== '' && isset($altBreakdown['task_breakdown']) && is_array($altBreakdown['task_breakdown'])) {
+                        $taskBreakdownByAlternative[$altId] = $altBreakdown['task_breakdown'];
+                    }
+                }
             }
         }
 
-        // Fallback to hardcoded logic
-        if ($taskBreakdown === null) {
-            $taskBreakdown = $this->buildTaskBreakdown($deliverables, $playbooks);
+        // Fallback: generate hardcoded tasks for any alternative not covered by LLM
+        foreach ($alternatives as $alternative) {
+            $alternativeId = (string) ($alternative['alternative_id'] ?? '');
+            if (! isset($taskBreakdownByAlternative[$alternativeId])) {
+                $deliverables = $alternative['deliverables'] ?? [];
+                $taskBreakdownByAlternative[$alternativeId] = ! empty($deliverables)
+                    ? $this->buildTaskBreakdown($deliverables, $playbooks)
+                    : [];
+            }
         }
 
+        // Store flat task_breakdown for backward compatibility (using first alternative)
+        $firstAlternativeId = (string) ($alternatives[0]['alternative_id'] ?? '');
+        $flatTaskBreakdown = $taskBreakdownByAlternative[$firstAlternativeId] ?? [];
+
         $this->mergeStateData($state, [
-            'task_breakdown' => $taskBreakdown,
+            'task_breakdown' => $flatTaskBreakdown,
+            'task_breakdown_by_alternative' => $taskBreakdownByAlternative,
             'tasks_generated_at' => now()->toIso8601String(),
         ]);
 
         return [
             'status' => 'completed',
-            'task_breakdown' => $taskBreakdown,
+            'task_breakdown' => $flatTaskBreakdown,
+            'task_breakdown_by_alternative' => $taskBreakdownByAlternative,
         ];
     }
 
@@ -528,64 +546,79 @@ PROMPT;
     }
 
     /**
-     * Build the LLM prompt for generating task breakdowns.
+     * Build the LLM prompt for generating task breakdowns for all alternatives at once.
      *
-     * @param  array<int, array<string, mixed>>  $deliverables
+     * @param  array<int, array<string, mixed>>  $alternatives
      * @param  array<int, array<string, mixed>>  $playbooks
      */
-    private function buildTaskBreakdownPrompt(array $deliverables, array $playbooks): string
+    private function buildAllAlternativesTaskBreakdownPrompt(array $alternatives, array $playbooks): string
     {
-        $deliverablesText = '';
-        foreach ($deliverables as $i => $deliverable) {
-            $num = $i + 1;
-            $title = $deliverable['title'] ?? 'Untitled';
-            $desc = $deliverable['description'] ?? '';
-            $deliverablesText .= "{$num}. {$title}: {$desc}\n";
+        $alternativesText = '';
+        foreach ($alternatives as $alternative) {
+            $altId = $alternative['alternative_id'] ?? '?';
+            $altName = $alternative['name'] ?? 'Untitled';
+            $alternativesText .= "### Alternative {$altId}: {$altName}\n";
+
+            $deliverables = $alternative['deliverables'] ?? [];
+            foreach ($deliverables as $i => $deliverable) {
+                $num = $i + 1;
+                $title = $deliverable['title'] ?? 'Untitled';
+                $desc = $deliverable['description'] ?? '';
+                $alternativesText .= "  {$num}. {$title}: {$desc}\n";
+            }
+
+            $alternativesText .= "\n";
         }
-        if ($deliverablesText === '') {
-            $deliverablesText = 'No deliverables provided.';
+
+        if ($alternativesText === '') {
+            $alternativesText = 'No alternatives provided.';
         }
 
         $playbookText = '';
         foreach ($playbooks as $playbook) {
             $playbookText .= "- {$playbook['name']}: {$playbook['description']}\n";
         }
+
         if ($playbookText === '') {
             $playbookText = 'None available.';
         }
 
         return <<<PROMPT
-Break down the following deliverables into actionable tasks with time estimates.
+Break down each alternative's deliverables into actionable tasks with time estimates.
 
-## Deliverables
-{$deliverablesText}
-
+## Alternatives
+{$alternativesText}
 ## Available Playbooks
 {$playbookText}
 
 ## Instructions
-For each deliverable, create a set of tasks that cover planning, execution, and review. Provide realistic hour estimates and identify dependencies between tasks.
+For each alternative, break down every deliverable into tasks covering planning, execution, and review. Provide realistic hour estimates and identify dependencies between tasks.
 
 Respond with ONLY a JSON object wrapped in ```json fences using this exact schema:
 
 ```json
 {
-  "task_breakdown": [
+  "alternatives": [
     {
-      "deliverable_title": "Exact title of the deliverable",
-      "tasks": [
+      "alternative_id": 1,
+      "task_breakdown": [
         {
-          "title": "Task title",
-          "description": "Task description",
-          "estimated_hours": 2.0,
-          "position_in_work_order": 1,
-          "checklist_items": ["item 1", "item 2"],
-          "dependencies": [],
+          "deliverable_title": "Exact title of the deliverable",
+          "tasks": [
+            {
+              "title": "Task title",
+              "description": "Task description",
+              "estimated_hours": 2.0,
+              "position_in_work_order": 1,
+              "checklist_items": ["item 1", "item 2"],
+              "dependencies": [],
+              "confidence": "low|medium|high"
+            }
+          ],
+          "total_estimated_hours": 12.0,
           "confidence": "low|medium|high"
         }
-      ],
-      "total_estimated_hours": 12.0,
-      "confidence": "low|medium|high"
+      ]
     }
   ]
 }
@@ -717,33 +750,6 @@ PROMPT;
         }
 
         return $alternatives;
-    }
-
-    /**
-     * Get approved deliverables from state.
-     *
-     * Returns either explicitly approved deliverables (from resume)
-     * or the first alternative (for full mode).
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function getApprovedDeliverables(AgentWorkflowState $state): array
-    {
-        // Check for explicitly approved deliverables from resume
-        $approvedDeliverables = $state->state_data['approved_deliverables'] ?? null;
-
-        if ($approvedDeliverables !== null && ! empty($approvedDeliverables)) {
-            return $approvedDeliverables;
-        }
-
-        // Fall back to first alternative for full mode
-        $alternatives = $state->state_data['deliverable_alternatives'] ?? [];
-
-        if (! empty($alternatives) && isset($alternatives[0]['deliverables'])) {
-            return $alternatives[0]['deliverables'];
-        }
-
-        return [];
     }
 
     /**

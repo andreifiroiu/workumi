@@ -1082,22 +1082,48 @@ export default function WorkOrderDetail({
         setPmCopilotError(null);
 
         const result = await triggerPMCopilot(workOrder.id);
-        if (result.success) {
-            const suggestionsResult = await fetchSuggestions();
-            const alternatives = suggestionsResult?.data?.alternatives ?? [];
-            if (alternatives.length > 0) {
-                const totalDeliverables = alternatives.reduce((sum, alt) => sum + (alt.deliverables?.length ?? 0), 0);
-                const totalTasks = alternatives.reduce((sum, alt) => sum + (alt.tasks?.length ?? 0), 0);
-                const parts: string[] = [`${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`];
-                if (totalDeliverables > 0) parts.push(`${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`);
-                if (totalTasks > 0) parts.push(`${totalTasks} task${totalTasks !== 1 ? 's' : ''}`);
-                setPmCopilotFeedback(`Plan generated — ${parts.join(' with ')} suggested.`);
-            } else {
-                setPmCopilotFeedback('Plan generated — review the suggestions below.');
-            }
-        } else {
+        if (!result.success) {
             setPmCopilotError(`Failed to generate plan: ${result.error || 'Unknown error'}`);
+            return;
         }
+
+        // Workflow runs asynchronously — poll for completion
+        setPmCopilotFeedback('Generating plan…');
+
+        const maxAttempts = 60; // ~2 minutes with 2s intervals
+        const pollInterval = 2000;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+
+            const suggestionsResult = await fetchSuggestions();
+            const status = suggestionsResult?.data?.workflowState?.status;
+
+            if (status === 'completed' || status === 'paused') {
+                const alternatives = suggestionsResult?.data?.alternatives ?? [];
+                if (alternatives.length > 0) {
+                    const totalDeliverables = alternatives.reduce((sum: number, alt: { deliverables?: unknown[] }) => sum + (alt.deliverables?.length ?? 0), 0);
+                    const totalTasks = alternatives.reduce((sum: number, alt: { tasks?: unknown[] }) => sum + (alt.tasks?.length ?? 0), 0);
+                    const parts: string[] = [`${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`];
+                    if (totalDeliverables > 0) parts.push(`${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`);
+                    if (totalTasks > 0) parts.push(`${totalTasks} task${totalTasks !== 1 ? 's' : ''}`);
+                    setPmCopilotFeedback(`Plan generated — ${parts.join(' with ')} suggested.`);
+                } else {
+                    setPmCopilotFeedback('Plan generated — review the suggestions below.');
+                }
+                return;
+            }
+
+            // Check for error in state data
+            if (suggestionsResult?.data?.workflowState?.error) {
+                setPmCopilotError(`Plan generation failed: ${suggestionsResult.data.workflowState.error}`);
+                setPmCopilotFeedback(null);
+                return;
+            }
+        }
+
+        setPmCopilotError('Plan generation timed out. Please check back later.');
+        setPmCopilotFeedback(null);
     }, [triggerPMCopilot, workOrder.id, fetchSuggestions]);
 
     /**

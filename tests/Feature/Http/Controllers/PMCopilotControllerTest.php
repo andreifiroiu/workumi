@@ -18,6 +18,7 @@ use App\Models\Party;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkOrder;
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     $this->user = User::factory()->create([
@@ -81,17 +82,19 @@ beforeEach(function () {
     ]);
 });
 
-test('manual trigger endpoint starts PM Copilot workflow', function () {
+test('manual trigger endpoint dispatches workflow job and returns running status', function () {
+    Queue::fake();
+
     $response = $this->actingAs($this->user)->post("/work/work-orders/{$this->workOrder->id}/pm-copilot/trigger");
 
-    // The endpoint should return success even if the workflow encounters errors during execution
-    // as long as the workflow state was created
     $response->assertSuccessful();
     $responseData = $response->json();
 
     // Verify response structure
-    expect($responseData)->toHaveKey('success');
-    expect($responseData)->toHaveKey('workflow_state_id');
+    expect($responseData)->toHaveKey('success')
+        ->and($responseData['success'])->toBeTrue()
+        ->and($responseData)->toHaveKey('workflow_state_id')
+        ->and($responseData['status'])->toBe('running');
 
     // Verify workflow state was created
     $workflowState = AgentWorkflowState::where('team_id', $this->team->id)
@@ -101,55 +104,141 @@ test('manual trigger endpoint starts PM Copilot workflow', function () {
 
     expect($workflowState)->not->toBeNull();
     expect($workflowState->state_data['input']['work_order_id'])->toBe($this->workOrder->id);
+
+    // Verify the job was dispatched
+    Queue::assertPushed(\App\Jobs\RunPMCopilotWorkflow::class, function ($job) use ($workflowState) {
+        return $job->workflowState->id === $workflowState->id;
+    });
 });
 
-test('get suggestions endpoint returns alternatives', function () {
-    // Create a workflow state with suggestions stored (using actual state data keys)
+test('get suggestions endpoint returns alternatives with tasks', function () {
+    // Create a completed workflow state with deliverable_alternatives and task_breakdown_by_alternative
     $workflowState = AgentWorkflowState::create([
         'team_id' => $this->team->id,
         'ai_agent_id' => $this->agent->id,
         'workflow_class' => PMCopilotWorkflow::class,
-        'current_node' => 'checkpoint_deliverables',
+        'current_node' => 'completed',
         'state_data' => [
             'input' => [
                 'work_order_id' => $this->workOrder->id,
                 'team_id' => $this->team->id,
-                'pm_copilot_mode' => 'staged',
+                'pm_copilot_mode' => 'full',
             ],
-            'deliverable_suggestions' => [
+            'deliverable_alternatives' => [
                 [
-                    'title' => 'Deliverable 1',
-                    'description' => 'Test deliverable description',
-                    'type' => 'document',
-                    'acceptance_criteria' => ['Criteria 1'],
-                    'confidence' => 'high',
-                ],
-                [
-                    'title' => 'Deliverable 2',
-                    'description' => 'Another deliverable',
-                    'type' => 'code',
-                    'acceptance_criteria' => ['Criteria 2'],
-                    'confidence' => 'medium',
-                ],
-            ],
-            'task_suggestions' => [
-                [
-                    'tasks' => [
+                    'alternative_id' => 1,
+                    'name' => 'Standard Approach',
+                    'deliverables' => [
                         [
-                            'title' => 'Task 1',
-                            'description' => 'Test task',
-                            'estimated_hours' => 4.0,
-                            'position' => 1,
+                            'title' => 'Deliverable 1',
+                            'description' => 'Test deliverable description',
+                            'type' => 'document',
+                            'acceptance_criteria' => ['Criteria 1'],
                             'confidence' => 'high',
                         ],
                     ],
                     'confidence' => 'high',
-                    'reasoning' => 'Phase-based breakdown',
+                    'reasoning' => 'Standard single-deliverable approach.',
+                ],
+                [
+                    'alternative_id' => 2,
+                    'name' => 'Multi-Phase Approach',
+                    'deliverables' => [
+                        [
+                            'title' => 'Phase 1: Planning',
+                            'description' => 'Planning phase',
+                            'type' => 'document',
+                            'acceptance_criteria' => ['Plan approved'],
+                            'confidence' => 'medium',
+                        ],
+                        [
+                            'title' => 'Phase 2: Implementation',
+                            'description' => 'Implementation phase',
+                            'type' => 'code',
+                            'acceptance_criteria' => ['Criteria 2'],
+                            'confidence' => 'medium',
+                        ],
+                    ],
+                    'confidence' => 'medium',
+                    'reasoning' => 'Phased approach.',
                 ],
             ],
+            'task_breakdown_by_alternative' => [
+                '1' => [
+                    [
+                        'deliverable_title' => 'Deliverable 1',
+                        'tasks' => [
+                            [
+                                'title' => 'Plan: Deliverable 1',
+                                'description' => 'Planning phase.',
+                                'estimated_hours' => 2.0,
+                                'position_in_work_order' => 1,
+                                'checklist_items' => ['Review requirements'],
+                                'dependencies' => [],
+                                'confidence' => 'medium',
+                            ],
+                            [
+                                'title' => 'Execute: Deliverable 1',
+                                'description' => 'Execution phase.',
+                                'estimated_hours' => 8.0,
+                                'position_in_work_order' => 2,
+                                'checklist_items' => ['Build feature'],
+                                'dependencies' => [1],
+                                'confidence' => 'medium',
+                            ],
+                        ],
+                    ],
+                ],
+                '2' => [
+                    [
+                        'deliverable_title' => 'Phase 1: Planning',
+                        'tasks' => [
+                            [
+                                'title' => 'Plan: Phase 1',
+                                'description' => 'Planning tasks.',
+                                'estimated_hours' => 2.0,
+                                'position_in_work_order' => 1,
+                                'checklist_items' => ['Define scope'],
+                                'dependencies' => [],
+                                'confidence' => 'medium',
+                            ],
+                        ],
+                    ],
+                    [
+                        'deliverable_title' => 'Phase 2: Implementation',
+                        'tasks' => [
+                            [
+                                'title' => 'Execute: Phase 2',
+                                'description' => 'Implementation tasks.',
+                                'estimated_hours' => 8.0,
+                                'position_in_work_order' => 2,
+                                'checklist_items' => ['Implement feature'],
+                                'dependencies' => [1],
+                                'confidence' => 'medium',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'task_breakdown' => [
+                [
+                    'deliverable_title' => 'Deliverable 1',
+                    'tasks' => [
+                        [
+                            'title' => 'Plan: Deliverable 1',
+                            'description' => 'Planning phase.',
+                            'estimated_hours' => 2.0,
+                            'position_in_work_order' => 1,
+                            'checklist_items' => ['Review requirements'],
+                            'dependencies' => [],
+                            'confidence' => 'medium',
+                        ],
+                    ],
+                ],
+            ],
+            'insights' => [],
         ],
-        'paused_at' => now(),
-        'approval_required' => true,
+        'completed_at' => now(),
     ]);
 
     $response = $this->actingAs($this->user)->get("/work/work-orders/{$this->workOrder->id}/pm-copilot/suggestions");
@@ -157,13 +246,23 @@ test('get suggestions endpoint returns alternatives', function () {
     $response->assertStatus(200);
     $response->assertJsonStructure([
         'success',
-        'workflow_state_id',
-        'deliverable_suggestions',
-        'task_suggestions',
+        'workOrderId',
+        'workflowState',
+        'alternatives',
+        'insights',
     ]);
 
-    expect($response->json('deliverable_suggestions'))->toHaveCount(2);
-    expect($response->json('task_suggestions'))->toHaveCount(1);
+    $alternatives = $response->json('alternatives');
+    expect($alternatives)->toHaveCount(2);
+
+    // Alternative 1 should have 2 tasks
+    expect($alternatives[0]['tasks'])->toHaveCount(2);
+    expect($alternatives[0]['tasks'][0]['title'])->toBe('Plan: Deliverable 1');
+
+    // Alternative 2 should have 2 tasks (one per deliverable)
+    expect($alternatives[1]['tasks'])->toHaveCount(2);
+    expect($alternatives[1]['tasks'][0]['title'])->toBe('Plan: Phase 1');
+    expect($alternatives[1]['tasks'][1]['title'])->toBe('Execute: Phase 2');
 });
 
 test('approve suggestion endpoint updates InboxItem and creates deliverable', function () {

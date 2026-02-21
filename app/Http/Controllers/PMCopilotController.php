@@ -14,9 +14,7 @@ use App\Models\InboxItem;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\WorkOrder;
-use App\Services\AgentApprovalService;
 use App\Services\AgentOrchestrator;
-use App\Services\AgentRunner;
 use App\Services\ProjectInsightsService;
 use App\Services\TaskDelegationService;
 use App\ValueObjects\DeliverableSuggestion;
@@ -35,8 +33,6 @@ class PMCopilotController extends Controller
 {
     public function __construct(
         private readonly AgentOrchestrator $orchestrator,
-        private readonly AgentApprovalService $approvalService,
-        private readonly AgentRunner $agentRunner,
     ) {}
 
     /**
@@ -59,36 +55,14 @@ class PMCopilotController extends Controller
                 'user_id' => $request->user()->id,
             ]);
 
-            // Try to run the workflow, but don't fail if it encounters issues
-            $status = 'started';
-            try {
-                $workflow = new PMCopilotWorkflow($this->orchestrator, $this->approvalService, $this->agentRunner);
-                $workflow->setCurrentState($workflowState);
-                $workflow->run();
-
-                $workflowState->refresh();
-                $status = $workflowState->isCompleted() ? 'completed' : ($workflowState->isPaused() ? 'paused' : 'running');
-            } catch (\Throwable $workflowError) {
-                Log::warning('PM Copilot workflow execution encountered an error', [
-                    'work_order_id' => $workOrder->id,
-                    'workflow_state_id' => $workflowState->id,
-                    'error' => $workflowError->getMessage(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'PM Copilot workflow failed: '.$workflowError->getMessage(),
-                    'error' => $workflowError->getMessage(),
-                    'workflow_state_id' => $workflowState->id,
-                    'status' => 'error',
-                ], 500);
-            }
+            // Dispatch workflow execution to the queue to avoid HTTP timeouts
+            \App\Jobs\RunPMCopilotWorkflow::dispatch($workflowState);
 
             return response()->json([
                 'success' => true,
-                'message' => 'PM Copilot workflow completed',
+                'message' => 'PM Copilot workflow started',
                 'workflow_state_id' => $workflowState->id,
-                'status' => $status,
+                'status' => 'running',
             ]);
         } catch (\Throwable $e) {
             Log::error('PM Copilot trigger failed', [
@@ -133,26 +107,34 @@ class PMCopilotController extends Controller
 
         $stateData = $workflowState->state_data ?? [];
         $deliverableAlternatives = $stateData['deliverable_alternatives'] ?? [];
-        $taskBreakdown = $stateData['task_breakdown'] ?? [];
+        $taskBreakdownByAlternative = $stateData['task_breakdown_by_alternative'] ?? [];
+        $taskBreakdownFlat = $stateData['task_breakdown'] ?? [];
         $insights = $stateData['insights'] ?? [];
 
-        // Map task breakdown by deliverable title for merging into alternatives
+        // Build fallback title-based map from flat task_breakdown (backward compatibility)
         $tasksByDeliverable = [];
-        foreach ($taskBreakdown as $breakdown) {
+        foreach ($taskBreakdownFlat as $breakdown) {
             $deliverableTitle = $breakdown['deliverable_title'] ?? '';
             $tasksByDeliverable[$deliverableTitle] = $breakdown['tasks'] ?? [];
         }
 
         // Transform workflow state into the frontend PlanAlternative shape
-        $alternatives = array_map(function (array $alt) use ($tasksByDeliverable) {
+        $alternatives = array_map(function (array $alt) use ($taskBreakdownByAlternative, $tasksByDeliverable) {
             $deliverables = $alt['deliverables'] ?? [];
+            $alternativeId = (string) ($alt['alternative_id'] ?? '');
 
-            // Collect tasks for all deliverables in this alternative
+            // Prefer per-alternative task breakdown; fall back to title-based matching
             $tasks = [];
-            foreach ($deliverables as $deliverable) {
-                $title = $deliverable['title'] ?? '';
-                if (isset($tasksByDeliverable[$title])) {
-                    $tasks = array_merge($tasks, $tasksByDeliverable[$title]);
+            if (isset($taskBreakdownByAlternative[$alternativeId])) {
+                foreach ($taskBreakdownByAlternative[$alternativeId] as $breakdown) {
+                    $tasks = array_merge($tasks, $breakdown['tasks'] ?? []);
+                }
+            } else {
+                foreach ($deliverables as $deliverable) {
+                    $title = $deliverable['title'] ?? '';
+                    if (isset($tasksByDeliverable[$title])) {
+                        $tasks = array_merge($tasks, $tasksByDeliverable[$title]);
+                    }
                 }
             }
 
@@ -190,8 +172,8 @@ class PMCopilotController extends Controller
             'workflowState' => [
                 'status' => $status,
                 'currentStep' => $workflowState->current_node,
-                'progress' => $status === 'completed' ? 100 : 50,
-                'error' => null,
+                'progress' => $status === 'completed' ? 100 : ($status === 'paused' ? 50 : $this->estimateProgress($workflowState->current_node)),
+                'error' => $stateData['error'] ?? null,
             ],
             'alternatives' => $alternatives,
             'approvedAlternativeId' => $stateData['approved_alternative_id'] ?? null,
@@ -730,5 +712,23 @@ class PMCopilotController extends Controller
         $stateData['approved_tasks'] = $stateData['approved_tasks'] ?? [];
         $stateData['approved_tasks'][] = $suggestionIndex;
         $workflowState->update(['state_data' => $stateData]);
+    }
+
+    /**
+     * Estimate workflow progress based on the current step.
+     */
+    private function estimateProgress(?string $currentNode): int
+    {
+        return match ($currentNode) {
+            'start' => 5,
+            'gather_context' => 15,
+            'generate_deliverables' => 35,
+            'checkpoint_deliverables' => 50,
+            'generate_task_breakdown' => 65,
+            'generate_insights' => 85,
+            'present_results' => 95,
+            'completed' => 100,
+            default => 10,
+        };
     }
 }

@@ -354,7 +354,18 @@ test('PMCopilotWorkflow falls back to hardcoded logic when AgentRunner is null',
     expect($alternatives)->not->toBeEmpty();
     expect($alternatives[0]['name'])->toBe('Standard Approach');
 
-    // Should use hardcoded task breakdown
+    // Should use hardcoded task breakdown for all alternatives
+    $taskBreakdownByAlt = $state->state_data['task_breakdown_by_alternative'] ?? [];
+    expect($taskBreakdownByAlt)->not->toBeEmpty();
+
+    // Each alternative should have its own task breakdown
+    foreach ($alternatives as $alt) {
+        $altId = (string) ($alt['alternative_id'] ?? '');
+        expect($taskBreakdownByAlt)->toHaveKey($altId);
+        expect($taskBreakdownByAlt[$altId])->not->toBeEmpty();
+    }
+
+    // Flat task_breakdown should also be present (backward compat)
     $taskBreakdown = $state->state_data['task_breakdown'] ?? [];
     expect($taskBreakdown)->not->toBeEmpty();
 });
