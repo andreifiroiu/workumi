@@ -1,7 +1,7 @@
 <x-layouts.public :title="__('public.home.title')">
 
     {{-- Hero --}}
-    <section class="relative overflow-hidden">
+    <section class="relative overflow-hidden" style="background: url('/images/hero-home-bg.svg') center/cover no-repeat">
         <div class="mx-auto max-w-6xl px-6 pb-20 pt-24 text-center md:pb-28 md:pt-32">
             <div class="mb-6 inline-flex items-center rounded-full border border-border bg-secondary px-4 py-1.5 text-xs font-medium text-muted-foreground">
                 {{ __('public.home.badge') }}

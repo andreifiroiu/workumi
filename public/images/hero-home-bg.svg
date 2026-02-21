@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 600" fill="none">
+  <rect width="1440" height="600" fill="#fafafa"/>
+
+  <!-- Soft gradient orbs -->
+  <circle cx="200" cy="120" r="200" fill="url(#g1)" opacity="0.5"/>
+  <circle cx="1200" cy="480" r="260" fill="url(#g2)" opacity="0.4"/>
+  <circle cx="720" cy="300" r="320" fill="url(#g3)" opacity="0.25"/>
+  <circle cx="1000" cy="100" r="140" fill="url(#g4)" opacity="0.3"/>
+  <circle cx="400" cy="500" r="180" fill="url(#g5)" opacity="0.3"/>
+
+  <!-- Grid dots pattern -->
+  <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+    <circle cx="20" cy="20" r="1" fill="#a3a3a3" opacity="0.2"/>
+  </pattern>
+  <rect width="1440" height="600" fill="url(#dots)"/>
+
+  <!-- Floating geometric shapes -->
+  <!-- Rounded rectangles -->
+  <rect x="120" y="80" width="64" height="64" rx="14" fill="#65a30d" opacity="0.06" transform="rotate(15 152 112)"/>
+  <rect x="1280" y="160" width="48" height="48" rx="10" fill="#65a30d" opacity="0.08" transform="rotate(-20 1304 184)"/>
+  <rect x="900" y="60" width="56" height="56" rx="12" fill="#3b82f6" opacity="0.05" transform="rotate(30 928 88)"/>
+  <rect x="300" y="440" width="44" height="44" rx="10" fill="#8b5cf6" opacity="0.06" transform="rotate(-10 322 462)"/>
+
+  <!-- Circles -->
+  <circle cx="1100" cy="140" r="20" fill="none" stroke="#65a30d" stroke-width="1.5" opacity="0.12"/>
+  <circle cx="340" cy="200" r="14" fill="none" stroke="#65a30d" stroke-width="1.5" opacity="0.1"/>
+  <circle cx="1300" cy="400" r="10" fill="#65a30d" opacity="0.08"/>
+  <circle cx="140" cy="380" r="16" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.08"/>
+  <circle cx="800" cy="520" r="12" fill="none" stroke="#65a30d" stroke-width="1.5" opacity="0.1"/>
+
+  <!-- Connection lines (subtle network) -->
+  <line x1="340" y1="200" x2="500" y2="280" stroke="#65a30d" stroke-width="0.8" opacity="0.06"/>
+  <line x1="500" y1="280" x2="720" y2="300" stroke="#65a30d" stroke-width="0.8" opacity="0.06"/>
+  <line x1="720" y1="300" x2="1000" y2="200" stroke="#65a30d" stroke-width="0.8" opacity="0.05"/>
+  <line x1="1000" y1="200" x2="1100" y2="140" stroke="#65a30d" stroke-width="0.8" opacity="0.06"/>
+  <line x1="720" y1="300" x2="800" y2="520" stroke="#65a30d" stroke-width="0.6" opacity="0.04"/>
+  <line x1="500" y1="280" x2="400" y2="500" stroke="#65a30d" stroke-width="0.6" opacity="0.04"/>
+
+  <!-- Small node dots at line intersections -->
+  <circle cx="500" cy="280" r="3" fill="#65a30d" opacity="0.12"/>
+  <circle cx="720" cy="300" r="4" fill="#65a30d" opacity="0.15"/>
+  <circle cx="1000" cy="200" r="3" fill="#65a30d" opacity="0.1"/>
+
+  <!-- Subtle plus signs -->
+  <g opacity="0.08" fill="#65a30d">
+    <rect x="618" y="100" width="12" height="2" rx="1"/>
+    <rect x="623" y="95" width="2" height="12" rx="1"/>
+  </g>
+  <g opacity="0.06" fill="#65a30d">
+    <rect x="1050" y="450" width="12" height="2" rx="1"/>
+    <rect x="1055" y="445" width="2" height="12" rx="1"/>
+  </g>
+  <g opacity="0.07" fill="#3b82f6">
+    <rect x="220" y="320" width="10" height="1.5" rx="1"/>
+    <rect x="224.25" y="315.75" width="1.5" height="10" rx="1"/>
+  </g>
+
+  <!-- Dashed arcs -->
+  <path d="M600 80 Q720 40 840 80" fill="none" stroke="#65a30d" stroke-width="1" stroke-dasharray="4 4" opacity="0.06"/>
+  <path d="M200 500 Q360 440 520 500" fill="none" stroke="#65a30d" stroke-width="1" stroke-dasharray="4 4" opacity="0.05"/>
+
+  <!-- Gradient definitions -->
+  <defs>
+    <radialGradient id="g1">
+      <stop offset="0%" stop-color="#65a30d" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#65a30d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2">
+      <stop offset="0%" stop-color="#65a30d" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#65a30d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g3">
+      <stop offset="0%" stop-color="#65a30d" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#65a30d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g4">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g5">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

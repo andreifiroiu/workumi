@@ -18,6 +18,9 @@
                         {{ __('public.operations.cta') }}
                     </a>
                 </div>
+                <div class="mx-auto mt-16 max-w-4xl overflow-hidden rounded-xl border border-border shadow-lg">
+                    <img src="/images/hero-operations.svg" alt="{{ __('public.operations.badge') }}" class="w-full">
+                </div>
             </div>
         </div>
     </section>
