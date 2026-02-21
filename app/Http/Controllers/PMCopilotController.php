@@ -195,6 +195,7 @@ class PMCopilotController extends Controller
             ],
             'alternatives' => $alternatives,
             'approvedAlternativeId' => $stateData['approved_alternative_id'] ?? null,
+            'rejectedAlternativeIds' => array_column($stateData['rejected_alternatives'] ?? [], 'alternative_id'),
             'insights' => $insights,
             'createdAt' => $workflowState->created_at?->toIso8601String() ?? '',
             'updatedAt' => $workflowState->updated_at?->toIso8601String() ?? '',

@@ -26,6 +26,7 @@ export function PlanAlternativesPanel({
     onApprove,
     onReject,
     selectedAlternativeId,
+    rejectedAlternativeIds = [],
     isLoading = false,
 }: PlanAlternativesPanelProps) {
     const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -71,6 +72,7 @@ export function PlanAlternativesPanel({
                 {alternatives.map((alternative, index) => {
                     const isExpanded = expandedIds.has(alternative.id);
                     const isSelected = selectedAlternativeId === alternative.id;
+                    const isRejected = rejectedAlternativeIds.includes(alternative.id);
 
                     return (
                         <Collapsible
@@ -83,7 +85,9 @@ export function PlanAlternativesPanel({
                                     'rounded-lg border transition-colors',
                                     isSelected
                                         ? 'border-primary bg-primary/5'
-                                        : 'border-border hover:border-primary/50'
+                                        : isRejected
+                                          ? 'border-destructive/30 bg-destructive/5 opacity-60'
+                                          : 'border-border hover:border-primary/50'
                                 )}
                             >
                                 {/* Alternative Header */}
@@ -199,7 +203,7 @@ export function PlanAlternativesPanel({
                                         <div className="flex gap-2">
                                             <Button
                                                 onClick={() => onApprove(alternative.id)}
-                                                disabled={isLoading || isSelected}
+                                                disabled={isLoading || isSelected || isRejected}
                                                 className="flex-1"
                                                 variant={isSelected ? 'secondary' : 'default'}
                                                 aria-label={`Approve ${alternative.name}`}
@@ -218,13 +222,13 @@ export function PlanAlternativesPanel({
                                             </Button>
                                             <Button
                                                 onClick={() => onReject(alternative.id, undefined)}
-                                                disabled={isLoading || isSelected}
-                                                variant="outline"
+                                                disabled={isLoading || isSelected || isRejected}
+                                                variant={isRejected ? 'destructive' : 'outline'}
                                                 className="flex-1"
                                                 aria-label={`Reject ${alternative.name}`}
                                             >
                                                 <X className="mr-2 h-4 w-4" />
-                                                Reject
+                                                {isRejected ? 'Rejected' : 'Reject'}
                                             </Button>
                                         </div>
                                     </div>

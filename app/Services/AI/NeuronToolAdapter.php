@@ -46,9 +46,10 @@ class NeuronToolAdapter
             );
         }
 
-        // Set callable that routes through ToolGateway for permission/budget/audit
-        $neuronTool->setCallable(function () use ($tool, $gateway, $agent, $config, $neuronTool) {
-            $inputs = $neuronTool->getInputs() ?? [];
+        // Set callable that routes through ToolGateway for permission/budget/audit.
+        // NeuronAI spreads a keyed array as named arguments (call_user_func($cb, ...$params)),
+        // so we capture them via ...$inputs which yields an associative array of the actual values.
+        $neuronTool->setCallable(function (mixed ...$inputs) use ($tool, $gateway, $agent, $config) {
             $result = $gateway->execute($agent, $config, $tool->name(), $inputs);
 
             return $result->success

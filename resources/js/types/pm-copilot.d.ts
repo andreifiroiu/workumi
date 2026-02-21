@@ -119,6 +119,7 @@ export interface PMCopilotSuggestionsResponse {
     workflowState: PMCopilotWorkflowState;
     alternatives: PlanAlternative[];
     approvedAlternativeId?: string | null;
+    rejectedAlternativeIds?: string[];
     insights: ProjectInsight[];
     createdAt: string;
     updatedAt: string;
@@ -148,6 +149,7 @@ export interface PlanAlternativesPanelProps {
     onApprove: (alternativeId: string) => void;
     onReject: (alternativeId: string, reason?: string) => void;
     selectedAlternativeId?: string | null;
+    rejectedAlternativeIds?: string[];
     isLoading?: boolean;
 }
 

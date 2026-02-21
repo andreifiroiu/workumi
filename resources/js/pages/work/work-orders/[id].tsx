@@ -169,6 +169,7 @@ interface WorkOrderWithRaci {
         workflowState: { status: string; currentStep: string | null; progress: number; error: string | null };
         alternatives: PlanAlternative[];
         approvedAlternativeId?: string | null;
+        rejectedAlternativeIds?: string[];
         insights: Array<unknown>;
         createdAt: string;
         updatedAt: string;
@@ -572,6 +573,9 @@ export default function WorkOrderDetail({
     const [approvedAlternativeId, setApprovedAlternativeId] = useState<string | null>(
         workOrder.pmCopilotSuggestions?.approvedAlternativeId ?? null
     );
+    const [rejectedAlternativeIds, setRejectedAlternativeIds] = useState<string[]>(
+        workOrder.pmCopilotSuggestions?.rejectedAlternativeIds ?? []
+    );
     const [pmCopilotFeedback, setPmCopilotFeedback] = useState<string | null>(null);
     const [pmCopilotError, setPmCopilotError] = useState<string | null>(null);
 
@@ -586,7 +590,7 @@ export default function WorkOrderDetail({
     // Get suggestions from either prop or fetched data
     const suggestions = workOrder.pmCopilotSuggestions ?? pmCopilotData;
 
-    // Sync approvedAlternativeId from fetched data (survives Inertia reload)
+    // Sync approvedAlternativeId and rejectedAlternativeIds from fetched data (survives Inertia reload)
     useEffect(() => {
         const fromProps = workOrder.pmCopilotSuggestions?.approvedAlternativeId;
         const fromFetch = pmCopilotData?.approvedAlternativeId;
@@ -594,7 +598,19 @@ export default function WorkOrderDetail({
         if (resolved) {
             setApprovedAlternativeId(resolved);
         }
-    }, [workOrder.pmCopilotSuggestions?.approvedAlternativeId, pmCopilotData?.approvedAlternativeId]);
+
+        const rejectedFromProps = workOrder.pmCopilotSuggestions?.rejectedAlternativeIds;
+        const rejectedFromFetch = pmCopilotData?.rejectedAlternativeIds;
+        const resolvedRejected = rejectedFromProps ?? rejectedFromFetch ?? [];
+        if (resolvedRejected.length > 0) {
+            setRejectedAlternativeIds(resolvedRejected);
+        }
+    }, [
+        workOrder.pmCopilotSuggestions?.approvedAlternativeId,
+        pmCopilotData?.approvedAlternativeId,
+        workOrder.pmCopilotSuggestions?.rejectedAlternativeIds,
+        pmCopilotData?.rejectedAlternativeIds,
+    ]);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Work', href: '/work' },
@@ -1100,8 +1116,12 @@ export default function WorkOrderDetail({
      * Handle PM Copilot suggestion rejection
      */
     const handleRejectSuggestion = useCallback(async (alternativeId: string, reason?: string) => {
-        await rejectSuggestion(alternativeId, reason);
-    }, [rejectSuggestion]);
+        const result = await rejectSuggestion(alternativeId, reason);
+        if (result.success) {
+            setRejectedAlternativeIds((prev) => [...prev, alternativeId]);
+            fetchSuggestions();
+        }
+    }, [rejectSuggestion, fetchSuggestions]);
 
     /**
      * Handle PM Copilot mode change
@@ -1731,6 +1751,7 @@ export default function WorkOrderDetail({
                                             onApprove={handleApproveSuggestion}
                                             onReject={handleRejectSuggestion}
                                             selectedAlternativeId={approvedAlternativeId}
+                                            rejectedAlternativeIds={rejectedAlternativeIds}
                                             isLoading={isApproving || isRejecting}
                                         />
                                     )}
