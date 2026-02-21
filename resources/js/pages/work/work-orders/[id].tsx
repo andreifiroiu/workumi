@@ -106,7 +106,7 @@ import {
     useApproveSuggestion,
     useRejectSuggestion,
     useDelegatePlan,
-    useAssignTask,
+    useConfirmAssignments,
 } from '@/hooks/use-pm-copilot';
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -189,6 +189,8 @@ interface WorkOrderDetailProps {
         dueDate: string | null;
         assignedToId: string | null;
         assignedToName: string;
+        assignedAgentId: string | null;
+        assignedAgentName: string | null;
         estimatedHours: number;
         actualHours: number;
         checklistItems: Array<{ id: string; text: string; completed: boolean }>;
@@ -348,7 +350,7 @@ function SortableTaskCard({
                         {task.isBlocked && <Badge variant="destructive">Blocked</Badge>}
                     </div>
                     <div className="text-muted-foreground text-sm">
-                        {task.assignedToName} - {task.checklistItems.filter((i) => i.completed).length}/
+                        {task.assignedAgentName ? `${task.assignedAgentName} (AI)` : task.assignedToName} - {task.checklistItems.filter((i) => i.completed).length}/
                         {task.checklistItems.length} items - {task.actualHours}/{task.estimatedHours}h
                         {task.dueDate && (
                             <span className={
@@ -586,7 +588,7 @@ export default function WorkOrderDetail({
     const { approve: approveSuggestion, isLoading: isApproving } = useApproveSuggestion(workOrder.id);
     const { reject: rejectSuggestion, isLoading: isRejecting } = useRejectSuggestion(workOrder.id);
     const { delegate: delegatePlan, isLoading: isDelegating, suggestions: aiSuggestions, error: delegationError } = useDelegatePlan(workOrder.id);
-    const { assign: assignTask, isLoading: isAssigningTask } = useAssignTask(workOrder.id);
+    const { confirm: confirmAssignments, isLoading: isConfirmingAssignments } = useConfirmAssignments(workOrder.id);
 
     // Get suggestions from either prop or fetched data
     const suggestions = workOrder.pmCopilotSuggestions ?? pmCopilotData;
@@ -1606,6 +1608,7 @@ export default function WorkOrderDetail({
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-foreground text-lg font-bold">Tasks</h2>
+                                        <span className="text-muted-foreground text-sm font-normal">{completedTasks}/{nonArchivedTasks.length}</span>
                                         {hasArchivedTasks && (
                                             <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                                                 <input
@@ -1671,7 +1674,10 @@ export default function WorkOrderDetail({
                             {/* Column 2: Deliverables Section */}
                             <div>
                                 <div className="mb-4 flex items-center justify-between">
-                                    <h2 className="text-foreground text-lg font-bold">Deliverables</h2>
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-foreground text-lg font-bold">Deliverables</h2>
+                                        <span className="text-muted-foreground text-sm font-normal">{deliverables.length}</span>
+                                    </div>
                                     <Button variant="outline" size="sm" onClick={() => setCreateDeliverableDialogOpen(true)}>
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add
@@ -1768,6 +1774,7 @@ export default function WorkOrderDetail({
                                         disabled={isApproving || isRejecting}
                                         feedbackMessage={pmCopilotFeedback}
                                         feedbackError={pmCopilotError}
+                                        hasExistingPlan={deliverables.length > 0}
                                     />
 
                                     <PMCopilotSettingsToggle
@@ -1788,18 +1795,18 @@ export default function WorkOrderDetail({
                                         />
                                     )}
 
-                                    {approvedAlternativeId && tasks.length > 0 && (
+                                    {tasks.length > 0 && (
                                         <PlanExecutionPanel
                                             workOrderId={workOrder.id}
                                             tasks={tasks}
                                             teamMembers={teamMembers}
                                             availableAgents={availableAgents}
-                                            onAssign={(taskId, assigneeType, assigneeId) =>
-                                                assignTask(taskId, assigneeType, assigneeId)
+                                            onConfirmAssignments={(assignments) =>
+                                                confirmAssignments(assignments)
                                             }
                                             onDelegateAll={() => delegatePlan()}
                                             isDelegating={isDelegating}
-                                            isAssigning={isAssigningTask}
+                                            isConfirming={isConfirmingAssignments}
                                             aiSuggestions={aiSuggestions}
                                             delegationError={delegationError}
                                         />

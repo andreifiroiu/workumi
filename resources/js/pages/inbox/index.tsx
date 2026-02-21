@@ -5,7 +5,7 @@ import type { BreadcrumbItem } from '@/types';
 import type { InboxPageProps, InboxTab } from '@/types/inbox';
 import { InboxTabs } from '@/components/inbox/inbox-tabs';
 import { InboxList } from '@/components/inbox/inbox-list';
-import { InboxSidePanel } from '@/components/inbox/inbox-side-panel';
+import { ApprovalDetailPanel } from '@/components/inbox/approval-detail-panel';
 import { InboxSearchBar } from '@/components/inbox/inbox-search-bar';
 import { InboxBulkActions } from '@/components/inbox/inbox-bulk-actions';
 import { useInboxFilters } from '@/hooks/use-inbox-filters';
@@ -138,8 +138,9 @@ export default function Inbox({
                 </div>
 
                 {/* Side Panel */}
-                <InboxSidePanel
+                <ApprovalDetailPanel
                     item={selectedItem}
+                    isOpen={!!selectedItem}
                     onClose={() => setSelectedItemId(null)}
                 />
             </div>

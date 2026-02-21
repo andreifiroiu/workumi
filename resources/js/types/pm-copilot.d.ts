@@ -139,6 +139,7 @@ export interface PMCopilotTriggerButtonProps {
     disabled?: boolean;
     feedbackMessage?: string | null;
     feedbackError?: string | null;
+    hasExistingPlan?: boolean;
 }
 
 /**
@@ -228,6 +229,15 @@ export interface AssigneeOption {
 }
 
 /**
+ * A single bulk assignment entry
+ */
+export interface BulkAssignment {
+    taskId: string;
+    assigneeType: 'user' | 'agent';
+    assigneeId: string;
+}
+
+/**
  * Props for PlanExecutionPanel component
  */
 export interface PlanExecutionPanelProps {
@@ -238,14 +248,16 @@ export interface PlanExecutionPanelProps {
         estimatedHours: number;
         assignedToId: string | null;
         assignedToName: string;
+        assignedAgentId: string | null;
+        assignedAgentName: string | null;
         status: string;
     }>;
     teamMembers: Array<{ id: string; name: string }>;
     availableAgents: Array<{ id: string; name: string; type: string }>;
-    onAssign: (taskId: string, assigneeType: 'user' | 'agent', assigneeId: string) => void;
+    onConfirmAssignments: (assignments: BulkAssignment[]) => void;
     onDelegateAll: () => void;
     isDelegating: boolean;
-    isAssigning: boolean;
+    isConfirming: boolean;
     aiSuggestions: TaskAssignmentSuggestion[];
     delegationError?: string | null;
 }

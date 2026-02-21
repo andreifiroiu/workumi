@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { router } from '@inertiajs/react';
 import type { InboxItem } from '@/types/inbox';
 import {
     Sheet,
@@ -35,7 +34,9 @@ import {
     Briefcase,
     Calendar,
     ExternalLink,
+    Archive,
 } from 'lucide-react';
+import { useInboxActions } from '@/hooks/use-inbox-actions';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
 import InputError from '@/components/input-error';
@@ -58,12 +59,13 @@ type RejectFormData = z.infer<typeof rejectSchema>;
 /**
  * ApprovalDetailPanel displays full context for an approval item in a slide-out panel.
  * Shows source, dates, project/work order links, AI confidence, and waiting time.
- * Provides Approve and Request Changes action buttons.
+ * Provides Archive, Defer, Request Changes, and Approve action buttons.
  */
 export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPanelProps) {
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
     const [isApproving, setIsApproving] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);
+    const { approveItem, rejectItem, deferItem, archiveItem } = useInboxActions();
 
     const {
         register,
@@ -78,32 +80,28 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
 
     const handleApprove = () => {
         setIsApproving(true);
-        router.post(`/inbox/${item.id}/approve`, {}, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setIsApproving(false);
-                onClose();
-            },
-            onError: () => {
-                setIsApproving(false);
-            },
-        });
+        approveItem(item.id);
+        setIsApproving(false);
+        onClose();
     };
 
     const handleRejectSubmit = (data: RejectFormData) => {
         setIsRejecting(true);
-        router.post(`/inbox/${item.id}/reject`, { feedback: data.feedback }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setIsRejecting(false);
-                setRejectDialogOpen(false);
-                reset();
-                onClose();
-            },
-            onError: () => {
-                setIsRejecting(false);
-            },
-        });
+        rejectItem(item.id, data.feedback);
+        setIsRejecting(false);
+        setRejectDialogOpen(false);
+        reset();
+        onClose();
+    };
+
+    const handleDefer = () => {
+        deferItem(item.id);
+        onClose();
+    };
+
+    const handleArchive = () => {
+        archiveItem(item.id);
+        onClose();
     };
 
     const handleOpenChange = (open: boolean) => {
@@ -118,6 +116,7 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
         approval: { label: 'Approval', color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400' },
         flag: { label: 'Flagged Item', color: 'bg-red-500/10 text-red-700 dark:text-red-400' },
         mention: { label: 'Mention', color: 'bg-purple-500/10 text-purple-700 dark:text-purple-400' },
+        agent_workflow_approval: { label: 'Workflow Approval', color: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400' },
     };
 
     // AI confidence styling
@@ -168,6 +167,14 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
                                     className="text-xs border-orange-500 text-orange-600 dark:text-orange-400"
                                 >
                                     HIGH
+                                </Badge>
+                            )}
+                            {item.qaValidation && (
+                                <Badge
+                                    variant={item.qaValidation === 'passed' ? 'outline' : 'destructive'}
+                                    className="text-xs"
+                                >
+                                    QA {item.qaValidation}
                                 </Badge>
                             )}
                         </div>
@@ -265,10 +272,26 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
                     {/* Action Buttons */}
                     <SheetFooter className="mt-4 flex-row gap-3 sm:justify-start">
                         <Button
+                            variant="outline"
+                            onClick={handleArchive}
+                            disabled={isApproving || isRejecting}
+                        >
+                            <Archive className="w-4 h-4 mr-2" aria-hidden="true" />
+                            Archive
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={handleDefer}
+                            disabled={isApproving || isRejecting}
+                        >
+                            <Clock className="w-4 h-4 mr-2" aria-hidden="true" />
+                            Defer
+                        </Button>
+                        <div className="flex-1" />
+                        <Button
                             variant="destructive"
                             onClick={() => setRejectDialogOpen(true)}
                             disabled={isApproving || isRejecting}
-                            className="flex-1 sm:flex-none"
                         >
                             <XCircle className="w-4 h-4 mr-2" aria-hidden="true" />
                             Request Changes
@@ -277,7 +300,7 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
                             variant="default"
                             onClick={handleApprove}
                             disabled={isApproving || isRejecting}
-                            className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white"
                         >
                             {isApproving ? (
                                 <>

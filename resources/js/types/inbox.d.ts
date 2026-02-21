@@ -114,11 +114,6 @@ export interface InboxListItemProps {
     onView: () => void;
 }
 
-export interface InboxSidePanelProps {
-    item: InboxItem | null;
-    onClose: () => void;
-}
-
 export interface InboxBulkActionsProps {
     selectedCount: number;
     selectedIds: string[];

@@ -14,6 +14,7 @@ export function PMCopilotTriggerButton({
     disabled = false,
     feedbackMessage,
     feedbackError,
+    hasExistingPlan = false,
 }: PMCopilotTriggerButtonProps) {
     const isDisabled = disabled || isRunning;
 
@@ -33,7 +34,7 @@ export function PMCopilotTriggerButton({
                     onClick={onTrigger}
                     disabled={isDisabled}
                     className="gap-2"
-                    aria-label={isRunning ? 'Generating plan' : 'Generate Plan'}
+                    aria-label={isRunning ? 'Generating plan' : hasExistingPlan ? 'Regenerate Plan' : 'Generate Plan'}
                 >
                     {isRunning ? (
                         <>
@@ -43,7 +44,7 @@ export function PMCopilotTriggerButton({
                     ) : (
                         <>
                             <Sparkles className="h-4 w-4" />
-                            <span>Generate Plan</span>
+                            <span>{hasExistingPlan ? 'Regenerate Plan' : 'Generate Plan'}</span>
                         </>
                     )}
                 </Button>
