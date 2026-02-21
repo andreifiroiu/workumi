@@ -80,6 +80,7 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::post('/work-orders/{workOrder}/pm-copilot/alternatives/{alternativeId}/reject', [PMCopilotController::class, 'rejectAlternative'])->name('work-orders.pm-copilot.alternatives.reject');
     Route::post('/work-orders/{workOrder}/pm-copilot/delegate', [PMCopilotController::class, 'delegatePlan'])->name('work-orders.pm-copilot.delegate');
     Route::post('/work-orders/{workOrder}/pm-copilot/tasks/{task}/assign', [PMCopilotController::class, 'assignTask'])->name('work-orders.pm-copilot.tasks.assign');
+    Route::post('/work-orders/{workOrder}/pm-copilot/bulk-assign', [PMCopilotController::class, 'bulkAssignTasks'])->name('work-orders.pm-copilot.bulk-assign');
 
     // Tasks
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');

@@ -16,6 +16,8 @@ use App\Models\GlobalAISettings;
 use App\Models\InboxItem;
 use App\Models\Party;
 use App\Models\Project;
+use App\Models\StatusTransition;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Support\Facades\Queue;
@@ -109,6 +111,16 @@ test('manual trigger endpoint dispatches workflow job and returns running status
     Queue::assertPushed(\App\Jobs\RunPMCopilotWorkflow::class, function ($job) use ($workflowState) {
         return $job->workflowState->id === $workflowState->id;
     });
+
+    // Verify activity record was created
+    $transition = StatusTransition::where('transitionable_type', WorkOrder::class)
+        ->where('transitionable_id', $this->workOrder->id)
+        ->where('comment', 'PM Copilot plan generation started')
+        ->first();
+
+    expect($transition)->not->toBeNull()
+        ->and($transition->user_id)->toBe($this->user->id)
+        ->and($transition->action_type)->toBe('status_change');
 });
 
 test('get suggestions endpoint returns alternatives with tasks', function () {
@@ -300,7 +312,7 @@ test('approve suggestion endpoint updates InboxItem and creates deliverable', fu
         'content_preview' => 'Review generated deliverables',
         'full_content' => 'Full content for PM Copilot suggestions approval',
         'source_type' => SourceType::AIAgent,
-        'source_id' => 'agent-' . $this->agent->id,
+        'source_id' => 'agent-'.$this->agent->id,
         'source_name' => 'PM Copilot Agent',
         'approvable_type' => AgentWorkflowState::class,
         'approvable_id' => $workflowState->id,
@@ -362,7 +374,7 @@ test('reject suggestion endpoint updates InboxItem with reason', function () {
         'content_preview' => 'Review generated deliverables',
         'full_content' => 'Full content for PM Copilot suggestions rejection',
         'source_type' => SourceType::AIAgent,
-        'source_id' => 'agent-' . $this->agent->id,
+        'source_id' => 'agent-'.$this->agent->id,
         'source_name' => 'PM Copilot Agent',
         'approvable_type' => AgentWorkflowState::class,
         'approvable_id' => $workflowState->id,
@@ -407,4 +419,141 @@ test('work order settings endpoint updates pm_copilot_mode', function () {
     // Verify the setting was persisted
     $this->workOrder->refresh();
     expect($this->workOrder->pm_copilot_mode)->toBe(PMCopilotMode::Staged);
+});
+
+test('bulk assign endpoint assigns multiple tasks in one request', function () {
+    $task1 = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'assigned_to_id' => null,
+        'assigned_agent_id' => null,
+    ]);
+
+    $task2 = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'assigned_to_id' => null,
+        'assigned_agent_id' => null,
+    ]);
+
+    $secondUser = User::factory()->create();
+    $memberRole = $this->team->getRole('member');
+    $this->team->users()->attach($secondUser, ['role_id' => $memberRole->id]);
+
+    $response = $this->actingAs($this->user)->postJson(
+        "/work/work-orders/{$this->workOrder->id}/pm-copilot/bulk-assign",
+        [
+            'assignments' => [
+                [
+                    'task_id' => $task1->id,
+                    'assignee_type' => 'user',
+                    'assignee_id' => $this->user->id,
+                ],
+                [
+                    'task_id' => $task2->id,
+                    'assignee_type' => 'user',
+                    'assignee_id' => $secondUser->id,
+                ],
+            ],
+        ]
+    );
+
+    $response->assertSuccessful();
+    $response->assertJson(['success' => true]);
+
+    $task1->refresh();
+    $task2->refresh();
+
+    expect($task1->assigned_to_id)->toBe($this->user->id)
+        ->and($task1->assigned_agent_id)->toBeNull()
+        ->and($task2->assigned_to_id)->toBe($secondUser->id)
+        ->and($task2->assigned_agent_id)->toBeNull();
+
+    // Verify activity records were created for each assignment
+    $transitions = StatusTransition::where('transitionable_type', WorkOrder::class)
+        ->where('transitionable_id', $this->workOrder->id)
+        ->where('action_type', 'assignment_change')
+        ->get();
+
+    expect($transitions)->toHaveCount(2);
+});
+
+test('bulk assign endpoint rejects tasks not belonging to work order', function () {
+    $otherWorkOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $otherTask = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $otherWorkOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->postJson(
+        "/work/work-orders/{$this->workOrder->id}/pm-copilot/bulk-assign",
+        [
+            'assignments' => [
+                [
+                    'task_id' => $otherTask->id,
+                    'assignee_type' => 'user',
+                    'assignee_id' => $this->user->id,
+                ],
+            ],
+        ]
+    );
+
+    $response->assertStatus(400);
+    $response->assertJson(['success' => false]);
+});
+
+test('bulk assign endpoint validates request payload', function () {
+    $response = $this->actingAs($this->user)->postJson(
+        "/work/work-orders/{$this->workOrder->id}/pm-copilot/bulk-assign",
+        ['assignments' => []]
+    );
+
+    $response->assertUnprocessable();
+});
+
+test('assign task endpoint persists assignment even when workflow execution would fail', function () {
+    $task = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'assigned_to_id' => null,
+        'assigned_agent_id' => null,
+    ]);
+
+    // Assign to a user (no workflow involved) — should always succeed
+    $response = $this->actingAs($this->user)->postJson(
+        "/work/work-orders/{$this->workOrder->id}/pm-copilot/tasks/{$task->id}/assign",
+        [
+            'assignee_type' => 'user',
+            'assignee_id' => $this->user->id,
+        ]
+    );
+
+    $response->assertSuccessful();
+    $response->assertJson(['success' => true]);
+
+    $task->refresh();
+    expect($task->assigned_to_id)->toBe($this->user->id);
+
+    // Verify activity record was created
+    $transition = StatusTransition::where('transitionable_type', WorkOrder::class)
+        ->where('transitionable_id', $this->workOrder->id)
+        ->where('action_type', 'assignment_change')
+        ->first();
+
+    expect($transition)->not->toBeNull()
+        ->and($transition->to_assigned_to_id)->toBe($this->user->id)
+        ->and($transition->comment)->toContain('assigned');
 });

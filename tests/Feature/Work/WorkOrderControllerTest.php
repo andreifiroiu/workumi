@@ -1,8 +1,9 @@
 <?php
 
+use App\Models\AIAgent;
 use App\Models\Party;
 use App\Models\Project;
-use App\Models\Team;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
 
@@ -50,10 +51,9 @@ test('user can view a work order', function () {
     $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) =>
-        $page->component('work/work-orders/[id]')
-            ->has('workOrder')
-            ->where('workOrder.id', (string) $workOrder->id)
+    $response->assertInertia(fn ($page) => $page->component('work/work-orders/[id]')
+        ->has('workOrder')
+        ->where('workOrder.id', (string) $workOrder->id)
     );
 });
 
@@ -137,6 +137,35 @@ test('user can delete a work order', function () {
     $this->assertSoftDeleted('work_orders', [
         'id' => $workOrder->id,
     ]);
+});
+
+test('work order show includes agent assignment data for tasks', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $agent = AIAgent::factory()->create();
+
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $workOrder->id,
+        'project_id' => $this->project->id,
+        'assigned_to_id' => null,
+        'assigned_agent_id' => $agent->id,
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('work/work-orders/[id]')
+        ->has('tasks', 1)
+        ->where('tasks.0.assignedAgentId', (string) $agent->id)
+        ->where('tasks.0.assignedAgentName', $agent->name)
+    );
 });
 
 test('user cannot access work orders from another team', function () {

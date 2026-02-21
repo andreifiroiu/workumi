@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import type {
+    BulkAssignment,
     PMCopilotSuggestionsResponse,
     PMCopilotWorkflowState,
     ProjectInsight,
@@ -172,7 +173,7 @@ export function useApproveSuggestion(workOrderId: string) {
             }
 
             // Reload the page to get fresh data after approval
-            router.reload({ only: ['tasks', 'deliverables', 'workOrder'] });
+            router.reload({ only: ['tasks', 'deliverables', 'workOrder', 'statusTransitions'] });
 
             return { success: true, data };
         } catch (err) {
@@ -449,8 +450,8 @@ export function useAssignTask(workOrderId: string) {
                 return { success: false, error: data.message };
             }
 
-            // Reload tasks from server
-            router.reload({ only: ['tasks'] });
+            // Reload tasks and activity from server
+            router.reload({ only: ['tasks', 'statusTransitions'] });
 
             return { success: true, data };
         } catch (err) {
@@ -464,6 +465,62 @@ export function useAssignTask(workOrderId: string) {
 
     return {
         assign,
+        isLoading,
+        error,
+    };
+}
+
+/**
+ * Hook for confirming multiple task assignments in bulk.
+ * Sends all draft assignments to the server in a single request.
+ */
+export function useConfirmAssignments(workOrderId: string) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const confirm = useCallback(async (assignments: BulkAssignment[]) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`/work/work-orders/${workOrderId}/pm-copilot/bulk-assign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN':
+                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    assignments: assignments.map((a) => ({
+                        task_id: parseInt(a.taskId, 10),
+                        assignee_type: a.assigneeType,
+                        assignee_id: parseInt(a.assigneeId, 10),
+                    })),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.message || 'Failed to confirm assignments');
+                return { success: false, error: data.message };
+            }
+
+            router.reload({ only: ['tasks', 'statusTransitions'] });
+
+            return { success: true, data };
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'An error occurred';
+            setError(message);
+            return { success: false, error: message };
+        } finally {
+            setIsLoading(false);
+        }
+    }, [workOrderId]);
+
+    return {
+        confirm,
         isLoading,
         error,
     };

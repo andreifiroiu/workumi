@@ -78,7 +78,7 @@ class WorkOrderController extends Controller
     {
         $this->authorize('view', $workOrder);
 
-        $workOrder->load(['project', 'assignedTo', 'createdBy', 'tasks', 'deliverables', 'documents', 'statusTransitions.user', 'accountable', 'responsible']);
+        $workOrder->load(['project', 'assignedTo', 'createdBy', 'tasks.assignedAgent', 'tasks.assignedTo', 'deliverables', 'documents', 'statusTransitions.user', 'statusTransitions.fromAssignedTo', 'statusTransitions.toAssignedTo', 'statusTransitions.fromAssignedAgent', 'statusTransitions.toAssignedAgent', 'accountable', 'responsible']);
 
         // Get communication thread and messages
         $thread = $workOrder->communicationThread;
@@ -142,7 +142,7 @@ class WorkOrderController extends Controller
                 'consultedIds' => $workOrder->consulted_ids ?? [],
                 'informedIds' => $workOrder->informed_ids ?? [],
             ],
-            'tasks' => $workOrder->tasks()->ordered()->get()->map(fn (Task $task) => [
+            'tasks' => $workOrder->tasks()->ordered()->with(['assignedTo', 'assignedAgent'])->get()->map(fn (Task $task) => [
                 'id' => (string) $task->id,
                 'title' => $task->title,
                 'description' => $task->description,
@@ -150,6 +150,8 @@ class WorkOrderController extends Controller
                 'dueDate' => $task->due_date?->format('Y-m-d'),
                 'assignedToId' => $task->assigned_to_id ? (string) $task->assigned_to_id : null,
                 'assignedToName' => $task->assignedTo?->name ?? 'Unassigned',
+                'assignedAgentId' => $task->assigned_agent_id ? (string) $task->assigned_agent_id : null,
+                'assignedAgentName' => $task->assignedAgent?->name ?? null,
                 'estimatedHours' => (float) $task->estimated_hours,
                 'actualHours' => (float) $task->actual_hours,
                 'checklistItems' => $task->checklist_items ?? [],
@@ -209,12 +211,29 @@ class WorkOrderController extends Controller
             ]),
             'statusTransitions' => $workOrder->statusTransitions->map(fn ($transition) => [
                 'id' => $transition->id,
+                'actionType' => $transition->action_type ?? 'status_change',
                 'fromStatus' => $transition->from_status,
                 'toStatus' => $transition->to_status,
                 'user' => $transition->user ? [
                     'id' => $transition->user->id,
                     'name' => $transition->user->name,
                     'email' => $transition->user->email,
+                ] : null,
+                'fromAssignedTo' => $transition->fromAssignedTo ? [
+                    'id' => $transition->fromAssignedTo->id,
+                    'name' => $transition->fromAssignedTo->name,
+                ] : null,
+                'toAssignedTo' => $transition->toAssignedTo ? [
+                    'id' => $transition->toAssignedTo->id,
+                    'name' => $transition->toAssignedTo->name,
+                ] : null,
+                'fromAssignedAgent' => $transition->fromAssignedAgent ? [
+                    'id' => $transition->fromAssignedAgent->id,
+                    'name' => $transition->fromAssignedAgent->name,
+                ] : null,
+                'toAssignedAgent' => $transition->toAssignedAgent ? [
+                    'id' => $transition->toAssignedAgent->id,
+                    'name' => $transition->toAssignedAgent->name,
                 ] : null,
                 'createdAt' => $transition->created_at->toIso8601String(),
                 'comment' => $transition->comment,
@@ -500,13 +519,27 @@ class WorkOrderController extends Controller
         ]);
 
         $updateData = [];
-        if (isset($validated['title'])) $updateData['title'] = $validated['title'];
-        if (array_key_exists('description', $validated)) $updateData['description'] = $validated['description'];
-        if (array_key_exists('assignedToId', $validated)) $updateData['assigned_to_id'] = $validated['assignedToId'];
-        if (isset($validated['priority'])) $updateData['priority'] = Priority::from($validated['priority']);
-        if (array_key_exists('due_date', $validated)) $updateData['due_date'] = $validated['due_date'];
-        if (array_key_exists('estimated_hours', $validated)) $updateData['estimated_hours'] = $validated['estimated_hours'] ?? 0;
-        if (isset($validated['acceptanceCriteria'])) $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];
+        if (isset($validated['title'])) {
+            $updateData['title'] = $validated['title'];
+        }
+        if (array_key_exists('description', $validated)) {
+            $updateData['description'] = $validated['description'];
+        }
+        if (array_key_exists('assignedToId', $validated)) {
+            $updateData['assigned_to_id'] = $validated['assignedToId'];
+        }
+        if (isset($validated['priority'])) {
+            $updateData['priority'] = Priority::from($validated['priority']);
+        }
+        if (array_key_exists('due_date', $validated)) {
+            $updateData['due_date'] = $validated['due_date'];
+        }
+        if (array_key_exists('estimated_hours', $validated)) {
+            $updateData['estimated_hours'] = $validated['estimated_hours'] ?? 0;
+        }
+        if (isset($validated['acceptanceCriteria'])) {
+            $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];
+        }
 
         $workOrder->update($updateData);
 

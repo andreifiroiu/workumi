@@ -12,6 +12,7 @@ use App\Models\AgentWorkflowState;
 use App\Models\AIAgent;
 use App\Models\InboxItem;
 use App\Models\Project;
+use App\Models\StatusTransition;
 use App\Models\Task;
 use App\Models\WorkOrder;
 use App\Services\AgentOrchestrator;
@@ -68,6 +69,17 @@ class PMCopilotController extends Controller
 
             // Dispatch workflow execution to the queue to avoid HTTP timeouts
             \App\Jobs\RunPMCopilotWorkflow::dispatch($workflowState);
+
+            StatusTransition::create([
+                'transitionable_type' => WorkOrder::class,
+                'transitionable_id' => $workOrder->id,
+                'user_id' => $request->user()->id,
+                'action_type' => 'status_change',
+                'from_status' => $workOrder->status->value,
+                'to_status' => $workOrder->status->value,
+                'comment' => 'PM Copilot plan generation started',
+                'created_at' => now(),
+            ]);
 
             $responseData = [
                 'success' => true,
@@ -485,6 +497,17 @@ class PMCopilotController extends Controller
             $stateData['approved_at'] = now()->toIso8601String();
             $workflowState->update(['state_data' => $stateData]);
 
+            StatusTransition::create([
+                'transitionable_type' => WorkOrder::class,
+                'transitionable_id' => $workOrder->id,
+                'user_id' => auth()->id(),
+                'action_type' => 'status_change',
+                'from_status' => $workOrder->status->value,
+                'to_status' => $workOrder->status->value,
+                'comment' => "Plan approved: {$createdDeliverables} deliverable(s) and {$createdTasks} task(s) created",
+                'created_at' => now(),
+            ]);
+
             Log::info('PM Copilot alternative approved', [
                 'work_order_id' => $workOrder->id,
                 'alternative_id' => $alternativeId,
@@ -615,7 +638,8 @@ class PMCopilotController extends Controller
     /**
      * Assign a task to a user or AI agent.
      *
-     * When assigned to an AI agent, automatically starts a TaskExecutionWorkflow.
+     * When assigned to an AI agent, attempts to start a TaskExecutionWorkflow.
+     * The assignment is always persisted even if the workflow fails to start.
      */
     public function assignTask(Request $request, WorkOrder $workOrder, Task $task, TaskDelegationService $delegationService): JsonResponse
     {
@@ -634,44 +658,198 @@ class PMCopilotController extends Controller
             ], 400);
         }
 
-        try {
-            $workflowStatus = null;
+        // Capture old assignment values before updating
+        $oldAssignedToId = $task->assigned_to_id;
+        $oldAssignedAgentId = $task->assigned_agent_id;
 
-            if ($validated['assignee_type'] === 'user') {
-                $task->update([
-                    'assigned_to_id' => $validated['assignee_id'],
-                    'assigned_agent_id' => null,
-                ]);
-            } else {
-                $agent = AIAgent::findOrFail($validated['assignee_id']);
-                $team = $request->user()->currentTeam;
+        // Always persist the assignment first
+        if ($validated['assignee_type'] === 'user') {
+            $task->update([
+                'assigned_to_id' => $validated['assignee_id'],
+                'assigned_agent_id' => null,
+            ]);
 
-                $task->update([
-                    'assigned_agent_id' => $agent->id,
-                    'assigned_to_id' => null,
-                ]);
-
-                $workflowState = $delegationService->startTaskExecution($task, $agent, $team);
-                $workflowState->refresh();
-
-                $workflowStatus = $workflowState->isCompleted() ? 'completed' : ($workflowState->isPaused() ? 'paused' : 'running');
-            }
+            StatusTransition::create([
+                'transitionable_type' => WorkOrder::class,
+                'transitionable_id' => $workOrder->id,
+                'user_id' => $request->user()->id,
+                'action_type' => 'assignment_change',
+                'from_assigned_to_id' => $oldAssignedToId,
+                'to_assigned_to_id' => $validated['assignee_id'],
+                'from_assigned_agent_id' => $oldAssignedAgentId,
+                'to_assigned_agent_id' => null,
+                'comment' => "Task \"{$task->title}\" assigned",
+                'created_at' => now(),
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Task assigned successfully',
-                'workflow_status' => $workflowStatus,
+                'workflow_status' => null,
             ]);
+        }
+
+        $agent = AIAgent::findOrFail($validated['assignee_id']);
+
+        $task->update([
+            'assigned_agent_id' => $agent->id,
+            'assigned_to_id' => null,
+        ]);
+
+        StatusTransition::create([
+            'transitionable_type' => WorkOrder::class,
+            'transitionable_id' => $workOrder->id,
+            'user_id' => $request->user()->id,
+            'action_type' => 'assignment_change',
+            'from_assigned_to_id' => $oldAssignedToId,
+            'to_assigned_to_id' => null,
+            'from_assigned_agent_id' => $oldAssignedAgentId,
+            'to_assigned_agent_id' => $agent->id,
+            'comment' => "Task \"{$task->title}\" assigned to agent",
+            'created_at' => now(),
+        ]);
+
+        // Attempt workflow execution separately — failure does not roll back the assignment
+        $workflowStatus = null;
+        $workflowWarning = null;
+
+        try {
+            $team = $request->user()->currentTeam;
+            $workflowState = $delegationService->startTaskExecution($task, $agent, $team);
+            $workflowState->refresh();
+            $workflowStatus = $workflowState->isCompleted() ? 'completed' : ($workflowState->isPaused() ? 'paused' : 'running');
         } catch (\Throwable $e) {
-            Log::error('Task assignment failed', [
+            Log::warning('Task assigned but workflow execution failed', [
                 'work_order_id' => $workOrder->id,
                 'task_id' => $task->id,
+                'agent_id' => $agent->id,
+                'error' => $e->getMessage(),
+            ]);
+            $workflowWarning = 'Task assigned but agent workflow could not be started: '.$e->getMessage();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $workflowWarning ?? 'Task assigned successfully',
+            'workflow_status' => $workflowStatus,
+            'warning' => $workflowWarning,
+        ]);
+    }
+
+    /**
+     * Bulk-assign multiple tasks to users or AI agents.
+     *
+     * Persists all assignments in a single transaction.
+     * Agent workflow executions are dispatched to the queue.
+     */
+    public function bulkAssignTasks(Request $request, WorkOrder $workOrder, TaskDelegationService $delegationService): JsonResponse
+    {
+        $this->authorize('view', $workOrder);
+
+        $validated = $request->validate([
+            'assignments' => 'required|array|min:1',
+            'assignments.*.task_id' => 'required|integer',
+            'assignments.*.assignee_type' => 'required|string|in:user,agent',
+            'assignments.*.assignee_id' => 'required|integer',
+        ]);
+
+        $team = $request->user()->currentTeam;
+        $taskIds = array_column($validated['assignments'], 'task_id');
+
+        // Verify all tasks belong to this work order
+        $tasks = Task::query()
+            ->where('work_order_id', $workOrder->id)
+            ->whereIn('id', $taskIds)
+            ->get()
+            ->keyBy('id');
+
+        if ($tasks->count() !== count($taskIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'One or more tasks do not belong to this work order',
+            ], 400);
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $tasks, $workOrder, $request) {
+                foreach ($validated['assignments'] as $assignment) {
+                    $task = $tasks->get($assignment['task_id']);
+                    $oldAssignedToId = $task->assigned_to_id;
+                    $oldAssignedAgentId = $task->assigned_agent_id;
+
+                    if ($assignment['assignee_type'] === 'user') {
+                        $task->update([
+                            'assigned_to_id' => $assignment['assignee_id'],
+                            'assigned_agent_id' => null,
+                        ]);
+
+                        StatusTransition::create([
+                            'transitionable_type' => WorkOrder::class,
+                            'transitionable_id' => $workOrder->id,
+                            'user_id' => $request->user()->id,
+                            'action_type' => 'assignment_change',
+                            'from_assigned_to_id' => $oldAssignedToId,
+                            'to_assigned_to_id' => $assignment['assignee_id'],
+                            'from_assigned_agent_id' => $oldAssignedAgentId,
+                            'to_assigned_agent_id' => null,
+                            'comment' => "Task \"{$task->title}\" assigned",
+                            'created_at' => now(),
+                        ]);
+                    } else {
+                        $task->update([
+                            'assigned_agent_id' => $assignment['assignee_id'],
+                            'assigned_to_id' => null,
+                        ]);
+
+                        StatusTransition::create([
+                            'transitionable_type' => WorkOrder::class,
+                            'transitionable_id' => $workOrder->id,
+                            'user_id' => $request->user()->id,
+                            'action_type' => 'assignment_change',
+                            'from_assigned_to_id' => $oldAssignedToId,
+                            'to_assigned_to_id' => null,
+                            'from_assigned_agent_id' => $oldAssignedAgentId,
+                            'to_assigned_agent_id' => $assignment['assignee_id'],
+                            'comment' => "Task \"{$task->title}\" assigned to agent",
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
+            });
+
+            // Dispatch agent workflow executions to the queue (outside the transaction)
+            foreach ($validated['assignments'] as $assignment) {
+                if ($assignment['assignee_type'] === 'agent') {
+                    try {
+                        $task = $tasks->get($assignment['task_id']);
+                        $agent = AIAgent::find($assignment['assignee_id']);
+
+                        if ($agent) {
+                            $delegationService->startTaskExecution($task->fresh(), $agent, $team);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('Bulk assign: agent workflow failed for task', [
+                            'task_id' => $assignment['task_id'],
+                            'agent_id' => $assignment['assignee_id'],
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => count($validated['assignments']).' task(s) assigned successfully',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Bulk task assignment failed', [
+                'work_order_id' => $workOrder->id,
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to assign task',
+                'message' => 'Failed to assign tasks',
                 'error' => $e->getMessage(),
             ], 500);
         }
