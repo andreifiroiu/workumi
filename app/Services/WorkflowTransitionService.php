@@ -205,6 +205,11 @@ class WorkflowTransitionService
                 $this->handleRevisionRequestedAutoTransition($item, $actor);
             }
 
+            // Auto-activate parent WorkOrder when a Task moves to InProgress
+            if ($item instanceof Task && $toStatus->value === 'in_progress') {
+                $this->autoActivateParentWorkOrder($item, $actor);
+            }
+
             return $transition;
         });
     }
@@ -261,6 +266,9 @@ class WorkflowTransitionService
                 $toStatus,
                 'Timer started - task reopened for work'
             );
+
+            // Auto-activate parent WorkOrder when a Task moves to InProgress
+            $this->autoActivateParentWorkOrder($task, $user);
 
             return $transition;
         });
@@ -366,6 +374,29 @@ class WorkflowTransitionService
             target: $modelType,
             targetId: (string) $item->id,
         );
+    }
+
+    /**
+     * Auto-activate the parent WorkOrder when a Task transitions to InProgress.
+     * If the WorkOrder is still in Draft status, it will be transitioned to Active.
+     */
+    private function autoActivateParentWorkOrder(Task $task, User|AIAgent $actor): void
+    {
+        $workOrder = $task->workOrder;
+
+        if ($workOrder === null || $workOrder->status !== WorkOrderStatus::Draft) {
+            return;
+        }
+
+        $fromStatus = $workOrder->status;
+        $toStatus = WorkOrderStatus::Active;
+
+        $this->createTransitionRecord($workOrder, $actor, $fromStatus, $toStatus, 'Auto-activated: task started');
+
+        $workOrder->status = $toStatus;
+        $workOrder->save();
+
+        $this->logToAuditLog($workOrder, $actor, $fromStatus, $toStatus, 'Auto-activated: task started');
     }
 
     /**

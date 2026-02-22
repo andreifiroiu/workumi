@@ -351,6 +351,17 @@ class TaskController extends Controller
         $this->authorize('delete', $task);
 
         $workOrderId = $task->work_order_id;
+        $taskTitle = $task->title;
+
+        StatusTransition::create([
+            'transitionable_type' => WorkOrder::class,
+            'transitionable_id' => $workOrderId,
+            'user_id' => $request->user()->id,
+            'action_type' => 'status_change',
+            'comment' => "Task \"{$taskTitle}\" deleted",
+            'created_at' => now(),
+        ]);
+
         $task->delete();
 
         return redirect()->route('work-orders.show', $workOrderId);
@@ -364,9 +375,19 @@ class TaskController extends Controller
             'status' => 'required|string|in:todo,in_progress,done',
         ]);
 
+        $newStatus = TaskStatus::from($validated['status']);
+
         $task->update([
-            'status' => TaskStatus::from($validated['status']),
+            'status' => $newStatus,
         ]);
+
+        // Auto-activate parent WorkOrder when task moves to in_progress
+        if ($newStatus === TaskStatus::InProgress) {
+            $workOrder = $task->workOrder;
+            if ($workOrder && $workOrder->status === WorkOrderStatus::Draft) {
+                $workOrder->update(['status' => WorkOrderStatus::Active]);
+            }
+        }
 
         // Update project progress
         $task->project->recalculateProgress();

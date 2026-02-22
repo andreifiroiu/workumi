@@ -80,28 +80,42 @@ export function ApprovalDetailPanel({ item, isOpen, onClose }: ApprovalDetailPan
 
     const handleApprove = () => {
         setIsApproving(true);
-        approveItem(item.id);
-        setIsApproving(false);
-        onClose();
+        approveItem(item.id, {
+            onSuccess: () => {
+                setIsApproving(false);
+                onClose();
+            },
+            onError: () => {
+                setIsApproving(false);
+            },
+        });
     };
 
     const handleRejectSubmit = (data: RejectFormData) => {
         setIsRejecting(true);
-        rejectItem(item.id, data.feedback);
-        setIsRejecting(false);
-        setRejectDialogOpen(false);
-        reset();
-        onClose();
+        rejectItem(item.id, data.feedback, {
+            onSuccess: () => {
+                setIsRejecting(false);
+                setRejectDialogOpen(false);
+                reset();
+                onClose();
+            },
+            onError: () => {
+                setIsRejecting(false);
+            },
+        });
     };
 
     const handleDefer = () => {
-        deferItem(item.id);
-        onClose();
+        deferItem(item.id, {
+            onSuccess: () => onClose(),
+        });
     };
 
     const handleArchive = () => {
-        archiveItem(item.id);
-        onClose();
+        archiveItem(item.id, {
+            onSuccess: () => onClose(),
+        });
     };
 
     const handleOpenChange = (open: boolean) => {

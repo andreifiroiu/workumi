@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Deliverable;
 use App\Models\DeliverableVersion;
 use App\Models\Document;
+use App\Models\StatusTransition;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Notifications\DeliverableStatusChangedNotification;
@@ -123,22 +124,34 @@ class DeliverableController extends Controller
         $statusChanged = false;
 
         $updateData = [];
-        if (isset($validated['title'])) $updateData['title'] = $validated['title'];
-        if (array_key_exists('description', $validated)) $updateData['description'] = $validated['description'];
-        if (isset($validated['type'])) $updateData['type'] = DeliverableType::from($validated['type']);
+        if (isset($validated['title'])) {
+            $updateData['title'] = $validated['title'];
+        }
+        if (array_key_exists('description', $validated)) {
+            $updateData['description'] = $validated['description'];
+        }
+        if (isset($validated['type'])) {
+            $updateData['type'] = DeliverableType::from($validated['type']);
+        }
         if (isset($validated['status'])) {
             $newStatus = DeliverableStatus::from($validated['status']);
             if ($oldStatus !== $newStatus) {
                 $statusChanged = true;
             }
             $updateData['status'] = $newStatus;
-            if ($validated['status'] === 'delivered' && !$deliverable->delivered_date) {
+            if ($validated['status'] === 'delivered' && ! $deliverable->delivered_date) {
                 $updateData['delivered_date'] = now();
             }
         }
-        if (isset($validated['version'])) $updateData['version'] = $validated['version'];
-        if (array_key_exists('fileUrl', $validated)) $updateData['file_url'] = $validated['fileUrl'];
-        if (isset($validated['acceptanceCriteria'])) $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];
+        if (isset($validated['version'])) {
+            $updateData['version'] = $validated['version'];
+        }
+        if (array_key_exists('fileUrl', $validated)) {
+            $updateData['file_url'] = $validated['fileUrl'];
+        }
+        if (isset($validated['acceptanceCriteria'])) {
+            $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];
+        }
 
         $deliverable->update($updateData);
 
@@ -159,6 +172,17 @@ class DeliverableController extends Controller
         $this->authorize('delete', $deliverable);
 
         $workOrderId = $deliverable->work_order_id;
+        $deliverableTitle = $deliverable->title;
+
+        StatusTransition::create([
+            'transitionable_type' => WorkOrder::class,
+            'transitionable_id' => $workOrderId,
+            'user_id' => $request->user()->id,
+            'action_type' => 'status_change',
+            'comment' => "Deliverable \"{$deliverableTitle}\" deleted",
+            'created_at' => now(),
+        ]);
+
         $deliverable->delete();
 
         return redirect()->route('work-orders.show', $workOrderId);
@@ -251,7 +275,7 @@ class DeliverableController extends Controller
         $deliverable->load('workOrder.createdBy', 'workOrder.assignedTo');
         $workOrder = $deliverable->workOrder;
 
-        if (!$workOrder) {
+        if (! $workOrder) {
             return;
         }
 
