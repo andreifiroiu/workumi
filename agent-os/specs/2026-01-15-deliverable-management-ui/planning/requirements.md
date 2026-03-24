@@ -2,7 +2,7 @@
 
 ## Initial Description
 
-Build a comprehensive Deliverable Management UI for Laborobo that allows team members to manage deliverables tied to work orders, including file upload functionality, version history, draft/final status workflow, and file preview capabilities.
+Build a comprehensive Deliverable Management UI for Workumi that allows team members to manage deliverables tied to work orders, including file upload functionality, version history, draft/final status workflow, and file preview capabilities.
 
 ## Requirements Discussion
 

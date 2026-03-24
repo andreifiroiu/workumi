@@ -1,16 +1,16 @@
-# Laborobo - Section Implementation Prompt Template
+# Workumi - Section Implementation Prompt Template
 
 Use this template when implementing sections incrementally (one at a time).
 
 ---
 
-I need you to implement the **[SECTION NAME]** section of Laborobo, an AI-powered work orchestration platform.
+I need you to implement the **[SECTION NAME]** section of Workumi, an AI-powered work orchestration platform.
 
 ## Context
 
-I'm building Laborobo incrementally, one section at a time. The foundation (project setup, design system, routing, and application shell) is already complete.
+I'm building Workumi incrementally, one section at a time. The foundation (project setup, design system, routing, and application shell) is already complete.
 
-**What Laborobo Does**: Turns messy work requests into structured deliverables with AI agents handling drafts while humans approve outcomes. Built for small service teams (2-10 people).
+**What Workumi Does**: Turns messy work requests into structured deliverables with AI agents handling drafts while humans approve outcomes. Built for small service teams (2-10 people).
 
 **Core Workflow**: Parties → Projects → Work Orders → Tasks → Deliverables
 

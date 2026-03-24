@@ -1,10 +1,10 @@
-# Laborobo - One-Shot Implementation Prompt
+# Workumi - One-Shot Implementation Prompt
 
-I need you to implement Laborobo, an AI-powered work orchestration platform for small service teams.
+I need you to implement Workumi, an AI-powered work orchestration platform for small service teams.
 
 ## About This Project
 
-Laborobo turns messy requests into structured deliverables, with AI agents handling drafts, analysis, and busywork while humans approve outcomes. It's designed for teams of 2-10 people who need to maintain quality without formal processes or specialist hires.
+Workumi turns messy requests into structured deliverables, with AI agents handling drafts, analysis, and busywork while humans approve outcomes. It's designed for teams of 2-10 people who need to maintain quality without formal processes or specialist hires.
 
 **Core Workflow**: Parties → Projects → Work Orders → Tasks → Deliverables
 **Key Feature**: Human-in-the-loop approvals - AI agents generate drafts but only humans can deliver work to clients
@@ -190,4 +190,4 @@ I'm providing you with:
 - Detailed implementation instructions
 - Test specifications for TDD
 
-Please let me know your tech stack decisions, then I'll provide the implementation instructions and we can begin building Laborobo!
+Please let me know your tech stack decisions, then I'll provide the implementation instructions and we can begin building Workumi!

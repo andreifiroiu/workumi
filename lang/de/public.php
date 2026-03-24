@@ -16,12 +16,12 @@ return [
 
     // Landing page
     'home' => [
-        'title' => 'Laborobo &ndash; KI-gestütztes Arbeitsmanagement für kleine Teams',
+        'title' => 'Workumi &ndash; KI-gestütztes Arbeitsmanagement für kleine Teams',
         'description' => 'KI-gestütztes Arbeitsmanagement für kleine Teams. Verwandle Chaos in strukturierte, profitable Abläufe.',
         'badge' => 'Arbeitsmanagement, das wirklich für kleine Teams funktioniert',
         'headline' => 'Schluss mit Jonglieren. Anfangen',
         'headline_accent' => 'zu liefern.',
-        'subheadline' => 'Laborobo gibt kleinen Teams die Struktur eines Großunternehmens &ndash; ohne den Overhead. KI-Agenten übernehmen die Routinearbeit, damit du dich auf das Wesentliche konzentrieren kannst.',
+        'subheadline' => 'Workumi gibt kleinen Teams die Struktur eines Großunternehmens &ndash; ohne den Overhead. KI-Agenten übernehmen die Routinearbeit, damit du dich auf das Wesentliche konzentrieren kannst.',
         'cta_primary' => 'Kostenlos starten',
         'cta_secondary' => 'So funktioniert es',
 
@@ -64,7 +64,7 @@ return [
         'social_proof' => 'Vertraut von kleinen Teams, die über ihrer Gewichtsklasse kämpfen',
 
         'pricing_title' => 'Einfache Preise',
-        'pricing_subtitle' => 'Laborobo ist in der öffentlichen Beta. Alles ist kostenlos, während wir gemeinsam mit frühen Nutzern bauen.',
+        'pricing_subtitle' => 'Workumi ist in der öffentlichen Beta. Alles ist kostenlos, während wir gemeinsam mit frühen Nutzern bauen.',
         'pricing_badge' => 'Öffentliche Beta',
         'pricing_price' => '0 €',
         'pricing_description' => 'Voller Zugang zu allen Funktionen. Keine Kreditkarte erforderlich. Keine Nutzungslimits während der Beta.',
@@ -74,7 +74,7 @@ return [
         'pricing_feature_4' => 'Bis zu 10 Teammitglieder',
         'pricing_cta' => 'Beta beitreten — Kostenlos',
         'pricing_note' => 'Bezahlpläne kommen später. Beta-Nutzer erhalten Early-Adopter-Preise.',
-        'pricing_ai_disclaimer' => 'KI-Funktionen erfordern Ihren eigenen API-Schlüssel (z.B. OpenAI). Die KI-Nutzungskosten werden direkt vom Anbieter abgerechnet, nicht von Laborobo.',
+        'pricing_ai_disclaimer' => 'KI-Funktionen erfordern Ihren eigenen API-Schlüssel (z.B. OpenAI). Die KI-Nutzungskosten werden direkt vom Anbieter abgerechnet, nicht von Workumi.',
 
         'cta_title' => 'Bereit, Ordnung ins Chaos zu bringen?',
         'cta_text' => 'Starte kostenlos. Keine Kreditkarte erforderlich. Richte dein erstes Projekt in Minuten ein.',
@@ -82,10 +82,10 @@ return [
 
     // Agencies use case
     'agencies' => [
-        'title' => 'Laborobo für Agenturen &ndash; KI-Arbeitsmanagement für Kreativ- & Marketing-Teams',
+        'title' => 'Workumi für Agenturen &ndash; KI-Arbeitsmanagement für Kreativ- & Marketing-Teams',
         'badge' => 'Für Kreativ- & Marketing-Agenturen',
         'headline' => 'Dein 5-Personen-Team kann liefern wie eine 20-Personen-Agentur',
-        'subheadline' => 'Kleine Agenturen verlieren Geld durch Scope Creep, verpassen Deadlines wegen Kompetenzlücken und brennen aus, weil es keine wiederholbaren Prozesse gibt. Laborobo löst alle drei Probleme.',
+        'subheadline' => 'Kleine Agenturen verlieren Geld durch Scope Creep, verpassen Deadlines wegen Kompetenzlücken und brennen aus, weil es keine wiederholbaren Prozesse gibt. Workumi löst alle drei Probleme.',
         'cta' => 'Kostenlose Testversion starten',
 
         'pain_title' => 'Der Agenturkampf ist real',
@@ -96,7 +96,7 @@ return [
         'pain_3_title' => 'Keine SOPs, keine Konsistenz',
         'pain_3_text' => 'Jedes Projekt startet bei null. Einarbeitung ist Stammwissen. Qualität hängt davon ab, wer gerade arbeitet, nicht von einem wiederholbaren Prozess.',
 
-        'solutions_title' => 'Wie Laborobo Agenturen zum Erfolg verhilft',
+        'solutions_title' => 'Wie Workumi Agenturen zum Erfolg verhilft',
         'sol_1_label' => 'KI-Teammitglieder',
         'sol_1_title' => 'Kompetenzlücken mit KI-Agenten füllen',
         'sol_1_text' => 'KI-Agenten agieren als teilzeitliche Teammitglieder &ndash; sie entwerfen Texte, triagieren Kundenanfragen und bereiten Statusupdates vor. Sie befolgen eure Playbooks und eskalieren an Menschen, wenn Urteilsvermögen gefragt ist.',
@@ -111,16 +111,16 @@ return [
         'sol_3_placeholder' => 'Playbook-Vorlagenansicht',
 
         'cta_title' => 'Hör auf, Geld liegen zu lassen',
-        'cta_text' => 'Schließ dich Agenturen an, die Laborobo nutzen, um bessere Arbeit zu liefern, ihre Margen zu schützen und ohne Neueinstellungen zu wachsen.',
+        'cta_text' => 'Schließ dich Agenturen an, die Workumi nutzen, um bessere Arbeit zu liefern, ihre Margen zu schützen und ohne Neueinstellungen zu wachsen.',
         'cta_button' => 'Kostenlos starten',
     ],
 
     // Consultancies use case
     'consultancies' => [
-        'title' => 'Laborobo für Beratungen &ndash; KI-Arbeitsmanagement für IT- & MSP-Teams',
+        'title' => 'Workumi für Beratungen &ndash; KI-Arbeitsmanagement für IT- & MSP-Teams',
         'badge' => 'Für IT-Beratungen & MSPs',
         'headline' => 'Hör auf, Kontext zwischen Aufträgen zu verlieren',
-        'subheadline' => 'Beratungen leben von Wissen. Wenn dieses Wissen nur in den Köpfen der Leute, in E-Mail-Verläufen und verstreuten Dokumenten existiert, leidet die Profitabilität. Laborobo erfasst alles an einem Ort.',
+        'subheadline' => 'Beratungen leben von Wissen. Wenn dieses Wissen nur in den Köpfen der Leute, in E-Mail-Verläufen und verstreuten Dokumenten existiert, leidet die Profitabilität. Workumi erfasst alles an einem Ort.',
         'cta' => 'Kostenlose Testversion starten',
 
         'pain_title' => 'Was dich Geld kostet',
@@ -131,7 +131,7 @@ return [
         'pain_3_title' => 'Profitabilitätsblindheit',
         'pain_3_text' => 'Du bietest Festpreisaufträge an, aber erfasst die Zeit nur grob. Am Ende weißt du nicht, ob du Geld verdient hast &ndash; du hoffst es nur.',
 
-        'solutions_title' => 'Wie Laborobo Beratungen zum Erfolg führt',
+        'solutions_title' => 'Wie Workumi Beratungen zum Erfolg führt',
         'sol_1_label' => 'SOP-Engine',
         'sol_1_title' => 'Stammwissen in Unternehmenswissen verwandeln',
         'sol_1_text' => 'Erstelle Playbooks, die die Prozesse deiner besten Berater festhalten. Checklisten, Validierungsschritte und Qualitäts-Gates sorgen für Konsistenz bei jedem Auftrag &ndash; unabhängig davon, wer eingesetzt ist.',
@@ -152,10 +152,10 @@ return [
 
     // Operations use case
     'operations' => [
-        'title' => 'Laborobo für den Betrieb &ndash; KI-Arbeitsmanagement für interne Ops-Teams',
+        'title' => 'Workumi für den Betrieb &ndash; KI-Arbeitsmanagement für interne Ops-Teams',
         'badge' => 'Für interne Ops- & Außendienst-Teams',
         'headline' => 'Verwandle chaotische Anfragen in strukturierte, nachverfolgbare Arbeit',
-        'subheadline' => 'Interne Ops-Teams ertrinken in Ad-hoc-Anfragen, unklaren Übergaben und null Verantwortlichkeit. Laborobo gibt dir eine strukturierte Aufnahme, klare Zuständigkeiten und eine Definition of Done für jedes Arbeitsstück.',
+        'subheadline' => 'Interne Ops-Teams ertrinken in Ad-hoc-Anfragen, unklaren Übergaben und null Verantwortlichkeit. Workumi gibt dir eine strukturierte Aufnahme, klare Zuständigkeiten und eine Definition of Done für jedes Arbeitsstück.',
         'cta' => 'Kostenlose Testversion starten',
 
         'pain_title' => 'Der Ops-Team-Schmerz, den du nur zu gut kennst',
@@ -166,7 +166,7 @@ return [
         'pain_3_title' => 'Keine Definition of Done',
         'pain_3_text' => 'Arbeit wird „größtenteils fertig", aber nie formell abgeschlossen. Es gibt keinen Abnahmeprozess, keine Lieferübergabe und keinen Audit-Trail.',
 
-        'solutions_title' => 'Wie Laborobo Ordnung in den Betrieb bringt',
+        'solutions_title' => 'Wie Workumi Ordnung in den Betrieb bringt',
         'sol_1_label' => 'Dispatcher-Agent',
         'sol_1_title' => 'KI triagiert und leitet eingehende Anfragen weiter',
         'sol_1_text' => 'Der Dispatcher-Agent empfängt Anfragen aus jedem Kanal, extrahiert Umfang und Dringlichkeit, erstellt strukturierte Arbeitsaufträge und leitet sie an das richtige Teammitglied weiter. Schluss mit Klebezettel-Management.',
@@ -177,7 +177,7 @@ return [
         'sol_2_placeholder' => 'Freigabe-Workflow-Stufen',
         'sol_3_label' => 'CRM-Optional',
         'sol_3_title' => 'Funktioniert mit oder ohne deine bestehenden Tools',
-        'sol_3_text' => 'Laborobo ersetzt nicht dein CRM oder Ticketing-System &ndash; es arbeitet daneben. Nutze es als internes Ops-Rückgrat und behalte kundenorientierte Tools bei. Oder nutze es als All-in-One-Lösung.',
+        'sol_3_text' => 'Workumi ersetzt nicht dein CRM oder Ticketing-System &ndash; es arbeitet daneben. Nutze es als internes Ops-Rückgrat und behalte kundenorientierte Tools bei. Oder nutze es als All-in-One-Lösung.',
         'sol_3_placeholder' => 'Integrationsdiagramm',
 
         'cta_title' => 'Gib deinem Ops-Team die Struktur, die es verdient',

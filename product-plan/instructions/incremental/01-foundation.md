@@ -1,6 +1,6 @@
 # Milestone 1: Foundation & Shell
 
-This milestone adapts your existing Laravel React starter kit to implement the Laborobo application structure.
+This milestone adapts your existing Laravel React starter kit to implement the Workumi application structure.
 
 ## Overview
 
@@ -25,7 +25,7 @@ This milestone adapts your existing Laravel React starter kit to implement the L
 
 ## Step 1: Update Design Tokens
 
-Update **resources/css/app.css** to include Laborobo design tokens:
+Update **resources/css/app.css** to include Workumi design tokens:
 
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -91,7 +91,7 @@ npm install lucide-react date-fns
 
 ## Step 3: Add Application Types
 
-Create **resources/js/types/laborobo.ts**:
+Create **resources/js/types/workumi.ts**:
 
 ```typescript
 // Extend existing User type from starter kit
@@ -161,7 +161,7 @@ export interface Task {
 Update **resources/js/types/index.d.ts** (or create if it doesn't exist):
 
 ```typescript
-import { User, Organization } from './laborobo'
+import { User, Organization } from './workumi'
 
 export interface User extends User {
   // Keep any existing User properties from starter kit
@@ -169,7 +169,7 @@ export interface User extends User {
   email_verified_at?: string
 }
 
-// Extend PageProps to include Laborobo-specific data
+// Extend PageProps to include Workumi-specific data
 export type PageProps
   T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -290,7 +290,7 @@ Create **resources/js/Components/Shell/** directory with these files:
 
 ```tsx
 import React, { PropsWithChildren, useState } from 'react'
-import { NavigationItem, User, Organization } from '@/types/laborobo'
+import { NavigationItem, User, Organization } from '@/types/workumi'
 import MainNav from './MainNav'
 import UserMenu from './UserMenu'
 import { Menu } from 'lucide-react'
@@ -326,7 +326,7 @@ export default function AppShell({
         <div className="flex-1 flex flex-col overflow-y-auto">
           <div className="flex items-center justify-center h-16 px-4 border-b border-neutral-200 dark:border-neutral-800">
             <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">
-              Laborobo
+              Workumi
             </h1>
           </div>
           <MainNav items={navigationItems} onNavigate={onNavigate} />
@@ -353,7 +353,7 @@ export default function AppShell({
           <aside className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-neutral-950 z-50 flex flex-col lg:hidden">
             <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200 dark:border-neutral-800">
               <h1 className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                Laborobo
+                Workumi
               </h1>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -390,7 +390,7 @@ export default function AppShell({
             <Menu className="w-5 h-5" />
           </button>
           <h1 className="ml-4 text-xl font-bold text-primary-600 dark:text-primary-400">
-            Laborobo
+            Workumi
           </h1>
         </header>
 
@@ -407,7 +407,7 @@ export default function AppShell({
 ```tsx
 import React from 'react'
 import { Link } from '@inertiajs/react'
-import { NavigationItem } from '@/types/laborobo'
+import { NavigationItem } from '@/types/workumi'
 
 interface MainNavProps {
   items: NavigationItem[]
@@ -452,7 +452,7 @@ export default function MainNav({ items, onNavigate }: MainNavProps) {
 
 ```tsx
 import React, { useState, useRef, useEffect } from 'react'
-import { User, Organization } from '@/types/laborobo'
+import { User, Organization } from '@/types/workumi'
 import { ChevronDown, Check, User, LogOut } from 'lucide-react'
 
 interface UserMenuProps {
@@ -575,7 +575,7 @@ Create **resources/js/Layouts/AppLayout.tsx**:
 import React, { PropsWithChildren } from 'react'
 import { usePage, router } from '@inertiajs/react'
 import { PageProps } from '@/types'
-import { NavigationItem } from '@/types/laborobo'
+import { NavigationItem } from '@/types/workumi'
 import { AppShell } from '@/Components/Shell'
 import { Home, Briefcase, Inbox, BookOpen, Users, BarChart3, Settings } from 'lucide-react'
 
@@ -671,7 +671,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Laborobo application routes
+    // Workumi application routes
     Route::get('/today', fn() => Inertia::render('Today/Index'))->name('today');
     Route::get('/work', fn() => Inertia::render('Work/Index'))->name('work');
     Route::get('/inbox', fn() => Inertia::render('Inbox/Index'))->name('inbox');
@@ -808,7 +808,7 @@ resources/
 │   │   ├── Profile/ (existing from starter kit)
 │   │   └── ... (other existing pages)
 │   ├── types/
-│   │   ├── laborobo.ts (new)
+│   │   ├── workumi.ts (new)
 │   │   ├── index.d.ts (updated)
 │   │   └── global.d.ts (from starter kit)
 │   └── app.tsx (updated progress color)
@@ -818,7 +818,7 @@ resources/
 
 1. **New AppLayout** - Your app uses `AppLayout` with sidebar, starter kit auth pages still use their `AuthenticatedLayout`/`GuestLayout`
 2. **Design tokens** - Purple/teal color scheme added to Tailwind
-3. **New types** - Laborobo-specific types for organizations, navigation, etc.
+3. **New types** - Workumi-specific types for organizations, navigation, etc.
 4. **7 new routes** - Your application sections
 5. **User preferences** - Added timezone/language to users table
 

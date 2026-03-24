@@ -15,7 +15,7 @@ use NeuronAI\Tools\ToolProperty;
 /**
  * Bridges App\Contracts\Tools\ToolInterface to NeuronAI\Tools\Tool.
  *
- * Converts Laborobo tool definitions into NeuronAI-compatible tools,
+ * Converts Workumi tool definitions into NeuronAI-compatible tools,
  * routing execution through ToolGateway to preserve permission/budget/audit enforcement.
  */
 class NeuronToolAdapter

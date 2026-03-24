@@ -1,6 +1,6 @@
 # Application Shell
 
-The Laborobo application shell provides a persistent navigation layout with sidebar navigation, user menu, and organization switching capabilities.
+The Workumi application shell provides a persistent navigation layout with sidebar navigation, user menu, and organization switching capabilities.
 
 ## Overview
 
@@ -123,7 +123,7 @@ Dropdown menu for user profile and organization management. Used internally by A
 │  ┌─────────────────┐ ┌──────────────────────┐  │
 │  │                 │ │                      │  │
 │  │   Logo Area     │ │                      │  │
-│  │   (Laborobo)    │ │                      │  │
+│  │   (Workumi)    │ │                      │  │
 │  │                 │ │                      │  │
 │  ├─────────────────┤ │    Main Content      │  │
 │  │                 │ │      Area            │  │

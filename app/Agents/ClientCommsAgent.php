@@ -72,7 +72,7 @@ class ClientCommsAgent extends BaseAgent
     }
 
     /**
-     * Get the Laborobo tools available to the Client Comms Agent.
+     * Get the Workumi tools available to the Client Comms Agent.
      *
      * Returns communication-specific tools filtered through ToolGateway permissions.
      *

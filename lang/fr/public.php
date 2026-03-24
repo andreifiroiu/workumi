@@ -16,12 +16,12 @@ return [
 
     // Page d'accueil
     'home' => [
-        'title' => 'Laborobo &ndash; Gestion du travail par IA pour petites équipes',
+        'title' => 'Workumi &ndash; Gestion du travail par IA pour petites équipes',
         'description' => 'Gestion du travail propulsée par l\'IA pour les petites équipes. Transformez le chaos en opérations structurées et rentables.',
         'badge' => 'La gestion du travail qui fonctionne vraiment pour les petites équipes',
         'headline' => 'Arrêtez de jongler. Commencez à',
         'headline_accent' => 'livrer.',
-        'subheadline' => 'Laborobo offre aux petites équipes la structure d\'une grande organisation sans la lourdeur. Les agents IA s\'occupent du travail ingrat pour que vous puissiez vous concentrer sur l\'essentiel.',
+        'subheadline' => 'Workumi offre aux petites équipes la structure d\'une grande organisation sans la lourdeur. Les agents IA s\'occupent du travail ingrat pour que vous puissiez vous concentrer sur l\'essentiel.',
         'cta_primary' => 'Commencer gratuitement',
         'cta_secondary' => 'Voir comment ça marche',
 
@@ -64,7 +64,7 @@ return [
         'social_proof' => 'Adopté par les petites équipes qui visent plus haut',
 
         'pricing_title' => 'Tarification simple',
-        'pricing_subtitle' => 'Laborobo est en bêta publique. Tout est gratuit pendant que nous construisons aux côtés des premiers utilisateurs.',
+        'pricing_subtitle' => 'Workumi est en bêta publique. Tout est gratuit pendant que nous construisons aux côtés des premiers utilisateurs.',
         'pricing_badge' => 'Bêta Publique',
         'pricing_price' => '0 €',
         'pricing_description' => 'Accès complet à toutes les fonctionnalités. Sans carte bancaire. Sans limites d\'utilisation pendant la bêta.',
@@ -74,7 +74,7 @@ return [
         'pricing_feature_4' => 'Jusqu\'à 10 membres d\'équipe',
         'pricing_cta' => 'Rejoindre la Bêta — C\'est Gratuit',
         'pricing_note' => 'Nous introduirons des plans payants plus tard. Les utilisateurs bêta bénéficieront de tarifs early-adopter.',
-        'pricing_ai_disclaimer' => 'Les fonctionnalités IA nécessitent votre propre clé API (ex. OpenAI). Les coûts d\'utilisation de l\'IA sont facturés directement par le fournisseur, pas par Laborobo.',
+        'pricing_ai_disclaimer' => 'Les fonctionnalités IA nécessitent votre propre clé API (ex. OpenAI). Les coûts d\'utilisation de l\'IA sont facturés directement par le fournisseur, pas par Workumi.',
 
         'cta_title' => 'Prêt à mettre de l\'ordre dans le chaos ?',
         'cta_text' => 'Commencez gratuitement. Pas de carte de crédit requise. Configurez votre premier projet en quelques minutes.',
@@ -82,10 +82,10 @@ return [
 
     // Cas d'usage agences
     'agencies' => [
-        'title' => 'Laborobo pour les agences &ndash; Gestion du travail par IA pour les équipes créatives et marketing',
+        'title' => 'Workumi pour les agences &ndash; Gestion du travail par IA pour les équipes créatives et marketing',
         'badge' => 'Pour les agences créatives et marketing',
         'headline' => 'Votre équipe de 5 peut livrer comme une agence de 20',
-        'subheadline' => 'Les petites agences perdent de l\'argent à cause du dépassement de périmètre, ratent des délais par manque de compétences et s\'épuisent faute de processus répétables. Laborobo règle ces trois problèmes.',
+        'subheadline' => 'Les petites agences perdent de l\'argent à cause du dépassement de périmètre, ratent des délais par manque de compétences et s\'épuisent faute de processus répétables. Workumi règle ces trois problèmes.',
         'cta' => 'Commencer l\'essai gratuit',
 
         'pain_title' => 'La galère des agences est bien réelle',
@@ -96,7 +96,7 @@ return [
         'pain_3_title' => 'Pas de procédures, pas de constance',
         'pain_3_text' => 'Chaque projet repart de zéro. L\'intégration repose sur le savoir oral. La qualité dépend de qui travaille ce jour-là, pas d\'un processus répétable.',
 
-        'solutions_title' => 'Comment Laborobo aide les agences à gagner',
+        'solutions_title' => 'Comment Workumi aide les agences à gagner',
         'sol_1_label' => 'Membres d\'équipe IA',
         'sol_1_title' => 'Comblez les lacunes avec des agents IA',
         'sol_1_text' => 'Les agents IA agissent comme des membres d\'équipe à temps partiel : rédaction, tri des demandes clients, préparation des points d\'avancement. Ils suivent vos playbooks et escaladent vers un humain quand un jugement est nécessaire.',
@@ -111,16 +111,16 @@ return [
         'sol_3_placeholder' => 'Vue du modèle de playbook',
 
         'cta_title' => 'Arrêtez de laisser de l\'argent sur la table',
-        'cta_text' => 'Rejoignez les agences qui utilisent Laborobo pour livrer un meilleur travail, protéger leurs marges et croître sans embaucher.',
+        'cta_text' => 'Rejoignez les agences qui utilisent Workumi pour livrer un meilleur travail, protéger leurs marges et croître sans embaucher.',
         'cta_button' => 'Commencer gratuitement',
     ],
 
     // Cas d'usage cabinets de conseil
     'consultancies' => [
-        'title' => 'Laborobo pour les cabinets de conseil &ndash; Gestion du travail par IA pour les équipes IT et MSP',
+        'title' => 'Workumi pour les cabinets de conseil &ndash; Gestion du travail par IA pour les équipes IT et MSP',
         'badge' => 'Pour les cabinets de conseil IT et MSP',
         'headline' => 'Arrêtez de perdre le contexte entre les missions',
-        'subheadline' => 'Les cabinets de conseil fonctionnent grâce au savoir. Quand ce savoir reste dans les têtes, les fils d\'e-mails et des documents éparpillés, la rentabilité en souffre. Laborobo centralise tout au même endroit.',
+        'subheadline' => 'Les cabinets de conseil fonctionnent grâce au savoir. Quand ce savoir reste dans les têtes, les fils d\'e-mails et des documents éparpillés, la rentabilité en souffre. Workumi centralise tout au même endroit.',
         'cta' => 'Commencer l\'essai gratuit',
 
         'pain_title' => 'Ce qui vous coûte de l\'argent',
@@ -131,7 +131,7 @@ return [
         'pain_3_title' => 'Aucune visibilité sur la rentabilité',
         'pain_3_text' => 'Vous proposez des missions au forfait mais suivez le temps de manière approximative. À la fin, vous ne savez pas si vous avez gagné de l\'argent — vous l\'espérez simplement.',
 
-        'solutions_title' => 'Comment Laborobo aide les cabinets de conseil à prospérer',
+        'solutions_title' => 'Comment Workumi aide les cabinets de conseil à prospérer',
         'sol_1_label' => 'Moteur de procédures',
         'sol_1_title' => 'Transformez le savoir individuel en savoir institutionnel',
         'sol_1_text' => 'Créez des playbooks qui capturent les processus de vos meilleurs consultants. Checklists, étapes de validation et contrôles qualité garantissent la constance sur chaque mission, quel que soit le consultant affecté.',
@@ -152,10 +152,10 @@ return [
 
     // Cas d'usage opérations
     'operations' => [
-        'title' => 'Laborobo pour les opérations &ndash; Gestion du travail par IA pour les équipes internes',
+        'title' => 'Workumi pour les opérations &ndash; Gestion du travail par IA pour les équipes internes',
         'badge' => 'Pour les équipes internes et terrain',
         'headline' => 'Transformez les demandes désordonnées en travail structuré et traçable',
-        'subheadline' => 'Les équipes opérationnelles internes croulent sous les demandes ad-hoc, les transferts flous et l\'absence de responsabilité. Laborobo vous offre un processus d\'entrée structuré, une propriété claire et une définition de terminé pour chaque tâche.',
+        'subheadline' => 'Les équipes opérationnelles internes croulent sous les demandes ad-hoc, les transferts flous et l\'absence de responsabilité. Workumi vous offre un processus d\'entrée structuré, une propriété claire et une définition de terminé pour chaque tâche.',
         'cta' => 'Commencer l\'essai gratuit',
 
         'pain_title' => 'Le mal des équipes ops que vous connaissez trop bien',
@@ -166,7 +166,7 @@ return [
         'pain_3_title' => 'Pas de définition de terminé',
         'pain_3_text' => 'Le travail est « presque fini » mais jamais formellement achevé. Pas de processus de validation, pas de remise de livrables et pas de traçabilité.',
 
-        'solutions_title' => 'Comment Laborobo met de l\'ordre dans les opérations',
+        'solutions_title' => 'Comment Workumi met de l\'ordre dans les opérations',
         'sol_1_label' => 'Agent Dispatcher',
         'sol_1_title' => 'L\'IA trie et route les demandes entrantes',
         'sol_1_text' => 'L\'agent Dispatcher reçoit les demandes de n\'importe quel canal, extrait le périmètre et l\'urgence, crée des bons de travail structurés et les achemine vers le bon membre de l\'équipe. Fini la gestion sur post-it.',
@@ -177,7 +177,7 @@ return [
         'sol_2_placeholder' => 'Étapes du workflow d\'approbation',
         'sol_3_label' => 'CRM optionnel',
         'sol_3_title' => 'Fonctionne avec ou sans vos outils existants',
-        'sol_3_text' => 'Laborobo ne remplace pas votre CRM ou système de tickets — il les complète. Utilisez-le comme colonne vertébrale de vos opérations internes tout en gardant vos outils orientés client. Ou utilisez-le comme solution tout-en-un.',
+        'sol_3_text' => 'Workumi ne remplace pas votre CRM ou système de tickets — il les complète. Utilisez-le comme colonne vertébrale de vos opérations internes tout en gardant vos outils orientés client. Ou utilisez-le comme solution tout-en-un.',
         'sol_3_placeholder' => 'Schéma d\'intégration',
 
         'cta_title' => 'Donnez à votre équipe ops la structure qu\'elle mérite',

@@ -2,7 +2,7 @@
 
 ## Initial Description
 
-Implementation of the Human Checkpoint Workflow system for Laborobo. This feature establishes the Draft > Review > Approve > Deliver state machine for work items, with role-based transition permissions, RACI framework integration, and approval flow enforcement. The system ensures that AI agents can draft work but only humans can approve and deliver, maintaining quality oversight while capturing productivity gains from AI assistance.
+Implementation of the Human Checkpoint Workflow system for Workumi. This feature establishes the Draft > Review > Approve > Deliver state machine for work items, with role-based transition permissions, RACI framework integration, and approval flow enforcement. The system ensures that AI agents can draft work but only humans can approve and deliver, maintaining quality oversight while capturing productivity gains from AI assistance.
 
 This is item #14 on the product roadmap: "Human Checkpoint Workflow - Draft > Review > Approve > Deliver state machine for work items, role-based transition permissions, and approval flow enforcement."
 

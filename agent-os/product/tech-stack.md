@@ -1,6 +1,6 @@
 # Tech Stack
 
-This document defines the complete technical stack for Laborobo, an AI-powered work orchestration platform built on Laravel with React/Inertia.js.
+This document defines the complete technical stack for Workumi, an AI-powered work orchestration platform built on Laravel with React/Inertia.js.
 
 ## Framework and Runtime
 
@@ -115,7 +115,7 @@ These components are noted for future implementation but not immediate prioritie
 
 Sidebar navigation with the following structure:
 - **Sidebar width:** 280px on desktop
-- **Logo area:** Top of sidebar with Laborobo branding
+- **Logo area:** Top of sidebar with Workumi branding
 - **Navigation items:** Vertically stacked below logo
 - **User menu:** Pinned at bottom of sidebar
 - **Content area:** Takes remaining horizontal space to the right
@@ -142,7 +142,7 @@ Sidebar navigation with the following structure:
 
 # Typography
 
-Laborobo uses two carefully selected Google Fonts that provide excellent readability, modern aesthetics, and strong support for UI design.
+Workumi uses two carefully selected Google Fonts that provide excellent readability, modern aesthetics, and strong support for UI design.
 
 ## Font Families
 
@@ -189,7 +189,7 @@ IBM Plex Mono is a monospaced typeface that pairs beautifully with Inter. It fea
 
 ## Type Scale
 
-Laborobo uses a consistent type scale across the application:
+Workumi uses a consistent type scale across the application:
 
 | Token | Size | Line Height | Use Case |
 |-------|------|-------------|----------|
@@ -397,7 +397,7 @@ Then configure in your Tailwind CSS (tokens.css):
 
 # Tailwind Color Palette
 
-Laborobo uses three carefully selected Tailwind color palettes to create a professional, trustworthy interface that supports both light and dark modes.
+Workumi uses three carefully selected Tailwind color palettes to create a professional, trustworthy interface that supports both light and dark modes.
 
 ## Primary Color: Indigo
 

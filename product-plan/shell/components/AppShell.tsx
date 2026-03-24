@@ -90,7 +90,7 @@ export function AppShell({
         {/* Logo area */}
         <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
           <span className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">
-            Laborobo
+            Workumi
           </span>
         </div>
 

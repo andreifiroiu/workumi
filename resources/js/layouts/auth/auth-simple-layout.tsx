@@ -24,7 +24,7 @@ export default function AuthSimpleLayout({
                             <div className="mb-1 flex items-center justify-center">
                                 <img
                                     src="/logo.svg"
-                                    alt="Laborobo"
+                                    alt="Workumi"
                                     className="h-12 w-auto"
                                 />
                             </div>

@@ -22,7 +22,7 @@ Extend the existing hour-based tracking system to support cost-based budgeting, 
 
 ## Context
 
-This is a Laravel 12/React 19/Inertia.js application (Laborobo) for work orchestration. The product mission emphasizes helping small service teams (2-10 people) understand profitability - currently described as "profitability based on vibes, not data."
+This is a Laravel 12/React 19/Inertia.js application (Workumi) for work orchestration. The product mission emphasizes helping small service teams (2-10 people) understand profitability - currently described as "profitability based on vibes, not data."
 
 The existing TimeEntry model tracks:
 - user_id, task_id, team_id

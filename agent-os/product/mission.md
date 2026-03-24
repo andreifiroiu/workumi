@@ -1,7 +1,7 @@
 # Product Mission
 
 ## Pitch
-Laborobo is an AI-powered work orchestration platform that helps small service teams (2-10 people) deliver projects with limited staff and uneven skill coverage by modeling work as a structured graph where AI agents act as integrated fractional team members—pushing work forward through human-approved checkpoints, not as chatbots bolted on.
+Workumi is an AI-powered work orchestration platform that helps small service teams (2-10 people) deliver projects with limited staff and uneven skill coverage by modeling work as a structured graph where AI agents act as integrated fractional team members—pushing work forward through human-approved checkpoints, not as chatbots bolted on.
 
 **Tagline:** "AI-powered work orchestration for small teams—turn requests into deliverables, with agents doing the busywork and humans approving the outcomes."
 
@@ -67,32 +67,32 @@ Small teams often don't track time accurately, estimate based on gut feel, and d
 ## Differentiators
 
 ### AI Agents as Resources, Not Chatbots
-Unlike productivity tools with AI features bolted on, Laborobo treats AI agents as actual team resources. They're assigned to work items, have specific domains of expertise, operate through controlled tool access, and follow your SOPs. They're not generic chatbots—they're specialized fractional employees integrated into your workflow.
+Unlike productivity tools with AI features bolted on, Workumi treats AI agents as actual team resources. They're assigned to work items, have specific domains of expertise, operate through controlled tool access, and follow your SOPs. They're not generic chatbots—they're specialized fractional employees integrated into your workflow.
 
 This results in agents that understand your business context, follow your processes, and deliver work that feels like it came from a team member, not a generic AI assistant.
 
 ### Human Checkpoints Are Non-Negotiable
-Unlike automation platforms that try to eliminate humans, Laborobo enforces human oversight at critical moments. Agents can Draft, but only humans can Approve and Deliver. This prevents runaway automation disasters while still capturing 80% of the time savings from AI-generated first drafts.
+Unlike automation platforms that try to eliminate humans, Workumi enforces human oversight at critical moments. Agents can Draft, but only humans can Approve and Deliver. This prevents runaway automation disasters while still capturing 80% of the time savings from AI-generated first drafts.
 
 This results in confident adoption—teams trust the system because humans remain in control, while still benefiting from massive productivity gains on the busywork.
 
 ### CRM is Optional, Not Required
-Unlike project management tools that assume you're a customer-facing business, Laborobo works perfectly for internal ops teams, IT departments, and maintenance crews who don't need CRM concepts. The core work graph (Projects > Work Orders > Tasks) functions independently. Add the CRM module only if you need client management, pipelines, and SLAs.
+Unlike project management tools that assume you're a customer-facing business, Workumi works perfectly for internal ops teams, IT departments, and maintenance crews who don't need CRM concepts. The core work graph (Projects > Work Orders > Tasks) functions independently. Add the CRM module only if you need client management, pipelines, and SLAs.
 
 This results in faster adoption and simpler workflows for teams that just need to organize internal work, without forcing them into a "customer-centric" mental model.
 
 ### Tool Gateway Architecture
-Unlike AI agents with open-ended tool access, Laborobo agents operate only through controlled, auditable tools defined by the Tool Gateway. Every agent action is logged, constrained by permissions, and validated against business rules. No agent can "go rogue" or access systems outside its defined toolset.
+Unlike AI agents with open-ended tool access, Workumi agents operate only through controlled, auditable tools defined by the Tool Gateway. Every agent action is logged, constrained by permissions, and validated against business rules. No agent can "go rogue" or access systems outside its defined toolset.
 
 This results in enterprise-grade safety and auditability while maintaining agent autonomy within guardrails.
 
 ### SOP-Driven AI
-Unlike generic AI that operates on general knowledge, Laborobo agents follow your documented SOPs, templates, and checklists. The QA/Compliance Agent validates outputs against your standards, not generic best practices. Your playbooks guide agent behavior.
+Unlike generic AI that operates on general knowledge, Workumi agents follow your documented SOPs, templates, and checklists. The QA/Compliance Agent validates outputs against your standards, not generic best practices. Your playbooks guide agent behavior.
 
 This results in output that matches your brand voice, follows your quality standards, and respects your business rules—not generic AI-generated content.
 
 ### Outcome-Based Pricing Option
-Unlike seat-based SaaS that charges per person, Laborobo offers an optional "Autopilot" pricing tier where you pay per work order or deliverable completed. This aligns pricing with value delivered rather than team size, making AI agents feel like contractors you pay for output, not software you pay to access.
+Unlike seat-based SaaS that charges per person, Workumi offers an optional "Autopilot" pricing tier where you pay per work order or deliverable completed. This aligns pricing with value delivered rather than team size, making AI agents feel like contractors you pay for output, not software you pay to access.
 
 This results in pricing that scales with business results, not arbitrary seat counts, making growth more predictable and profitable.
 

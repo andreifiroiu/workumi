@@ -22,13 +22,13 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - Add `scopeWhereUserHasRaciRole($query, int $userId, bool $excludeInformed = true)`
     - Add `scopeWhereUserIsAccountable($query, int $userId)`
     - Add `scopeWhereUserIsResponsible($query, int $userId)`
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/app/Models/Project.php`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/app/Models/Project.php`
   - [x] 1.3 Add RACI query scope methods to WorkOrder model
     - Add `scopeWhereUserHasRaciRole($query, int $userId, bool $excludeInformed = true)`
     - Add `scopeWhereUserIsAccountable($query, int $userId)`
     - Add `scopeWhereUserIsResponsible($query, int $userId)`
     - Add `scopeInReviewWhereUserIsAccountable($query, int $userId)` for "awaiting review" metric
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/app/Models/WorkOrder.php`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/app/Models/WorkOrder.php`
   - [x] 1.4 Add helper method to get user RACI roles for an item
     - Add `getUserRaciRoles(int $userId): array` to Project model
     - Add `getUserRaciRoles(int $userId): array` to WorkOrder model
@@ -59,7 +59,7 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - Add `getMyWorkData(User $user, Team $team, bool $showInformed = false): array`
     - Include projects, work orders, and tasks with RACI role data
     - Include computed RACI roles for each item
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/app/Http/Controllers/Work/WorkController.php`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/app/Http/Controllers/Work/WorkController.php`
   - [x] 2.3 Add summary metrics calculation method
     - Add `getMyWorkMetrics(User $user, Team $team): array`
     - Calculate: accountable count, responsible count, awaiting review count, assigned tasks count
@@ -97,8 +97,8 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - Test MyWorkFilters component applies filters correctly
     - Test MyWorkTreeView renders hierarchical structure
   - [x] 3.2 Create RaciBadge component
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/raci-badge.tsx`
-    - Follow StatusBadge pattern from `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/status-badge.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/raci-badge.tsx`
+    - Follow StatusBadge pattern from `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/status-badge.tsx`
     - Implement color scheme:
       - Accountable: Purple/violet (`bg-violet-100 text-violet-700 dark:bg-violet-950/30 dark:text-violet-400`)
       - Responsible: Blue/indigo (`bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400`)
@@ -108,13 +108,13 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - Add tooltip with full role name on hover
     - Support multiple badges display (ordered by prominence)
   - [x] 3.3 Create MyWorkSubtabs component
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/my-work-subtabs.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/my-work-subtabs.tsx`
     - Tabs: Tasks (default), Work Orders, Projects, All
     - Styled to appear nested below main view tabs
     - Handle tab change callback to parent
     - Persist selection via user preference
   - [x] 3.4 Create MyWorkFilters component
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/my-work-filters.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/my-work-filters.tsx`
     - RACI role multi-select filter (Accountable, Responsible, Consulted, Informed)
     - Status filter (dynamic based on active subtab)
     - Due date range filter (This week, Next 7 days, Next 30 days, Overdue, Custom)
@@ -123,14 +123,14 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - "Clear all" button
     - "Show Informed" toggle switch
   - [x] 3.5 Create MyWorkMetrics component
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/my-work-metrics.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/my-work-metrics.tsx`
     - Reuse existing StatCard pattern from my-work-view.tsx
     - Display: Accountable items count, Responsible items count, Awaiting review count, Assigned tasks count
     - Make metrics clickable to apply corresponding filter
     - Use appropriate colors for each metric
   - [x] 3.6 Create MyWorkTreeView component for "All" subtab
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/my-work-tree-view.tsx`
-    - Follow ProjectTreeItem pattern from `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/project-tree-item.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/my-work-tree-view.tsx`
+    - Follow ProjectTreeItem pattern from `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/project-tree-item.tsx`
     - Render hierarchy: Projects > Work Orders > Tasks
     - Display RaciBadge at project and work order levels
     - Support expand/collapse functionality
@@ -164,13 +164,13 @@ This feature enhances the "My Work" subsection of the Work page to provide RACI-
     - Test "Show Informed" toggle persists and applies
     - Test metric click-to-filter behavior
   - [x] 4.2 Refactor MyWorkView component
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/components/work/my-work-view.tsx`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/components/work/my-work-view.tsx`
     - Add MyWorkMetrics at top (above subtabs)
     - Add MyWorkSubtabs below metrics
     - Add MyWorkFilters below subtabs
     - Conditionally render appropriate list/tree view based on active subtab
   - [x] 4.3 Update TypeScript types (ALREADY DONE in Task Group 3)
-    - File: `/Users/andreifiroiu/Dev/ValetSites/laborobo/resources/js/types/work.d.ts`
+    - File: `/Users/andreifiroiu/Dev/ValetSites/workumi/resources/js/types/work.d.ts`
     - Add `RaciRole` type: `'accountable' | 'responsible' | 'consulted' | 'informed'`
     - Extend Project type with `userRaciRoles?: RaciRole[]`
     - Extend WorkOrder type with `userRaciRoles?: RaciRole[]`

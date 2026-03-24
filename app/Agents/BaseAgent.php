@@ -18,10 +18,10 @@ use NeuronAI\Providers\AIProviderInterface;
 use RuntimeException;
 
 /**
- * Base agent class for Laborobo AI agents.
+ * Base agent class for Workumi AI agents.
  *
  * Extends NeuronAI\Agent to provide real LLM calls while layering
- * Laborobo-specific behaviors:
+ * Workumi-specific behaviors:
  * - Provider configuration based on GlobalAISettings and TeamApiKey
  * - System prompt loading from AgentConfiguration
  * - Tool filtering through ToolGateway permissions
@@ -118,7 +118,7 @@ abstract class BaseAgent extends Agent
      * Get the tools for NeuronAI.
      *
      * Called by NeuronAI's getTools() during chat().
-     * Returns Laborobo tools adapted to NeuronAI format, with
+     * Returns Workumi tools adapted to NeuronAI format, with
      * execution routed through ToolGateway for permission/budget/audit.
      *
      * @return array<\NeuronAI\Tools\ToolInterface>
@@ -136,7 +136,7 @@ abstract class BaseAgent extends Agent
     }
 
     /**
-     * Get the Laborobo tools available to this agent.
+     * Get the Workumi tools available to this agent.
      *
      * Returns tools filtered through ToolGateway permissions based on
      * the agent's configuration. Override in concrete agents to filter

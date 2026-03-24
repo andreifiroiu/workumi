@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? config('app.name', 'Laborobo') }}</title>
+    <title>{{ $title ?? config('app.name', 'Workumi') }}</title>
     <meta name="description" content="{{ $description ?? __('public.home.description') }}">
 
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -79,7 +79,7 @@
             <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
                 <div class="flex items-center gap-2">
                     <img src="/logo.svg" alt="{{ config('app.name') }}" class="h-6 w-auto opacity-60">
-                    <span class="text-sm text-muted-foreground">{{ __('public.nav.copyright', ['year' => date('Y'), 'name' => config('app.name', 'Laborobo')]) }}</span>
+                    <span class="text-sm text-muted-foreground">{{ __('public.nav.copyright', ['year' => date('Y'), 'name' => config('app.name', 'Workumi')]) }}</span>
                 </div>
                 <div class="flex gap-6">
                     <a href="/use-cases/agencies" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.agencies') }}</a>

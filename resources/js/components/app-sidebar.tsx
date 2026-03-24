@@ -67,7 +67,7 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Documentation',
-        href: 'https://laborobo.dev/docs',
+        href: 'https://workumi.dev/docs',
         icon: Folder,
     },
 ];

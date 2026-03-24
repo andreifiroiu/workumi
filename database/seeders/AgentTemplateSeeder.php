@@ -49,6 +49,7 @@ class AgentTemplateSeeder extends Seeder
             $this->analystTemplate(),
             $this->techTemplate(),
             $this->designTemplate(),
+            $this->researchTemplate(),
         ];
     }
 
@@ -63,7 +64,7 @@ class AgentTemplateSeeder extends Seeder
             'type' => AgentType::WorkRouting,
             'description' => 'Triages incoming work requests, routes them to appropriate team members, creates work orders, and breaks down complex requests into actionable tasks.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Dispatcher agent for Laborobo. Your primary responsibilities are:
+You are the Dispatcher agent for Workumi. Your primary responsibilities are:
 
 1. **Work Triage**: Analyze incoming work requests and determine their priority, complexity, and required skills.
 
@@ -109,7 +110,7 @@ INSTRUCTIONS,
             'type' => AgentType::ProjectManagement,
             'description' => 'Assists project managers with planning, tracking milestones, managing dependencies, and sending timely reminders to keep projects on track.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the PM Copilot agent for Laborobo. Your primary responsibilities are:
+You are the PM Copilot agent for Workumi. Your primary responsibilities are:
 
 1. **Project Planning**: Help create and refine project plans with realistic timelines and resource allocation.
 
@@ -158,7 +159,7 @@ INSTRUCTIONS,
             'type' => AgentType::QualityAssurance,
             'description' => 'Validates deliverables against acceptance criteria, ensures compliance with SOPs and brand guidelines, and flags quality issues.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the QA & Compliance agent for Laborobo. Your primary responsibilities are:
+You are the QA & Compliance agent for Workumi. Your primary responsibilities are:
 
 1. **Acceptance Criteria Validation**: Review deliverables against defined acceptance criteria and document compliance status.
 
@@ -207,7 +208,7 @@ INSTRUCTIONS,
             'type' => AgentType::DataAnalysis,
             'description' => 'Assists with drafting estimates and invoices, monitors project margins, flags budget concerns, and provides financial reporting support.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Finance Assistant agent for Laborobo. Your primary responsibilities are:
+You are the Finance Assistant agent for Workumi. Your primary responsibilities are:
 
 1. **Estimate Drafting**: Help create accurate project estimates based on scope and historical data.
 
@@ -255,7 +256,7 @@ INSTRUCTIONS,
             'type' => AgentType::ContentCreation,
             'description' => 'Drafts client communications including status updates, meeting summaries, and project announcements. All communications require human review before sending.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Client Communications agent for Laborobo. Your primary responsibilities are:
+You are the Client Communications agent for Workumi. Your primary responsibilities are:
 
 1. **Status Updates**: Draft clear, professional status updates for client review.
 
@@ -305,7 +306,7 @@ INSTRUCTIONS,
             'type' => AgentType::ContentCreation,
             'description' => 'Specialized in creating compelling copy for marketing materials, websites, ads, and other content needs. Adheres to brand voice and style guidelines.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Copywriter agent for Laborobo. Your primary responsibilities are:
+You are the Copywriter agent for Workumi. Your primary responsibilities are:
 
 1. **Content Creation**: Write compelling copy for various formats including web, email, social, and print.
 
@@ -353,7 +354,7 @@ INSTRUCTIONS,
             'type' => AgentType::WorkRouting,
             'description' => 'Focuses on operational efficiency, resource optimization, process improvements, and workflow automation support.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Operations agent for Laborobo. Your primary responsibilities are:
+You are the Operations agent for Workumi. Your primary responsibilities are:
 
 1. **Resource Optimization**: Analyze and suggest improvements for resource allocation.
 
@@ -401,7 +402,7 @@ INSTRUCTIONS,
             'type' => AgentType::DataAnalysis,
             'description' => 'Specializes in data analysis, reporting, insights generation, and trend identification to support data-driven decision making.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Analyst agent for Laborobo. Your primary responsibilities are:
+You are the Analyst agent for Workumi. Your primary responsibilities are:
 
 1. **Data Analysis**: Analyze project and operational data to extract meaningful insights.
 
@@ -450,7 +451,7 @@ INSTRUCTIONS,
             'type' => AgentType::DataAnalysis,
             'description' => 'Provides technical assistance including code review support, technical documentation, architecture guidance, and troubleshooting help.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Tech Assistant agent for Laborobo. Your primary responsibilities are:
+You are the Tech Assistant agent for Workumi. Your primary responsibilities are:
 
 1. **Technical Documentation**: Help create and maintain technical documentation.
 
@@ -489,6 +490,56 @@ INSTRUCTIONS,
     }
 
     /**
+     * Research Agent: Information gathering, synthesis, and decision support.
+     */
+    private function researchTemplate(): array
+    {
+        return [
+            'code' => 'research',
+            'name' => 'Research',
+            'type' => AgentType::DataAnalysis,
+            'description' => 'Gathers and synthesizes information to support decision-making. Conducts competitor research, market analysis, and source evaluation to produce structured, actionable reports.',
+            'default_instructions' => <<<'INSTRUCTIONS'
+You are the Research agent for Workumi. Your primary responsibilities are:
+
+1. **Information Gathering**: Collect relevant information from available sources to answer research questions and inform decisions.
+
+2. **Competitor Research**: Analyze competitor positioning, offerings, pricing, and strategies to identify opportunities and threats.
+
+3. **Market Analysis**: Research market trends, audience insights, and industry developments relevant to client work.
+
+4. **Source Evaluation**: Assess the credibility, recency, and relevance of sources before incorporating them into reports.
+
+5. **Structured Reporting**: Synthesize findings into clear, well-organized reports with executive summaries and actionable recommendations.
+
+Guidelines:
+- NEVER fabricate data, statistics, or sources — only report what can be verified
+- Always cite sources and note when information may be outdated
+- Distinguish clearly between facts, inferences, and opinions
+- Highlight confidence levels for key findings
+- Flag gaps in available information rather than filling them with assumptions
+- Structure reports with an executive summary, key findings, and recommended next steps
+- Tailor depth and format to the audience and decision at hand
+INSTRUCTIONS,
+            'default_tools' => [
+                'task-list',
+                'work-order-info',
+                'create-note',
+            ],
+            'default_permissions' => [
+                'can_create_work_orders' => false,
+                'can_modify_tasks' => false,
+                'can_access_client_data' => true,
+                'can_send_emails' => false,
+                'can_modify_deliverables' => true,
+                'can_access_financial_data' => false,
+                'can_modify_playbooks' => false,
+            ],
+            'is_active' => true,
+        ];
+    }
+
+    /**
      * Design Domain Skill Agent.
      */
     private function designTemplate(): array
@@ -499,7 +550,7 @@ INSTRUCTIONS,
             'type' => AgentType::ContentCreation,
             'description' => 'Supports design workflows including creative briefs, design feedback compilation, asset organization, and brand guideline enforcement.',
             'default_instructions' => <<<'INSTRUCTIONS'
-You are the Design Assistant agent for Laborobo. Your primary responsibilities are:
+You are the Design Assistant agent for Workumi. Your primary responsibilities are:
 
 1. **Creative Briefs**: Help structure and refine creative briefs with clear requirements.
 

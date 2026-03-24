@@ -1,8 +1,8 @@
-# Laborobo — Product Overview
+# Workumi — Product Overview
 
 ## Summary
 
-Laborobo is an AI-powered work orchestration platform for small service teams (2-10 people). It turns messy requests into structured deliverables, with AI agents handling drafts, analysis, and busywork while humans approve outcomes. Built for teams with limited staff and skill gaps who need to maintain quality without formal processes or specialist hires. A user should be able to define multiple organizations/teams and switch between them. Each organization will need a separate subscription and will have completely different settings and data.
+Workumi is an AI-powered work orchestration platform for small service teams (2-10 people). It turns messy requests into structured deliverables, with AI agents handling drafts, analysis, and busywork while humans approve outcomes. Built for teams with limited staff and skill gaps who need to maintain quality without formal processes or specialist hires. A user should be able to define multiple organizations/teams and switch between them. Each organization will need a separate subscription and will have completely different settings and data.
 
 ## Planned Sections
 

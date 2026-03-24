@@ -36,7 +36,7 @@ class DispatcherAgent extends BaseAgent
     }
 
     /**
-     * Get the Laborobo tools available to the Dispatcher Agent.
+     * Get the Workumi tools available to the Dispatcher Agent.
      *
      * Returns dispatcher-specific tools filtered through ToolGateway permissions.
      *

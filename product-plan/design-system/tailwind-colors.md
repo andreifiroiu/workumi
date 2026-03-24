@@ -1,6 +1,6 @@
 # Tailwind Color Palette
 
-Laborobo uses three carefully selected Tailwind color palettes to create a professional, trustworthy interface that supports both light and dark modes.
+Workumi uses three carefully selected Tailwind color palettes to create a professional, trustworthy interface that supports both light and dark modes.
 
 ## Primary Color: Indigo
 

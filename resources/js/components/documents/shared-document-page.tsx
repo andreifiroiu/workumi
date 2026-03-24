@@ -20,7 +20,7 @@ function SharedDocumentLayout({ children }: SharedDocumentLayoutProps) {
                 <div className="mb-4 flex items-center justify-center">
                     <img
                         src="/logo.svg"
-                        alt="Laborobo"
+                        alt="Workumi"
                         className="h-10 w-auto"
                     />
                 </div>

@@ -1,6 +1,6 @@
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
-import { Organization } from './laborobo';
+import { Organization } from './workumi';
 
 export interface Auth {
     user: User;

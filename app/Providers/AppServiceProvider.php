@@ -110,10 +110,10 @@ class AppServiceProvider extends ServiceProvider
     private function createResource(): ResourceInfo
     {
         $attributes = [
-            ServiceAttributes::SERVICE_NAME => config('opentelemetry.service_name', 'laborobo'),
+            ServiceAttributes::SERVICE_NAME => config('opentelemetry.service_name', 'workumi'),
             ServiceAttributes::SERVICE_VERSION => config('opentelemetry.service_version', '1.0.0'),
             DeploymentIncubatingAttributes::DEPLOYMENT_ENVIRONMENT_NAME => config('opentelemetry.resource_attributes.deployment.environment', 'production'),
-            ServiceIncubatingAttributes::SERVICE_NAMESPACE => config('opentelemetry.resource_attributes.service.namespace', 'laborobo'),
+            ServiceIncubatingAttributes::SERVICE_NAMESPACE => config('opentelemetry.resource_attributes.service.namespace', 'workumi'),
         ];
 
         return ResourceInfo::create(Attributes::create($attributes));

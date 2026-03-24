@@ -11,7 +11,7 @@ Establish the foundational infrastructure for AI agents including an agent abstr
 ## Specific Requirements
 
 **Agent Abstraction Layer**
-- Create a base `BaseAgent` class extending neuron-ai's `Agent` class with Laborobo-specific behaviors
+- Create a base `BaseAgent` class extending neuron-ai's `Agent` class with Workumi-specific behaviors
 - Implement `provider()` to return configured AI provider based on GlobalAISettings
 - Implement `instructions()` to load system prompt from agent configuration
 - Implement `tools()` to return tools filtered through Tool Gateway permissions

@@ -17,7 +17,7 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 
 const OTEL_ENABLED = import.meta.env.VITE_OTEL_ENABLED !== 'false' && import.meta.env.VITE_OTEL_ENABLED !== false;
 const OTEL_ENDPOINT = import.meta.env.VITE_OTEL_EXPORTER_ENDPOINT || 'http://localhost:4318';
-const SERVICE_NAME = import.meta.env.VITE_OTEL_SERVICE_NAME || 'laborobo-frontend';
+const SERVICE_NAME = import.meta.env.VITE_OTEL_SERVICE_NAME || 'workumi-frontend';
 const SERVICE_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 
 let provider: WebTracerProvider | null = null;

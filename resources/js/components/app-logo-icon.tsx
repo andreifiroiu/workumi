@@ -4,7 +4,7 @@ export default function AppLogoIcon({ className, ...props }: ImgHTMLAttributes<H
     return (
         <img
             src="/favicon.svg"
-            alt="Laborobo"
+            alt="Workumi"
             className={className}
             {...props}
         />

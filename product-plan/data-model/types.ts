@@ -1,7 +1,7 @@
 /**
- * Laborobo Data Model - TypeScript Type Definitions
+ * Workumi Data Model - TypeScript Type Definitions
  *
- * This file contains all TypeScript interfaces and types for the Laborobo platform.
+ * This file contains all TypeScript interfaces and types for the Workumi platform.
  * These types align with the entities defined in the data model and provide
  * type safety for all components and data interactions.
  */

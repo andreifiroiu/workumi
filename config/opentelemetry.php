@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'service_name' => env('OTEL_SERVICE_NAME', env('APP_NAME', 'laborobo')),
+    'service_name' => env('OTEL_SERVICE_NAME', env('APP_NAME', 'workumi')),
 
     'service_version' => env('OTEL_SERVICE_VERSION', '1.0.0'),
 
@@ -96,7 +96,7 @@ return [
 
     'resource_attributes' => [
         'deployment.environment' => env('APP_ENV', 'production'),
-        'service.namespace' => env('OTEL_SERVICE_NAMESPACE', 'laborobo'),
+        'service.namespace' => env('OTEL_SERVICE_NAMESPACE', 'workumi'),
     ],
 
     /*

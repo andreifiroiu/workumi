@@ -1,10 +1,10 @@
-# Laborobo - Product Design Export
+# Workumi - Product Design Export
 
-This package contains the complete product design for Laborobo, an AI-powered work orchestration platform for small service teams.
+This package contains the complete product design for Workumi, an AI-powered work orchestration platform for small service teams.
 
 ## What's Inside
 
-This export includes everything needed to implement Laborobo:
+This export includes everything needed to implement Workumi:
 
 - **Product Overview** - Vision, problems/solutions, key features
 - **Design System** - Colors (indigo/emerald/slate), typography (Inter/IBM Plex Mono), design tokens
@@ -307,7 +307,7 @@ Use your preferred testing framework:
 
 ## Multi-Organization Architecture
 
-Laborobo supports multiple organizations per user:
+Workumi supports multiple organizations per user:
 
 - Each organization has **completely separate**:
   - Subscription plan and billing
@@ -362,7 +362,7 @@ Parties → Projects → Work Orders → Tasks → Deliverables
 
 ## License
 
-This design package is provided for implementation of the Laborobo platform.
+This design package is provided for implementation of the Workumi platform.
 
 ---
 

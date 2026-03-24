@@ -13,7 +13,7 @@
 ## Layout Pattern
 Sidebar navigation with the following structure:
 - **Sidebar width:** 280px on desktop
-- **Logo area:** Top of sidebar with Laborobo branding
+- **Logo area:** Top of sidebar with Workumi branding
 - **Navigation items:** Vertically stacked below logo
 - **User menu:** Pinned at bottom of sidebar
 - **Content area:** Takes remaining horizontal space to the right

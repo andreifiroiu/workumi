@@ -36,7 +36,7 @@ class PMCopilotAgent extends BaseAgent
     }
 
     /**
-     * Get the Laborobo tools available to the PM Copilot Agent.
+     * Get the Workumi tools available to the PM Copilot Agent.
      *
      * Returns PM-specific tools filtered through ToolGateway permissions.
      *

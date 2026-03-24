@@ -29,10 +29,10 @@
   <path d="M232 186 L296 194" stroke="#65a30d" stroke-width="1.5" stroke-opacity="0.4" marker-end="url(#arw3)"/>
   <path d="M232 244 L296 210" stroke="#65a30d" stroke-width="1.5" stroke-opacity="0.4" marker-end="url(#arw3)"/>
   <path d="M232 302 L296 226" stroke="#65a30d" stroke-width="1.5" stroke-opacity="0.4" marker-end="url(#arw3)"/>
-  <!-- Center: Laborobo -->
+  <!-- Center: Workumi -->
   <rect x="304" y="108" width="192" height="184" rx="16" fill="#65a30d" fill-opacity="0.06" stroke="#65a30d" stroke-opacity="0.3" stroke-width="2"/>
   <rect x="340" y="128" width="120" height="36" rx="8" fill="#65a30d" fill-opacity="0.12"/>
-  <text x="364" y="150" font-family="system-ui,sans-serif" font-size="12" font-weight="700" fill="#365314">Laborobo</text>
+  <text x="364" y="150" font-family="system-ui,sans-serif" font-size="12" font-weight="700" fill="#365314">Workumi</text>
   <text x="330" y="186" font-family="system-ui,sans-serif" font-size="10" fill="#525252">Projects</text>
   <rect x="394" y="176" width="8" height="8" rx="2" fill="#65a30d"/>
   <text x="330" y="206" font-family="system-ui,sans-serif" font-size="10" fill="#525252">Work Orders</text>
@@ -63,6 +63,6 @@
   <text x="588" y="298" font-family="system-ui,sans-serif" font-size="11" font-weight="500" fill="#171717">Audit trail</text>
   <text x="588" y="314" font-family="system-ui,sans-serif" font-size="9" fill="#65a30d">Complete work history</text>
   <!-- Bottom note -->
-  <text x="304" y="356" font-family="system-ui,sans-serif" font-size="10" fill="#a3a3a3" text-anchor="middle" x="400">Replace tools or keep them — Laborobo works either way</text>
+  <text x="304" y="356" font-family="system-ui,sans-serif" font-size="10" fill="#a3a3a3" text-anchor="middle" x="400">Replace tools or keep them — Workumi works either way</text>
   <defs><marker id="arw3" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#65a30d" fill-opacity="0.5"/></marker></defs>
 </svg>

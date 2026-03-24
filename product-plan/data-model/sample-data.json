@@ -1,5 +1,5 @@
 {
-  "_description": "Sample data for Laborobo - representative examples of all entity types to support component development and testing",
+  "_description": "Sample data for Workumi - representative examples of all entity types to support component development and testing",
   "_note": "This consolidated file contains sample data from all sections. Use this as a reference for component props and state management.",
 
   "parties": [
@@ -328,7 +328,7 @@
   ],
 
   "workspaceSettings": {
-    "name": "Laborobo Workspace",
+    "name": "Workumi Workspace",
     "timezone": "America/Los_Angeles",
     "workWeekStart": "monday",
     "defaultProjectStatus": "active",

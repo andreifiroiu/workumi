@@ -1,6 +1,6 @@
 # Typography
 
-Laborobo uses two carefully selected Google Fonts that provide excellent readability, modern aesthetics, and strong support for UI design.
+Workumi uses two carefully selected Google Fonts that provide excellent readability, modern aesthetics, and strong support for UI design.
 
 ## Font Families
 
@@ -47,7 +47,7 @@ IBM Plex Mono is a monospaced typeface that pairs beautifully with Inter. It fea
 
 ## Type Scale
 
-Laborobo uses a consistent type scale across the application:
+Workumi uses a consistent type scale across the application:
 
 | Token | Size | Line Height | Use Case |
 |-------|------|-------------|----------|

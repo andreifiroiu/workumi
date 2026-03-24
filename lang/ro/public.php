@@ -16,12 +16,12 @@ return [
 
     // Pagina principală
     'home' => [
-        'title' => 'Laborobo &ndash; Management al muncii cu AI pentru echipe mici',
+        'title' => 'Workumi &ndash; Management al muncii cu AI pentru echipe mici',
         'description' => 'Management al muncii cu AI pentru echipe mici. Transformă haosul în operațiuni structurate și profitabile.',
         'badge' => 'Management al muncii care funcționează cu adevărat pentru echipe mici',
         'headline' => 'Nu mai jongla. Începe să',
         'headline_accent' => 'livrezi.',
-        'subheadline' => 'Laborobo oferă echipelor mici structura unei operațiuni mari fără costurile asociate. Agenții AI se ocupă de munca repetitivă ca tu să te poți concentra pe ce contează.',
+        'subheadline' => 'Workumi oferă echipelor mici structura unei operațiuni mari fără costurile asociate. Agenții AI se ocupă de munca repetitivă ca tu să te poți concentra pe ce contează.',
         'cta_primary' => 'Începe gratuit',
         'cta_secondary' => 'Vezi cum funcționează',
 
@@ -64,7 +64,7 @@ return [
         'social_proof' => 'Ales de echipe mici care livrează peste așteptări',
 
         'pricing_title' => 'Prețuri simple',
-        'pricing_subtitle' => 'Laborobo este în beta publică. Totul este gratuit cât timp construim alături de primii utilizatori.',
+        'pricing_subtitle' => 'Workumi este în beta publică. Totul este gratuit cât timp construim alături de primii utilizatori.',
         'pricing_badge' => 'Beta Publică',
         'pricing_price' => '0 lei',
         'pricing_description' => 'Acces complet la toate funcționalitățile. Fără card de credit. Fără limite de utilizare în timpul beta.',
@@ -74,7 +74,7 @@ return [
         'pricing_feature_4' => 'Până la 10 membri în echipă',
         'pricing_cta' => 'Intră în Beta — Este Gratis',
         'pricing_note' => 'Vom introduce planuri plătite mai târziu. Utilizatorii beta vor primi prețuri de early-adopter.',
-        'pricing_ai_disclaimer' => 'Funcționalitățile AI necesită propria cheie API (ex. OpenAI). Costurile de utilizare AI sunt facturate direct de furnizor, nu de Laborobo.',
+        'pricing_ai_disclaimer' => 'Funcționalitățile AI necesită propria cheie API (ex. OpenAI). Costurile de utilizare AI sunt facturate direct de furnizor, nu de Workumi.',
 
         'cta_title' => 'Pregătit să aduci ordine în haos?',
         'cta_text' => 'Începe gratuit. Fără card de credit. Configurează primul tău proiect în câteva minute.',
@@ -82,10 +82,10 @@ return [
 
     // Cazul de utilizare pentru agenții
     'agencies' => [
-        'title' => 'Laborobo pentru agenții &ndash; Management al muncii cu AI pentru echipe creative și de marketing',
+        'title' => 'Workumi pentru agenții &ndash; Management al muncii cu AI pentru echipe creative și de marketing',
         'badge' => 'Pentru agenții creative și de marketing',
         'headline' => 'Echipa ta de 5 persoane poate livra ca o agenție de 20',
-        'subheadline' => 'Agențiile mici pierd bani din cauza extinderii domeniului, ratează termene din cauza lacunelor de competențe și se epuizează pentru că nu au procese repetabile. Laborobo rezolvă toate trei.',
+        'subheadline' => 'Agențiile mici pierd bani din cauza extinderii domeniului, ratează termene din cauza lacunelor de competențe și se epuizează pentru că nu au procese repetabile. Workumi rezolvă toate trei.',
         'cta' => 'Începe perioada de probă gratuită',
 
         'pain_title' => 'Provocările agențiilor sunt reale',
@@ -96,7 +96,7 @@ return [
         'pain_3_title' => 'Fără proceduri standard, fără consistență',
         'pain_3_text' => 'Fiecare proiect pornește de la zero. Integrarea noilor colegi se bazează pe cunoștințe neformalizate. Calitatea depinde de cine lucrează în ziua respectivă, nu de un proces repetabil.',
 
-        'solutions_title' => 'Cum ajută Laborobo agențiile să câștige',
+        'solutions_title' => 'Cum ajută Workumi agențiile să câștige',
         'sol_1_label' => 'Membri AI în echipă',
         'sol_1_title' => 'Acoperă lacunele de competențe cu agenți AI',
         'sol_1_text' => 'Agenții AI acționează ca membri fracționari ai echipei — redactează texte, triază cererile clienților, pregătesc rapoarte de status. Urmează playbook-urile tale și escaladează către oameni când e nevoie de judecată.',
@@ -111,16 +111,16 @@ return [
         'sol_3_placeholder' => 'Vizualizare șablon playbook',
 
         'cta_title' => 'Nu mai lăsa bani pe masă',
-        'cta_text' => 'Alătură-te agențiilor care folosesc Laborobo pentru a livra muncă mai bună, a-și proteja marjele și a crește fără să angajeze.',
+        'cta_text' => 'Alătură-te agențiilor care folosesc Workumi pentru a livra muncă mai bună, a-și proteja marjele și a crește fără să angajeze.',
         'cta_button' => 'Începe gratuit',
     ],
 
     // Cazul de utilizare pentru consultanță
     'consultancies' => [
-        'title' => 'Laborobo pentru consultanță &ndash; Management al muncii cu AI pentru echipe IT și MSP',
+        'title' => 'Workumi pentru consultanță &ndash; Management al muncii cu AI pentru echipe IT și MSP',
         'badge' => 'Pentru consultanțe IT și MSP-uri',
         'headline' => 'Nu mai pierde contextul între angajamente',
-        'subheadline' => 'Consultanțele funcționează pe bază de cunoștințe. Când acele cunoștințe rămân în mintea oamenilor, în fire de email și în documente împrăștiate, profitabilitatea suferă. Laborobo le centralizează pe toate într-un singur loc.',
+        'subheadline' => 'Consultanțele funcționează pe bază de cunoștințe. Când acele cunoștințe rămân în mintea oamenilor, în fire de email și în documente împrăștiate, profitabilitatea suferă. Workumi le centralizează pe toate într-un singur loc.',
         'cta' => 'Începe perioada de probă gratuită',
 
         'pain_title' => 'Ce te costă bani',
@@ -131,7 +131,7 @@ return [
         'pain_3_title' => 'Orbire față de profitabilitate',
         'pain_3_text' => 'Cotezi angajamente cu preț fix dar urmărești timpul aproximativ. La final, nu ești sigur dacă ai câștigat bani — doar speri că da.',
 
-        'solutions_title' => 'Cum ajută Laborobo consultanțele să prospere',
+        'solutions_title' => 'Cum ajută Workumi consultanțele să prospere',
         'sol_1_label' => 'Motor de proceduri',
         'sol_1_title' => 'Transformă cunoștințele neformalizate în cunoștințe instituționale',
         'sol_1_text' => 'Construiește playbook-uri care surprind procesele celor mai buni consultanți. Liste de verificare, pași de validare și porți de calitate asigură consistența în fiecare angajament, indiferent cine este alocat.',
@@ -152,10 +152,10 @@ return [
 
     // Cazul de utilizare pentru operațiuni
     'operations' => [
-        'title' => 'Laborobo pentru operațiuni &ndash; Management al muncii cu AI pentru echipe interne de operațiuni',
+        'title' => 'Workumi pentru operațiuni &ndash; Management al muncii cu AI pentru echipe interne de operațiuni',
         'badge' => 'Pentru echipe interne de operațiuni și teren',
         'headline' => 'Transformă cererile dezordonate în muncă structurată și urmăribilă',
-        'subheadline' => 'Echipele interne de operațiuni se îneacă în cereri ad-hoc, predări neclare și zero responsabilitate. Laborobo îți oferă un flux structurat de primire, proprietate clară și o definiție a finalizării pentru fiecare element de lucru.',
+        'subheadline' => 'Echipele interne de operațiuni se îneacă în cereri ad-hoc, predări neclare și zero responsabilitate. Workumi îți oferă un flux structurat de primire, proprietate clară și o definiție a finalizării pentru fiecare element de lucru.',
         'cta' => 'Începe perioada de probă gratuită',
 
         'pain_title' => 'Durerea echipei de operațiuni pe care o cunoști prea bine',
@@ -166,7 +166,7 @@ return [
         'pain_3_title' => 'Fără definiție a finalizării',
         'pain_3_text' => 'Munca e „aproape gata" dar niciodată finalizată formal. Nu există proces de semnare, predare a livrabilelor sau pistă de audit.',
 
-        'solutions_title' => 'Cum aduce Laborobo ordine în operațiuni',
+        'solutions_title' => 'Cum aduce Workumi ordine în operațiuni',
         'sol_1_label' => 'Agent dispecer',
         'sol_1_title' => 'AI triază și direcționează cererile primite',
         'sol_1_text' => 'Agentul dispecer primește cereri din orice canal, extrage domeniul și urgența, creează comenzi de lucru structurate și le direcționează către membrul potrivit al echipei. Fără management pe bilețele.',
@@ -177,7 +177,7 @@ return [
         'sol_2_placeholder' => 'Etapele fluxului de aprobare',
         'sol_3_label' => 'CRM opțional',
         'sol_3_title' => 'Funcționează cu sau fără uneltele tale existente',
-        'sol_3_text' => 'Laborobo nu înlocuiește CRM-ul sau sistemul tău de tichete — stă alături de ele. Folosește-l ca coloană vertebrală a operațiunilor interne, păstrând uneltele orientate către client. Sau folosește-l ca soluție completă.',
+        'sol_3_text' => 'Workumi nu înlocuiește CRM-ul sau sistemul tău de tichete — stă alături de ele. Folosește-l ca coloană vertebrală a operațiunilor interne, păstrând uneltele orientate către client. Sau folosește-l ca soluție completă.',
         'sol_3_placeholder' => 'Diagramă de integrări',
 
         'cta_title' => 'Oferă echipei tale de operațiuni structura pe care o merită',

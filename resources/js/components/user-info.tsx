@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import { type User } from '@/types';
-import { type Organization } from '@/types/laborobo';
+import { type Organization } from '@/types/workumi';
 
 export function UserInfo({
     user,

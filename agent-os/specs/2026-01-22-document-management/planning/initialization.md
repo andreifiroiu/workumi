@@ -2,7 +2,7 @@
 
 ## Initial Description
 
-Enhance the existing document management capabilities in Laborobo to provide scalable, feature-rich document handling for service teams.
+Enhance the existing document management capabilities in Workumi to provide scalable, feature-rich document handling for service teams.
 
 ## Proposed Features
 

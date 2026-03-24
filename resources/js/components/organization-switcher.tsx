@@ -6,7 +6,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { type Organization } from '@/types/laborobo';
+import { type Organization } from '@/types/workumi';
 import { router, Link } from '@inertiajs/react';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 

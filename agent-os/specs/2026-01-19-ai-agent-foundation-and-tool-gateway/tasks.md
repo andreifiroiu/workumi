@@ -187,7 +187,7 @@ This is an XL-sized feature establishing foundational infrastructure for AI agen
     - Test ContextBuilder respects token limits with truncation
     - Test AgentMemory storage and retrieval
   - [x] 4.2 Create BaseAgent class extending neuron-ai Agent
-    - Extend `NeuronAI\Agent` with Laborobo-specific behaviors
+    - Extend `NeuronAI\Agent` with Workumi-specific behaviors
     - Implement `provider()` to return AI provider based on GlobalAISettings
     - Implement `instructions()` to load system prompt from AgentConfiguration or AIAgent
     - Implement `tools()` to return tools filtered through ToolGateway permissions
@@ -223,7 +223,7 @@ This is an XL-sized feature establishing foundational infrastructure for AI agen
 
 **Acceptance Criteria:**
 - The 6-8 tests written in 4.1 pass
-- BaseAgent extends neuron-ai Agent with Laborobo behaviors
+- BaseAgent extends neuron-ai Agent with Workumi behaviors
 - ContextBuilder assembles 3-level memory (project, client, org)
 - Token limits respected with intelligent truncation
 

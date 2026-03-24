@@ -2,7 +2,7 @@
 
 ## Goal
 
-Enhance Laborobo's document management with S3 storage, view-only document previews, dual commenting systems (thread-level and positional annotations), hierarchical folder organization, and secure external sharing capabilities.
+Enhance Workumi's document management with S3 storage, view-only document previews, dual commenting systems (thread-level and positional annotations), hierarchical folder organization, and secure external sharing capabilities.
 
 ## User Stories
 

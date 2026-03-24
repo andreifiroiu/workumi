@@ -16,12 +16,12 @@ return [
 
     // Landing page
     'home' => [
-        'title' => 'Laborobo — AI-Powered Work Management for Small Teams',
+        'title' => 'Workumi — AI-Powered Work Management for Small Teams',
         'description' => 'AI-powered work management for small teams. Turn chaos into structured, profitable operations.',
         'badge' => 'Work management that actually works for small teams',
         'headline' => 'Stop juggling. Start',
         'headline_accent' => 'delivering.',
-        'subheadline' => 'Laborobo gives small teams the structure of a large operation without the overhead. AI agents handle the grunt work so you can focus on what matters.',
+        'subheadline' => 'Workumi gives small teams the structure of a large operation without the overhead. AI agents handle the grunt work so you can focus on what matters.',
         'cta_primary' => 'Get Started Free',
         'cta_secondary' => 'See How It Works',
 
@@ -64,7 +64,7 @@ return [
         'social_proof' => 'Trusted by small teams who punch above their weight',
 
         'pricing_title' => 'Simple pricing',
-        'pricing_subtitle' => 'Laborobo is in public beta. Everything is free while we build alongside early users.',
+        'pricing_subtitle' => 'Workumi is in public beta. Everything is free while we build alongside early users.',
         'pricing_badge' => 'Public Beta',
         'pricing_price' => '$0',
         'pricing_description' => 'Full access to every feature. No credit card required. No usage limits during beta.',
@@ -74,7 +74,7 @@ return [
         'pricing_feature_4' => 'Up to 10 team members',
         'pricing_cta' => 'Join the Beta — It\'s Free',
         'pricing_note' => 'We\'ll introduce paid plans later. Beta users will get early-adopter pricing.',
-        'pricing_ai_disclaimer' => 'AI features require your own API key (e.g. OpenAI). AI usage costs are billed directly by the provider, not by Laborobo.',
+        'pricing_ai_disclaimer' => 'AI features require your own API key (e.g. OpenAI). AI usage costs are billed directly by the provider, not by Workumi.',
 
         'cta_title' => 'Ready to bring order to the chaos?',
         'cta_text' => 'Start for free. No credit card required. Set up your first project in minutes.',
@@ -82,10 +82,10 @@ return [
 
     // Agencies use case
     'agencies' => [
-        'title' => 'Laborobo for Agencies — AI Work Management for Creative & Marketing Teams',
+        'title' => 'Workumi for Agencies — AI Work Management for Creative & Marketing Teams',
         'badge' => 'For Creative & Marketing Agencies',
         'headline' => 'Your 5-person team can deliver like a 20-person agency',
-        'subheadline' => 'Small agencies lose money to scope creep, miss deadlines from skill gaps, and burn out because there are no repeatable processes. Laborobo fixes all three.',
+        'subheadline' => 'Small agencies lose money to scope creep, miss deadlines from skill gaps, and burn out because there are no repeatable processes. Workumi fixes all three.',
         'cta' => 'Start Free Trial',
 
         'pain_title' => 'The agency struggle is real',
@@ -96,7 +96,7 @@ return [
         'pain_3_title' => 'No SOPs, no consistency',
         'pain_3_text' => 'Every project starts from scratch. Onboarding is tribal knowledge. Quality depends on who\'s working that day, not on a repeatable process.',
 
-        'solutions_title' => 'How Laborobo helps agencies win',
+        'solutions_title' => 'How Workumi helps agencies win',
         'sol_1_label' => 'AI Team Members',
         'sol_1_title' => 'Fill skill gaps with AI agents',
         'sol_1_text' => 'AI agents act as fractional team members—drafting copy, triaging client requests, preparing status updates. They follow your playbooks and escalate to humans when judgment is needed.',
@@ -111,16 +111,16 @@ return [
         'sol_3_placeholder' => 'Playbook template view',
 
         'cta_title' => 'Stop leaving money on the table',
-        'cta_text' => 'Join agencies that use Laborobo to deliver better work, protect their margins, and grow without hiring.',
+        'cta_text' => 'Join agencies that use Workumi to deliver better work, protect their margins, and grow without hiring.',
         'cta_button' => 'Get Started Free',
     ],
 
     // Consultancies use case
     'consultancies' => [
-        'title' => 'Laborobo for Consultancies — AI Work Management for IT & MSP Teams',
+        'title' => 'Workumi for Consultancies — AI Work Management for IT & MSP Teams',
         'badge' => 'For IT Consultancies & MSPs',
         'headline' => 'Stop losing context between engagements',
-        'subheadline' => 'Consultancies run on knowledge. When that knowledge lives in people\'s heads, email threads, and scattered docs, profitability suffers. Laborobo captures it all in one place.',
+        'subheadline' => 'Consultancies run on knowledge. When that knowledge lives in people\'s heads, email threads, and scattered docs, profitability suffers. Workumi captures it all in one place.',
         'cta' => 'Start Free Trial',
 
         'pain_title' => 'What\'s costing you money',
@@ -131,7 +131,7 @@ return [
         'pain_3_title' => 'Profitability blindness',
         'pain_3_text' => 'You quote fixed-fee engagements but track time loosely. By the end, you\'re not sure if you made money—you just hope you did.',
 
-        'solutions_title' => 'How Laborobo helps consultancies thrive',
+        'solutions_title' => 'How Workumi helps consultancies thrive',
         'sol_1_label' => 'SOP Engine',
         'sol_1_title' => 'Turn tribal knowledge into institutional knowledge',
         'sol_1_text' => 'Build playbooks that capture your best consultants\' processes. Checklists, validation steps, and quality gates ensure consistency across every engagement, regardless of who\'s staffed.',
@@ -152,10 +152,10 @@ return [
 
     // Operations use case
     'operations' => [
-        'title' => 'Laborobo for Operations — AI Work Management for Internal Ops Teams',
+        'title' => 'Workumi for Operations — AI Work Management for Internal Ops Teams',
         'badge' => 'For Internal Ops & Field Teams',
         'headline' => 'Turn messy requests into structured, trackable work',
-        'subheadline' => 'Internal ops teams drown in ad-hoc requests, unclear handoffs, and zero accountability. Laborobo gives you a structured intake, clear ownership, and a definition of done for every piece of work.',
+        'subheadline' => 'Internal ops teams drown in ad-hoc requests, unclear handoffs, and zero accountability. Workumi gives you a structured intake, clear ownership, and a definition of done for every piece of work.',
         'cta' => 'Start Free Trial',
 
         'pain_title' => 'The ops team pain you know too well',
@@ -166,7 +166,7 @@ return [
         'pain_3_title' => 'No definition of done',
         'pain_3_text' => 'Work gets "mostly finished" but never formally completed. There\'s no sign-off process, no deliverable handoff, and no audit trail.',
 
-        'solutions_title' => 'How Laborobo brings order to ops',
+        'solutions_title' => 'How Workumi brings order to ops',
         'sol_1_label' => 'Dispatcher Agent',
         'sol_1_title' => 'AI triages and routes incoming requests',
         'sol_1_text' => 'The Dispatcher agent receives requests from any channel, extracts scope and urgency, creates structured work orders, and routes them to the right team member. No more sticky-note management.',
@@ -177,7 +177,7 @@ return [
         'sol_2_placeholder' => 'Approval workflow stages',
         'sol_3_label' => 'CRM-Optional',
         'sol_3_title' => 'Works with or without your existing tools',
-        'sol_3_text' => 'Laborobo doesn\'t replace your CRM or ticketing system—it sits alongside them. Use it as your internal ops backbone while keeping client-facing tools in place. Or use it as your all-in-one.',
+        'sol_3_text' => 'Workumi doesn\'t replace your CRM or ticketing system—it sits alongside them. Use it as your internal ops backbone while keeping client-facing tools in place. Or use it as your all-in-one.',
         'sol_3_placeholder' => 'Integration diagram',
 
         'cta_title' => 'Give your ops team the structure it deserves',

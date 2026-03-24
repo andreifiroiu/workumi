@@ -29,7 +29,7 @@ class OtlpHandler extends AbstractProcessingHandler
         parent::__construct($level, $bubble);
 
         $this->logger = $loggerProvider->getLogger(
-            config('opentelemetry.service_name', 'laborobo'),
+            config('opentelemetry.service_name', 'workumi'),
             config('opentelemetry.service_version', '1.0.0'),
         );
     }

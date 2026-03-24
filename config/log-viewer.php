@@ -132,8 +132,8 @@ return [
         ],
 
          'staging' => [
-             'name' => 'Staging Laborobo',
-             'host' => 'https://laborobo.netinteraction.biz/log-viewer',
+             'name' => 'Staging Workumi',
+             'host' => 'https://workumi.netinteraction.biz/log-viewer',
              'auth' => [      // Example of HTTP Basic auth
                  'username' => 'admin',
                  'password' => 'Andrei#44',
