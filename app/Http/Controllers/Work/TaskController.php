@@ -172,8 +172,8 @@ class TaskController extends Controller
                 'id' => (string) $activeTimer->id,
                 'startedAt' => $activeTimer->started_at->toIso8601String(),
             ] : null,
-            'teamMembers' => $task->project->team->users
-                ->push($task->project->team->owner)
+            'teamMembers' => ($task->project?->team?->users ?? collect())
+                ->push($task->project?->team?->owner)
                 ->push($request->user())
                 ->unique('id')
                 ->filter()
