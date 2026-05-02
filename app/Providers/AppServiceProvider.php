@@ -12,10 +12,18 @@ use App\Listeners\DeliverableStatusChangedListener;
 use App\Listeners\DispatcherMentionListener;
 use App\Listeners\TriggerPMCopilotOnWorkOrderCreated;
 use App\Listeners\WorkOrderStatusChangedListener;
+use App\Models\Document;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\TimeEntry;
+use App\Models\WorkOrder;
+use App\Observers\DocumentObserver;
+use App\Observers\ProjectObserver;
+use App\Observers\TaskObserver;
 use App\Observers\TeamObserver;
 use App\Observers\TimeEntryObserver;
+use App\Observers\WorkOrderObserver;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use OpenTelemetry\API\Globals;
@@ -69,6 +77,10 @@ class AppServiceProvider extends ServiceProvider
         // Register model observers
         Team::observe(TeamObserver::class);
         TimeEntry::observe(TimeEntryObserver::class);
+        Project::observe(ProjectObserver::class);
+        WorkOrder::observe(WorkOrderObserver::class);
+        Task::observe(TaskObserver::class);
+        Document::observe(DocumentObserver::class);
 
         // Register event listeners
         Event::listen(MessageCreated::class, DispatcherMentionListener::class);
