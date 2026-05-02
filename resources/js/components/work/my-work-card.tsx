@@ -63,33 +63,35 @@ function WorkOrderCard({ workOrder }: { workOrder: WorkOrder }) {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                    <Building2 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{workOrder.projectName}</span>
+                </span>
+                {workOrder.workOrderListName && (
                     <span className="flex items-center gap-1">
-                        <Building2 className="h-3.5 w-3.5" />
-                        <span>{workOrder.projectName}</span>
+                        <LayoutList className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{workOrder.workOrderListName}</span>
                     </span>
-                    {workOrder.workOrderListName && (
-                        <span className="flex items-center gap-1">
-                            <LayoutList className="h-3.5 w-3.5" />
-                            <span>{workOrder.workOrderListName}</span>
-                        </span>
-                    )}
+                )}
+                <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
                         {workOrder.actualHours}/{workOrder.estimatedHours}h
                     </span>
+                    {daysUntilDue !== null && (
+                        <span
+                            className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-destructive' : ''}`}
+                        >
+                            {isOverdue ? (
+                                <AlertCircle className="h-3.5 w-3.5" />
+                            ) : (
+                                <Clock className="h-3.5 w-3.5" />
+                            )}
+                            {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` : `${daysUntilDue}d left`}
+                        </span>
+                    )}
                 </div>
-                {daysUntilDue !== null && (
-                    <div
-                        className={`flex items-center gap-1 font-medium ${
-                            isOverdue ? 'text-destructive' : ''
-                        }`}
-                    >
-                        {isOverdue ? <AlertCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-                        {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` : `${daysUntilDue}d left`}
-                    </div>
-                )}
             </div>
 
             {workOrder.acceptanceCriteria.length > 0 && (
