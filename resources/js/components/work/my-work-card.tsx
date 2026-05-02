@@ -1,4 +1,4 @@
-import { Clock, AlertCircle, CheckCircle2, User } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle2, Building2 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { StatusBadge } from './status-badge';
 import { ProgressBar } from './progress-bar';
@@ -66,8 +66,8 @@ function WorkOrderCard({ workOrder }: { workOrder: WorkOrder }) {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5" />
-                        {workOrder.projectName}
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span>{workOrder.projectName}</span>
                     </span>
                     <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
