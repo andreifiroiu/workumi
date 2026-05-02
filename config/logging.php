@@ -77,7 +77,7 @@ return [
             'processors' => [TraceContextProcessor::class],
         ],
 
-        'discord' => [
+        /*'discord' => [
             'driver'  => 'monolog',
             'level'   => env('LOG_DISCORD_LEVEL', 'error'),
             'handler' => App\Logging\DiscordWebhookHandler::class,
@@ -85,6 +85,14 @@ return [
                 'webhookUrl' => env('LOG_DISCORD_WEBHOOK_URL'),
                 'username'   => env('LOG_DISCORD_USERNAME', 'Workumi Log'),
             ],
+        ],*/
+
+        'discord' => [
+            'driver' => 'custom',
+            'via'    => MarvinLabs\DiscordLogger\Logger::class,
+            'level'  => 'error',
+            'url'    => env('LOG_DISCORD_WEBHOOK_URL'),
+            'ignore_exceptions' => env('LOG_DISCORD_IGNORE_EXCEPTIONS', false),
         ],
 
         'slack' => [

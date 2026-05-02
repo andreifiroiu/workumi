@@ -17,6 +17,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
+        "marvinlabs/laravel-discord-logger": "^1.4",
         "neuron-core/neuron-ai": "^2.12",
         "opcodesio/log-viewer": "^3.21",
         "open-telemetry/exporter-otlp": "^1.3",

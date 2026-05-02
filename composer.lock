@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a5e7df538177cb67d070564b2786d08",
+    "content-hash": "fa18d8bbe1f7a8bdef069fd4b4740a05",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2639,6 +2639,76 @@
                 }
             ],
             "time": "2025-12-07T16:03:21+00:00"
+        },
+        {
+            "name": "marvinlabs/laravel-discord-logger",
+            "version": "v1.4.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vpratfr/laravel-discord-logger.git",
+                "reference": "01eff2df9c46b68d118399a1e46882db3fb40a9d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vpratfr/laravel-discord-logger/zipball/01eff2df9c46b68d118399a1e46882db3fb40a9d",
+                "reference": "01eff2df9c46b68d118399a1e46882db3fb40a9d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^7.0",
+                "illuminate/support": "^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.0",
+                "orchestra/testbench": "^10.0|^11.0",
+                "phpunit/phpunit": "^11.5|^12.5.12",
+                "roave/security-advisories": "dev-master"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "MarvinLabs\\DiscordLogger\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MarvinLabs\\DiscordLogger\\": "src/DiscordLogger"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Vincent Mimoun-Prat",
+                    "email": "contact@vincentprat.info",
+                    "homepage": "https://vincentprat.info",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Logging to a discord channel in Laravel",
+            "keywords": [
+                "discord",
+                "laravel",
+                "logger",
+                "logging"
+            ],
+            "support": {
+                "issues": "https://github.com/vpratfr/laravel-discord-logger/issues",
+                "source": "https://github.com/vpratfr/laravel-discord-logger/tree/v1.4.4"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/vpratfr",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-27T08:19:49+00:00"
         },
         {
             "name": "monolog/monolog",

@@ -8,7 +8,7 @@ use Monolog\LogRecord;
 class DiscordWebhookHandler extends AbstractProcessingHandler
 {
     public function __construct(
-        private string $webhookUrl,
+        private ?string $webhookUrl,
         private string $username = 'Laravel',
         int|string $level = \Monolog\Level::Error,
         bool $bubble = true,
@@ -18,6 +18,10 @@ class DiscordWebhookHandler extends AbstractProcessingHandler
 
     protected function write(LogRecord $record): void
     {
+        if (empty($this->webhookUrl)) {
+            return;
+        }
+
         $colors = [
             'DEBUG' => 0x95A5A6,
             'INFO' => 0x3498DB,
