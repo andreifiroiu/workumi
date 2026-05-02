@@ -17,6 +17,7 @@ import type { Task } from '@/types/work';
 
 interface KanbanTasksViewProps {
     tasks: Task[];
+    searchQuery?: string;
 }
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -59,7 +60,7 @@ async function transitionTask(taskId: string, status: string): Promise<boolean> 
     return true;
 }
 
-export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
+export function KanbanTasksView({ tasks, searchQuery = '' }: KanbanTasksViewProps) {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [hideCompleted, setHideCompleted] = useState(false);
@@ -80,9 +81,21 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
         [hideCompleted]
     );
 
+    const filteredTasks = useMemo(() => {
+        if (!searchQuery.trim()) return tasks;
+        const q = searchQuery.toLowerCase();
+        return tasks.filter(
+            (t) =>
+                t.title.toLowerCase().includes(q) ||
+                (t.workOrderTitle?.toLowerCase().includes(q) ?? false) ||
+                (t.projectName?.toLowerCase().includes(q) ?? false) ||
+                t.assignedToName.toLowerCase().includes(q)
+        );
+    }, [tasks, searchQuery]);
+
     const visibleTasks = useMemo(
-        () => (hideCompleted ? tasks.filter((t) => effectiveStatus(t) !== 'done') : tasks),
-        [tasks, hideCompleted, effectiveStatus]
+        () => (hideCompleted ? filteredTasks.filter((t) => effectiveStatus(t) !== 'done') : filteredTasks),
+        [filteredTasks, hideCompleted, effectiveStatus]
     );
 
     const tasksByStatus = useMemo(() => {
@@ -184,10 +197,10 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
 
     const handleDragCancel = useCallback(() => setActiveTask(null), []);
 
-    const activeCount = tasks.filter(
+    const activeCount = filteredTasks.filter(
         (t) => effectiveStatus(t) !== 'done' && effectiveStatus(t) !== 'cancelled'
     ).length;
-    const doneCount = tasks.filter((t) => effectiveStatus(t) === 'done').length;
+    const doneCount = filteredTasks.filter((t) => effectiveStatus(t) === 'done').length;
 
     return (
         <DndContext
@@ -205,7 +218,7 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
                             <div className="text-2xl font-bold text-foreground">
                                 {activeCount}
                                 <span className="text-sm font-normal text-muted-foreground ml-1">
-                                    / {tasks.length}
+                                    / {filteredTasks.length}
                                 </span>
                             </div>
                             <div className="text-xs text-muted-foreground">Active Tasks</div>

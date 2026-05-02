@@ -10,8 +10,9 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
-import { Briefcase, CheckSquare, GripHorizontal } from 'lucide-react';
+import { Briefcase, CheckSquare, GripHorizontal, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
 import { KanbanTasksView } from './kanban-tasks-view';
@@ -44,6 +45,7 @@ const COLUMNS: Array<{ status: WorkOrder['status']; title: string }> = [
 
 export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewProps) {
     const [subtab, setSubtab] = useState<KanbanSubtab>('work_orders');
+    const [searchQuery, setSearchQuery] = useState('');
     const [activeWorkOrder, setActiveWorkOrder] = useState<WorkOrder | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     // optimistic: workOrderId → overridden status
@@ -55,11 +57,23 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
         })
     );
 
+    const filteredWorkOrders = useMemo(() => {
+        if (!searchQuery.trim()) return workOrders;
+        const q = searchQuery.toLowerCase();
+        return workOrders.filter(
+            (wo) =>
+                wo.title.toLowerCase().includes(q) ||
+                wo.projectName.toLowerCase().includes(q) ||
+                (wo.workOrderListName?.toLowerCase().includes(q) ?? false) ||
+                wo.assignedToName.toLowerCase().includes(q)
+        );
+    }, [workOrders, searchQuery]);
+
     const workOrdersByStatus = useMemo(
         () =>
             COLUMNS.map((column) => ({
                 ...column,
-                workOrders: workOrders
+                workOrders: filteredWorkOrders
                     .filter((wo) => (optimisticStatuses[wo.id] ?? wo.status) === column.status)
                     .sort((a, b) => {
                         const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
@@ -71,7 +85,7 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
                         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                     }),
             })),
-        [workOrders, optimisticStatuses]
+        [filteredWorkOrders, optimisticStatuses]
     );
 
     const validDropTargets = useMemo(() => {
@@ -152,8 +166,8 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
         setActiveWorkOrder(null);
     }, []);
 
-    const totalWorkOrders = workOrders.length;
-    const activeCount = workOrders.filter((wo) => wo.status !== 'delivered').length;
+    const totalWorkOrders = filteredWorkOrders.length;
+    const activeCount = filteredWorkOrders.filter((wo) => wo.status !== 'delivered').length;
 
     return (
         <div className="space-y-6">
@@ -183,8 +197,19 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
                 </button>
             </div>
 
+            {/* Search bar */}
+            <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={subtab === 'tasks' ? 'Search tasks…' : 'Search work orders…'}
+                    className="pl-9"
+                />
+            </div>
+
             {/* Tasks board */}
-            {subtab === 'tasks' && <KanbanTasksView tasks={tasks} />}
+            {subtab === 'tasks' && <KanbanTasksView tasks={tasks} searchQuery={searchQuery} />}
 
             {/* Work Orders board */}
             {subtab === 'work_orders' && (
