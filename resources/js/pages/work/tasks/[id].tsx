@@ -80,7 +80,7 @@ interface TaskWithWorkflow {
     workOrderId: string;
     workOrderTitle: string;
     projectId: string;
-    projectName?: string;
+    projectName: string;
     assignedToId: string | null;
     assignedToName: string;
     assignedAgentId: string | null;
@@ -179,6 +179,7 @@ export default function TaskDetail({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Work', href: '/work' },
+        { title: task.projectName, href: `/work/projects/${task.projectId}` },
         {
             title: task.workOrderTitle,
             href: `/work/work-orders/${task.workOrderId}`,

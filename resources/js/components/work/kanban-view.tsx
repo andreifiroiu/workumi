@@ -10,14 +10,18 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
-import { GripHorizontal } from 'lucide-react';
+import { Briefcase, CheckSquare, GripHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
-import type { WorkOrder } from '@/types/work';
+import { KanbanTasksView } from './kanban-tasks-view';
+import type { WorkOrder, Task } from '@/types/work';
+
+type KanbanSubtab = 'work_orders' | 'tasks';
 
 interface KanbanViewProps {
     workOrders: WorkOrder[];
+    tasks: Task[];
     onCreateWorkOrder: (status: WorkOrder['status']) => void;
 }
 
@@ -38,7 +42,8 @@ const COLUMNS: Array<{ status: WorkOrder['status']; title: string }> = [
     { status: 'delivered', title: 'Delivered' },
 ];
 
-export function KanbanView({ workOrders, onCreateWorkOrder }: KanbanViewProps) {
+export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewProps) {
+    const [subtab, setSubtab] = useState<KanbanSubtab>('work_orders');
     const [activeWorkOrder, setActiveWorkOrder] = useState<WorkOrder | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -133,78 +138,114 @@ export function KanbanView({ workOrders, onCreateWorkOrder }: KanbanViewProps) {
     const activeCount = workOrders.filter((wo) => wo.status !== 'delivered').length;
 
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={rectIntersection}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-        >
-            <div className="space-y-6">
-                {/* Summary Stats */}
-                <div className="flex items-center gap-6">
-                    <div className="px-4 py-2 bg-card border border-border rounded-lg">
-                        <div className="text-2xl font-bold text-foreground">
-                            {activeCount}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">
-                                / {totalWorkOrders}
-                            </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">Active Work Orders</div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                        Organize work orders by status. Drag cards between columns to update status, or use the +
-                        button to create new work orders.
-                    </div>
-                </div>
-
-                {/* Kanban Board */}
-                <div className="overflow-x-auto pb-4">
-                    <div className="flex gap-4 min-w-max">
-                        {workOrdersByStatus.map((column) => (
-                            <KanbanColumn
-                                key={column.status}
-                                status={column.status}
-                                title={column.title}
-                                workOrders={column.workOrders}
-                                onCreateWorkOrder={() => onCreateWorkOrder(column.status)}
-                                isValidDropTarget={validDropTargets.has(column.status)}
-                                activeWorkOrderId={activeWorkOrder?.id ?? null}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Empty State */}
-                {totalWorkOrders === 0 && (
-                    <div className="bg-card border border-border rounded-xl p-12 text-center">
-                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                            <GripHorizontal className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">No work orders yet</h3>
-                        <p className="text-sm text-muted-foreground mb-6">
-                            Create your first work order to get started with the kanban board.
-                        </p>
-                        <Button onClick={() => onCreateWorkOrder('draft')}>Create Work Order</Button>
-                    </div>
-                )}
-
-                {/* Drag tip */}
-                {totalWorkOrders > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-lg p-3">
-                        <GripHorizontal className="w-4 h-4 shrink-0" />
-                        <span>
-                            <strong>Tip:</strong> Drag cards between columns to update status. Click a card to view
-                            details.
-                        </span>
-                    </div>
-                )}
+        <div className="space-y-6">
+            {/* Sub-tab toggle */}
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => setSubtab('work_orders')}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        subtab === 'work_orders'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                    }`}
+                >
+                    <Briefcase className="h-4 w-4" />
+                    Work Orders
+                </button>
+                <button
+                    onClick={() => setSubtab('tasks')}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                        subtab === 'tasks'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                    }`}
+                >
+                    <CheckSquare className="h-4 w-4" />
+                    Tasks
+                </button>
             </div>
 
-            <DragOverlay>
-                {activeWorkOrder ? <KanbanCard workOrder={activeWorkOrder} isOverlay /> : null}
-            </DragOverlay>
-        </DndContext>
+            {/* Tasks board */}
+            {subtab === 'tasks' && <KanbanTasksView tasks={tasks} />}
+
+            {/* Work Orders board */}
+            {subtab === 'work_orders' && (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={rectIntersection}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={handleDragCancel}
+                >
+                    <div className="space-y-6">
+                        {/* Summary Stats */}
+                        <div className="flex items-center gap-6">
+                            <div className="px-4 py-2 bg-card border border-border rounded-lg">
+                                <div className="text-2xl font-bold text-foreground">
+                                    {activeCount}
+                                    <span className="text-sm font-normal text-muted-foreground ml-1">
+                                        / {totalWorkOrders}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">Active Work Orders</div>
+                            </div>
+
+                            <div className="text-xs text-muted-foreground">
+                                Organize work orders by status. Drag cards between columns to update status, or
+                                use the + button to create new work orders.
+                            </div>
+                        </div>
+
+                        {/* Kanban Board */}
+                        <div className="overflow-x-auto pb-4">
+                            <div className="flex gap-4 min-w-max">
+                                {workOrdersByStatus.map((column) => (
+                                    <KanbanColumn
+                                        key={column.status}
+                                        status={column.status}
+                                        title={column.title}
+                                        workOrders={column.workOrders}
+                                        onCreateWorkOrder={() => onCreateWorkOrder(column.status)}
+                                        isValidDropTarget={validDropTargets.has(column.status)}
+                                        activeWorkOrderId={activeWorkOrder?.id ?? null}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Empty State */}
+                        {totalWorkOrders === 0 && (
+                            <div className="bg-card border border-border rounded-xl p-12 text-center">
+                                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                                    <GripHorizontal className="w-8 h-8 text-muted-foreground" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-foreground mb-2">
+                                    No work orders yet
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-6">
+                                    Create your first work order to get started with the kanban board.
+                                </p>
+                                <Button onClick={() => onCreateWorkOrder('draft')}>Create Work Order</Button>
+                            </div>
+                        )}
+
+                        {/* Drag tip */}
+                        {totalWorkOrders > 0 && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-lg p-3">
+                                <GripHorizontal className="w-4 h-4 shrink-0" />
+                                <span>
+                                    <strong>Tip:</strong> Drag cards between columns to update status. Click a
+                                    card to view details.
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <DragOverlay>
+                        {activeWorkOrder ? <KanbanCard workOrder={activeWorkOrder} isOverlay /> : null}
+                    </DragOverlay>
+                </DndContext>
+            )}
+        </div>
     );
 }

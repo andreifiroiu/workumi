@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@inertiajs/react';
-import { CheckCircle2, User, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, User, AlertTriangle, Briefcase, Building2 } from 'lucide-react';
 import { StatusBadge } from '@/components/work/status-badge';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,8 @@ export interface TaskKanbanCardProps {
         assignedToName: string;
         isBlocked: boolean;
         checklistItems: Array<{ id: string; text: string; completed: boolean }>;
+        workOrderTitle?: string;
+        projectName?: string;
     };
     isDragOverlay?: boolean;
 }
@@ -75,6 +77,23 @@ export function TaskKanbanCard({ task, isDragOverlay = false }: TaskKanbanCardPr
                         <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
                     )}
                 </div>
+
+                {(task.projectName || task.workOrderTitle) && (
+                    <div className="mb-2 flex flex-col gap-0.5 text-xs text-muted-foreground">
+                        {task.projectName && (
+                            <div className="flex items-center gap-1">
+                                <Building2 className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{task.projectName}</span>
+                            </div>
+                        )}
+                        {task.workOrderTitle && (
+                            <div className="flex items-center gap-1">
+                                <Briefcase className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{task.workOrderTitle}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {task.assignedToName && (

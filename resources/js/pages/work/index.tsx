@@ -254,6 +254,7 @@ export default function Work({
                         <div className="p-6">
                             <KanbanView
                                 workOrders={workOrders}
+                                tasks={tasks}
                                 onCreateWorkOrder={handleCreateWorkOrderFromKanban}
                             />
                         </div>

@@ -72,6 +72,7 @@ export interface WorkOrder {
     createdBy: string;
     createdByName: string;
     workOrderListId?: string | null;
+    workOrderListName?: string | null;
     positionInList?: number;
     userRaciRoles?: RaciRole[];
     averageBillingRate?: number;
