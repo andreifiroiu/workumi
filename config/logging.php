@@ -77,6 +77,16 @@ return [
             'processors' => [TraceContextProcessor::class],
         ],
 
+        'discord' => [
+            'driver'  => 'monolog',
+            'level'   => env('LOG_DISCORD_LEVEL', 'error'),
+            'handler' => App\Logging\DiscordWebhookHandler::class,
+            'with'    => [
+                'webhookUrl' => env('LOG_DISCORD_WEBHOOK_URL'),
+                'username'   => env('LOG_DISCORD_USERNAME', 'Workumi Log'),
+            ],
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
