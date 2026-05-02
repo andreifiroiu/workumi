@@ -46,6 +46,8 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
     const [subtab, setSubtab] = useState<KanbanSubtab>('work_orders');
     const [activeWorkOrder, setActiveWorkOrder] = useState<WorkOrder | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    // optimistic: workOrderId → overridden status
+    const [optimisticStatuses, setOptimisticStatuses] = useState<Record<string, string>>({});
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -58,7 +60,7 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
             COLUMNS.map((column) => ({
                 ...column,
                 workOrders: workOrders
-                    .filter((wo) => wo.status === column.status)
+                    .filter((wo) => (optimisticStatuses[wo.id] ?? wo.status) === column.status)
                     .sort((a, b) => {
                         const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
                         const diff = priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -69,13 +71,14 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
                         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                     }),
             })),
-        [workOrders]
+        [workOrders, optimisticStatuses]
     );
 
     const validDropTargets = useMemo(() => {
         if (!activeWorkOrder) return new Set<string>();
-        return new Set(VALID_TRANSITIONS[activeWorkOrder.status] ?? []);
-    }, [activeWorkOrder]);
+        const status = optimisticStatuses[activeWorkOrder.id] ?? activeWorkOrder.status;
+        return new Set(VALID_TRANSITIONS[status] ?? []);
+    }, [activeWorkOrder, optimisticStatuses]);
 
     const handleDragStart = useCallback(
         (event: DragStartEvent) => {
@@ -95,11 +98,15 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
             const workOrder = workOrders.find((wo) => wo.id === active.id);
             if (!workOrder) return;
 
+            const currentStatus = optimisticStatuses[workOrder.id] ?? workOrder.status;
             const targetStatus = over.id as string;
-            if (workOrder.status === targetStatus) return;
+            if (currentStatus === targetStatus) return;
 
-            const validTargets = VALID_TRANSITIONS[workOrder.status] ?? [];
+            const validTargets = VALID_TRANSITIONS[currentStatus] ?? [];
             if (!validTargets.includes(targetStatus)) return;
+
+            // Move card immediately
+            setOptimisticStatuses((prev) => ({ ...prev, [workOrder.id]: targetStatus }));
 
             setIsTransitioning(true);
             try {
@@ -117,17 +124,28 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
                 if (!response.ok) {
                     const data = await response.json();
                     console.error('Failed to transition work order:', data.message);
+                    // Revert on failure
+                    setOptimisticStatuses((prev) => {
+                        const next = { ...prev };
+                        delete next[workOrder.id];
+                        return next;
+                    });
                     return;
                 }
 
                 router.reload({ only: ['workOrders'] });
             } catch (error) {
                 console.error('Error transitioning work order:', error);
+                setOptimisticStatuses((prev) => {
+                    const next = { ...prev };
+                    delete next[workOrder.id];
+                    return next;
+                });
             } finally {
                 setIsTransitioning(false);
             }
         },
-        [workOrders, isTransitioning]
+        [workOrders, isTransitioning, optimisticStatuses]
     );
 
     const handleDragCancel = useCallback(() => {

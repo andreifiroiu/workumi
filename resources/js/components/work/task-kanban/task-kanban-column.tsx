@@ -10,6 +10,7 @@ export interface TaskKanbanColumnProps {
     tasks: TaskKanbanCardProps['task'][];
     isValidDropTarget: boolean;
     activeTaskId: string | null;
+    onMarkDone?: (taskId: string) => void;
 }
 
 const statusColors: Record<TaskStatus, { header: string; badge: string }> = {
@@ -45,6 +46,7 @@ export function TaskKanbanColumn({
     tasks,
     isValidDropTarget,
     activeTaskId,
+    onMarkDone,
 }: TaskKanbanColumnProps) {
     const { isOver, setNodeRef } = useDroppable({
         id: status,
@@ -103,7 +105,7 @@ export function TaskKanbanColumn({
                     </div>
                 ) : (
                     tasks.map((task) => (
-                        <TaskKanbanCard key={task.id} task={task} />
+                        <TaskKanbanCard key={task.id} task={task} onMarkDone={onMarkDone} />
                     ))
                 )}
             </div>

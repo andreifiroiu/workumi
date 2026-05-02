@@ -2,7 +2,6 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Link } from '@inertiajs/react';
 import { CheckCircle2, User, AlertTriangle, Briefcase, Building2 } from 'lucide-react';
-import { StatusBadge } from '@/components/work/status-badge';
 import { cn } from '@/lib/utils';
 
 export interface TaskKanbanCardProps {
@@ -17,9 +16,12 @@ export interface TaskKanbanCardProps {
         projectName?: string;
     };
     isDragOverlay?: boolean;
+    onMarkDone?: (taskId: string) => void;
 }
 
-export function TaskKanbanCard({ task, isDragOverlay = false }: TaskKanbanCardProps) {
+const CAN_MARK_DONE = new Set(['in_progress', 'approved']);
+
+export function TaskKanbanCard({ task, isDragOverlay = false, onMarkDone }: TaskKanbanCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: {
@@ -70,12 +72,28 @@ export function TaskKanbanCard({ task, isDragOverlay = false }: TaskKanbanCardPr
                     >
                         {task.title}
                     </span>
-                    {task.status === 'done' && (
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                    )}
-                    {task.isBlocked && (
-                        <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
-                    )}
+                    <div className="flex shrink-0 items-center gap-1">
+                        {onMarkDone && CAN_MARK_DONE.has(task.status) && (
+                            <button
+                                type="button"
+                                title="Mark as done"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    onMarkDone(task.id);
+                                }}
+                                className="rounded p-0.5 text-muted-foreground hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                            </button>
+                        )}
+                        {task.status === 'done' && (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        )}
+                        {task.isBlocked && (
+                            <AlertTriangle className="h-4 w-4 text-destructive" />
+                        )}
+                    </div>
                 </div>
 
                 {(task.projectName || task.workOrderTitle) && (

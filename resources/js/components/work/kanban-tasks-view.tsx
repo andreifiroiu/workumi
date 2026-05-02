@@ -10,7 +10,7 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
-import { CheckSquare } from 'lucide-react';
+import { CheckSquare, EyeOff } from 'lucide-react';
 import { TaskKanbanColumn, type TaskStatus } from './task-kanban/task-kanban-column';
 import { TaskKanbanCard } from './task-kanban/task-kanban-card';
 import type { Task } from '@/types/work';
@@ -30,7 +30,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
     cancelled: [],
 };
 
-const VISIBLE_COLUMNS: { status: TaskStatus; title: string }[] = [
+const ALL_COLUMNS: { status: TaskStatus; title: string }[] = [
     { status: 'todo', title: 'To Do' },
     { status: 'in_progress', title: 'In Progress' },
     { status: 'in_review', title: 'In Review' },
@@ -39,12 +39,50 @@ const VISIBLE_COLUMNS: { status: TaskStatus; title: string }[] = [
     { status: 'blocked', title: 'Blocked' },
 ];
 
+async function transitionTask(taskId: string, status: string): Promise<boolean> {
+    const response = await fetch(`/work/tasks/${taskId}/transition`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN':
+                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+        },
+        body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to transition task:', data.message);
+        return false;
+    }
+    return true;
+}
+
 export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [hideCompleted, setHideCompleted] = useState(false);
+    // optimistic: taskId → overridden status
+    const [optimisticStatuses, setOptimisticStatuses] = useState<Record<string, string>>({});
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    );
+
+    const effectiveStatus = useCallback(
+        (task: Task) => optimisticStatuses[task.id] ?? task.status,
+        [optimisticStatuses]
+    );
+
+    const visibleColumns = useMemo(
+        () => (hideCompleted ? ALL_COLUMNS.filter((c) => c.status !== 'done') : ALL_COLUMNS),
+        [hideCompleted]
+    );
+
+    const visibleTasks = useMemo(
+        () => (hideCompleted ? tasks.filter((t) => effectiveStatus(t) !== 'done') : tasks),
+        [tasks, hideCompleted, effectiveStatus]
     );
 
     const tasksByStatus = useMemo(() => {
@@ -56,18 +94,19 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
             done: [],
             blocked: [],
         };
-        tasks.forEach((task) => {
-            if (grouped[task.status]) {
-                grouped[task.status].push(task);
+        visibleTasks.forEach((task) => {
+            const status = effectiveStatus(task);
+            if (grouped[status]) {
+                grouped[status].push(task);
             }
         });
         return grouped;
-    }, [tasks]);
+    }, [visibleTasks, effectiveStatus]);
 
     const validDropTargets = useMemo(() => {
         if (!activeTask) return new Set<string>();
-        return new Set(VALID_TRANSITIONS[activeTask.status] ?? []);
-    }, [activeTask]);
+        return new Set(VALID_TRANSITIONS[effectiveStatus(activeTask)] ?? []);
+    }, [activeTask, effectiveStatus]);
 
     const handleDragStart = useCallback(
         (event: DragStartEvent) => {
@@ -87,44 +126,68 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
             const task = tasks.find((t) => t.id === active.id);
             if (!task) return;
 
+            const currentStatus = effectiveStatus(task);
             const targetStatus = over.id as string;
-            if (task.status === targetStatus) return;
+            if (currentStatus === targetStatus) return;
 
-            const validTargets = VALID_TRANSITIONS[task.status] ?? [];
+            const validTargets = VALID_TRANSITIONS[currentStatus] ?? [];
             if (!validTargets.includes(targetStatus)) return;
+
+            // Move card immediately
+            setOptimisticStatuses((prev) => ({ ...prev, [task.id]: targetStatus }));
 
             setIsTransitioning(true);
             try {
-                const response = await fetch(`/work/tasks/${task.id}/transition`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                    },
-                    body: JSON.stringify({ status: targetStatus }),
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    console.error('Failed to transition task:', data.message);
-                    return;
+                const ok = await transitionTask(task.id, targetStatus);
+                if (ok) {
+                    router.reload({ only: ['tasks'] });
+                } else {
+                    // Revert on failure
+                    setOptimisticStatuses((prev) => {
+                        const next = { ...prev };
+                        delete next[task.id];
+                        return next;
+                    });
                 }
-
-                router.reload({ only: ['tasks'] });
-            } catch (error) {
-                console.error('Error transitioning task:', error);
             } finally {
                 setIsTransitioning(false);
             }
         },
-        [tasks, isTransitioning]
+        [tasks, isTransitioning, effectiveStatus]
+    );
+
+    const handleMarkDone = useCallback(
+        async (taskId: string) => {
+            if (isTransitioning) return;
+
+            // Move card immediately
+            setOptimisticStatuses((prev) => ({ ...prev, [taskId]: 'done' }));
+
+            setIsTransitioning(true);
+            try {
+                const ok = await transitionTask(taskId, 'done');
+                if (ok) {
+                    router.reload({ only: ['tasks'] });
+                } else {
+                    setOptimisticStatuses((prev) => {
+                        const next = { ...prev };
+                        delete next[taskId];
+                        return next;
+                    });
+                }
+            } finally {
+                setIsTransitioning(false);
+            }
+        },
+        [isTransitioning]
     );
 
     const handleDragCancel = useCallback(() => setActiveTask(null), []);
 
-    const activeCount = tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled').length;
+    const activeCount = tasks.filter(
+        (t) => effectiveStatus(t) !== 'done' && effectiveStatus(t) !== 'cancelled'
+    ).length;
+    const doneCount = tasks.filter((t) => effectiveStatus(t) === 'done').length;
 
     return (
         <DndContext
@@ -135,26 +198,43 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
             onDragCancel={handleDragCancel}
         >
             <div className="space-y-6">
-                {/* Summary */}
-                <div className="flex items-center gap-6">
-                    <div className="px-4 py-2 bg-card border border-border rounded-lg">
-                        <div className="text-2xl font-bold text-foreground">
-                            {activeCount}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">
-                                / {tasks.length}
-                            </span>
+                {/* Summary + filter toggle */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <div className="px-4 py-2 bg-card border border-border rounded-lg">
+                            <div className="text-2xl font-bold text-foreground">
+                                {activeCount}
+                                <span className="text-sm font-normal text-muted-foreground ml-1">
+                                    / {tasks.length}
+                                </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Active Tasks</div>
                         </div>
-                        <div className="text-xs text-muted-foreground">Active Tasks</div>
+                        <div className="text-xs text-muted-foreground">
+                            All tasks across your workspace. Drag cards between columns to update status.
+                        </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                        All tasks across your workspace. Drag cards between columns to update status.
-                    </div>
+
+                    {doneCount > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setHideCompleted((v) => !v)}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                                hideCompleted
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                            }`}
+                        >
+                            <EyeOff className="h-3.5 w-3.5" />
+                            Hide completed{hideCompleted && ` (${doneCount})`}
+                        </button>
+                    )}
                 </div>
 
                 {/* Board */}
                 <div className="overflow-x-auto pb-4">
                     <div className="flex gap-4 min-w-max">
-                        {VISIBLE_COLUMNS.map((column) => (
+                        {visibleColumns.map((column) => (
                             <TaskKanbanColumn
                                 key={column.status}
                                 status={column.status}
@@ -162,7 +242,7 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
                                 tasks={(tasksByStatus[column.status] ?? []).map((t) => ({
                                     id: t.id,
                                     title: t.title,
-                                    status: t.status,
+                                    status: effectiveStatus(t),
                                     assignedToName: t.assignedToName,
                                     isBlocked: t.isBlocked,
                                     checklistItems: t.checklistItems,
@@ -171,6 +251,7 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
                                 }))}
                                 isValidDropTarget={validDropTargets.has(column.status)}
                                 activeTaskId={activeTask?.id ?? null}
+                                onMarkDone={handleMarkDone}
                             />
                         ))}
                     </div>
@@ -189,13 +270,13 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
                     </div>
                 )}
 
-                {/* Drag tip */}
+                {/* Tip */}
                 {tasks.length > 0 && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-lg p-3">
                         <CheckSquare className="w-4 h-4 shrink-0" />
                         <span>
-                            <strong>Tip:</strong> Drag cards between columns to update status. Click a card to view
-                            details.
+                            <strong>Tip:</strong> Drag cards between columns to update status, or click the{' '}
+                            <CheckSquare className="inline h-3 w-3" /> icon on a card to mark it done directly.
                         </span>
                     </div>
                 )}
@@ -207,7 +288,7 @@ export function KanbanTasksView({ tasks }: KanbanTasksViewProps) {
                         task={{
                             id: activeTask.id,
                             title: activeTask.title,
-                            status: activeTask.status,
+                            status: effectiveStatus(activeTask),
                             assignedToName: activeTask.assignedToName,
                             isBlocked: activeTask.isBlocked,
                             checklistItems: activeTask.checklistItems,
