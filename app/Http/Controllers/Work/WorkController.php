@@ -310,7 +310,7 @@ class WorkController extends Controller
     private function getWorkOrders(Team $team): array
     {
         return WorkOrder::forTeam($team->id)
-            ->with(['project', 'assignedTo', 'createdBy', 'workOrderList'])
+            ->with(['project', 'assignedTo', 'createdBy', 'workOrderList', 'tasks'])
             ->orderBy('due_date')
             ->get()
             ->map(fn (WorkOrder $wo) => [
@@ -334,6 +334,8 @@ class WorkController extends Controller
                 'createdByName' => $wo->createdBy?->name ?? 'Unknown',
                 'workOrderListId' => $wo->work_order_list_id ? (string) $wo->work_order_list_id : null,
                 'workOrderListName' => $wo->workOrderList?->name,
+                'tasksCount' => $wo->tasks->count(),
+                'completedTasksCount' => $wo->tasks->where('status', 'done')->count(),
             ])
             ->all();
     }

@@ -7,6 +7,7 @@ import { edit as editLanguage } from '@/routes/account/language';
 import { edit } from '@/routes/account/profile';
 import { show } from '@/routes/account/two-factor';
 import { edit as editPassword } from '@/routes/account/password';
+import { index as apiTokensIndex } from '@/routes/account/api-tokens';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -46,6 +47,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         {
             title: t('nav.language'),
             href: editLanguage(),
+            icon: null,
+        },
+        {
+            title: t('nav.api_tokens'),
+            href: apiTokensIndex(),
             icon: null,
         },
     ];

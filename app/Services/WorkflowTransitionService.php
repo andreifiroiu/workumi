@@ -29,7 +29,7 @@ class WorkflowTransitionService
      * @var array<string, array<string>>
      */
     private const TASK_TRANSITIONS = [
-        'todo' => ['in_progress', 'cancelled'],
+        'todo' => ['in_progress', 'done', 'cancelled'],
         'in_progress' => ['in_review', 'done', 'blocked', 'cancelled'],
         'in_review' => ['approved', 'revision_requested', 'cancelled'],
         'approved' => ['done', 'revision_requested', 'cancelled'],

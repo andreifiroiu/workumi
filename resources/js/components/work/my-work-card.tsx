@@ -1,4 +1,4 @@
-import { Clock, AlertCircle, CheckCircle2, Building2, LayoutList } from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle2, Building2, LayoutList, CheckSquare } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { StatusBadge } from './status-badge';
 import { ProgressBar } from './progress-bar';
@@ -79,18 +79,26 @@ function WorkOrderCard({ workOrder }: { workOrder: WorkOrder }) {
                         <Clock className="h-3.5 w-3.5 shrink-0" />
                         {workOrder.actualHours}/{workOrder.estimatedHours}h
                     </span>
-                    {daysUntilDue !== null && (
-                        <span
-                            className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-destructive' : ''}`}
-                        >
-                            {isOverdue ? (
-                                <AlertCircle className="h-3.5 w-3.5" />
-                            ) : (
-                                <Clock className="h-3.5 w-3.5" />
-                            )}
-                            {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` : `${daysUntilDue}d left`}
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {workOrder.tasksCount !== undefined && workOrder.tasksCount > 0 && (
+                            <span className="flex items-center gap-1">
+                                <CheckSquare className="h-3.5 w-3.5 shrink-0" />
+                                {workOrder.completedTasksCount}/{workOrder.tasksCount}
+                            </span>
+                        )}
+                        {daysUntilDue !== null && (
+                            <span
+                                className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-destructive' : ''}`}
+                            >
+                                {isOverdue ? (
+                                    <AlertCircle className="h-3.5 w-3.5" />
+                                ) : (
+                                    <Clock className="h-3.5 w-3.5" />
+                                )}
+                                {isOverdue ? `${Math.abs(daysUntilDue)}d overdue` : `${daysUntilDue}d left`}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 

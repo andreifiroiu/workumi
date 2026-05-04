@@ -6,7 +6,8 @@
     "password": "Contraseña",
     "two_factor": "Autenticación de dos factores",
     "appearance": "Apariencia",
-    "language": "Idioma"
+    "language": "Idioma",
+    "api_tokens": "Tokens de API"
   },
   "profile": {
     "title": "Información del perfil",

@@ -6,7 +6,8 @@
     "password": "Parolă",
     "two_factor": "Autentificare cu doi factori",
     "appearance": "Aspect",
-    "language": "Limbă"
+    "language": "Limbă",
+    "api_tokens": "Token API"
   },
   "profile": {
     "title": "Informații profil",

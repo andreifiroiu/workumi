@@ -76,6 +76,8 @@ export interface WorkOrder {
     positionInList?: number;
     userRaciRoles?: RaciRole[];
     averageBillingRate?: number;
+    tasksCount?: number;
+    completedTasksCount?: number;
 }
 
 export interface WorkOrderInList {

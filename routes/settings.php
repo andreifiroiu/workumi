@@ -5,6 +5,7 @@ use App\Http\Controllers\Settings\AgentTemplateController;
 use App\Http\Controllers\Settings\AgentWorkflowController;
 use App\Http\Controllers\Settings\AIAgentsController;
 use App\Http\Controllers\Settings\ApiKeysController;
+use App\Http\Controllers\Settings\ApiTokenController;
 use App\Http\Controllers\Settings\AuditLogController;
 use App\Http\Controllers\Settings\IntegrationsController;
 use App\Http\Controllers\Settings\InvitationController;
@@ -56,6 +57,11 @@ Route::middleware('auth')->group(function () {
         // Account Settings - Rates (rates are immutable for history tracking, only create is allowed)
         Route::get('/settings/rates', [UserRateController::class, 'index'])->name('settings.rates.index');
         Route::post('/settings/rates', [UserRateController::class, 'store'])->name('settings.rates.store');
+
+        // API Tokens (Sanctum personal access tokens for remote MCP / API access)
+        Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('account.api-tokens.index');
+        Route::post('/api-tokens', [ApiTokenController::class, 'store'])->name('account.api-tokens.store');
+        Route::delete('/api-tokens/{token}', [ApiTokenController::class, 'destroy'])->name('account.api-tokens.destroy');
     });
 
     // ========================================================================
