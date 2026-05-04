@@ -31,6 +31,7 @@ import { useState } from 'react';
 interface PersonalAccessToken {
     id: number;
     name: string;
+    abilities: string[];
     lastUsedAt: string | null;
     createdAt: string;
 }
@@ -124,12 +125,21 @@ function TokenRow({
           })
         : 'Never';
 
+    const isReadOnly = !token.abilities.includes('*') && !token.abilities.includes('write');
+
     return (
         <div className="flex items-center justify-between rounded-md border px-4 py-3">
             <div className="flex items-center gap-3">
                 <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
-                    <p className="text-sm font-medium">{token.name}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{token.name}</p>
+                        {isReadOnly && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                                Read only
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                         Created {createdAt} · Last used {lastUsed}
                     </p>
@@ -191,7 +201,7 @@ function GenerateTokenDialog({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const form = useForm({ name: '' });
+    const form = useForm({ name: '', access: 'full' as 'full' | 'read' });
 
     const handleOpenChange = (isOpen: boolean) => {
         if (!isOpen) {
@@ -236,6 +246,35 @@ function GenerateTokenDialog({
                                 {form.errors.name}
                             </p>
                         )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Access level</Label>
+                        <div className="flex flex-col gap-2">
+                            {(['full', 'read'] as const).map((value) => (
+                                <label
+                                    key={value}
+                                    className="flex cursor-pointer items-center gap-2"
+                                >
+                                    <input
+                                        type="radio"
+                                        name="access"
+                                        value={value}
+                                        checked={form.data.access === value}
+                                        onChange={() => form.setData('access', value)}
+                                        className="accent-primary"
+                                    />
+                                    <span className="text-sm">
+                                        {value === 'full' ? 'Full access' : 'Read only'}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {form.data.access === 'read'
+                                ? 'This token can only read data. Write operations will be rejected.'
+                                : 'This token can read and write all data in your team.'}
+                        </p>
                     </div>
 
                     <DialogFooter>

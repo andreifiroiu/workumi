@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Projects;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\Project;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -16,8 +17,12 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Update an existing project. Only provided fields are updated. Returns the updated project.')]
 class UpdateProjectTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
+
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'name' => ['sometimes', 'string', 'max:255'],
@@ -25,7 +30,7 @@ class UpdateProjectTool extends Tool
             'status' => ['sometimes', 'string', Rule::in(['active', 'on_hold', 'completed', 'archived'])],
             'start_date' => ['sometimes', 'nullable', 'date'],
             'target_end_date' => ['sometimes', 'nullable', 'date'],
-            'party_id' => ['sometimes', 'nullable', 'integer'],
+            'party_id' => ['sometimes', 'nullable', 'integer', Rule::exists('parties', 'id')->where('team_id', $context->teamId)],
             'budget_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'budget_cost' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'budget_type' => ['sometimes', 'nullable', 'string', Rule::in(['fixed_price', 'time_and_materials', 'monthly_subscription'])],

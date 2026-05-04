@@ -21,6 +21,8 @@ class ListPartiesTool extends Tool
         $validated = $request->validate([
             'type' => ['nullable', 'string', Rule::in(['client', 'vendor', 'partner', 'department', 'internal-department', 'team_member'])],
             'status' => ['nullable', 'string'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $query = Party::forTeam($context->teamId)
@@ -34,12 +36,15 @@ class ListPartiesTool extends Tool
             $query->where('status', $validated['status']);
         }
 
-        $parties = $query->get([
+        $limit = $validated['limit'] ?? 50;
+        $offset = $validated['offset'] ?? 0;
+
+        $parties = $query->offset($offset)->limit($limit)->get([
             'id', 'name', 'type', 'status', 'contact_name',
             'contact_email', 'phone', 'website', 'tags',
         ]);
 
-        return Response::json($parties->toArray());
+        return Response::json(['data' => $parties->toArray(), 'limit' => $limit, 'offset' => $offset]);
     }
 
     public function schema(JsonSchema $schema): array
@@ -47,6 +52,8 @@ class ListPartiesTool extends Tool
         return [
             'type' => $schema->string()->enum(['client', 'vendor', 'partner', 'department', 'internal-department', 'team_member'])->nullable()->description('Filter by party type'),
             'status' => $schema->string()->nullable()->description('Filter by status (e.g. active)'),
+            'limit' => $schema->integer()->nullable()->description('Max records to return (default 50, max 200)'),
+            'offset' => $schema->integer()->nullable()->description('Number of records to skip (default 0)'),
         ];
     }
 }

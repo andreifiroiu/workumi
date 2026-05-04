@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\WorkOrders;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\WorkOrder;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -16,8 +17,12 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Update an existing work order. Only provided fields are updated. Returns the updated work order.')]
 class UpdateWorkOrderTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
+
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'title' => ['sometimes', 'string', 'max:255'],
@@ -26,7 +31,7 @@ class UpdateWorkOrderTool extends Tool
             'priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'estimated_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['sometimes', 'nullable', 'integer'],
+            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($context->teamId)],
             'acceptance_criteria' => ['sometimes', 'nullable', 'array'],
             'acceptance_criteria.*' => ['string'],
         ]);
