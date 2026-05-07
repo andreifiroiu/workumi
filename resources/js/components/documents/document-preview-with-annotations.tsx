@@ -20,6 +20,7 @@ import type {
     AnnotationPosition,
     CreateAnnotationData,
 } from '@/types/documents.d';
+import { getCsrfToken } from '@/lib/csrf';
 
 interface DocumentPreviewWithAnnotationsProps {
     documentId: string;
@@ -131,9 +132,7 @@ export function DocumentPreviewWithAnnotations({
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content ?? '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify(data),
             });

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
+import { getCsrfToken } from '@/lib/csrf';
 import type {
     BulkAssignment,
     PMCopilotSuggestionsResponse,
@@ -27,7 +28,7 @@ export function useTriggerPMCopilot() {
         setError(null);
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const csrfToken = getCsrfToken();
 
             const response = await fetch(`/work/work-orders/${workOrderId}/pm-copilot/trigger`, {
                 method: 'POST',
@@ -35,7 +36,7 @@ export function useTriggerPMCopilot() {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-XSRF-TOKEN': csrfToken,
                 },
             });
 
@@ -160,8 +161,7 @@ export function useApproveSuggestion(workOrderId: string) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
             });
 
@@ -216,8 +216,7 @@ export function useRejectSuggestion(workOrderId: string) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ reason }),
             });
@@ -269,8 +268,7 @@ export function useUpdatePMCopilotMode() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ pm_copilot_mode: mode }),
             });
@@ -369,8 +367,7 @@ export function useDelegatePlan(workOrderId: string) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
             });
 
@@ -434,8 +431,7 @@ export function useAssignTask(workOrderId: string) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({
                     assignee_type: assigneeType,
@@ -488,8 +484,7 @@ export function useConfirmAssignments(workOrderId: string) {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({
                     assignments: assignments.map((a) => ({

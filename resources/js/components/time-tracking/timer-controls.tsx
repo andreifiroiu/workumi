@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { TimerConfirmationDialog } from '@/components/workflow/timer-confirmation-dialog';
 import type { ActiveTimer } from '@/types';
 import { cn } from '@/lib/utils';
+import { getCsrfToken } from '@/lib/csrf';
 
 interface TimerControlsProps {
     taskId: number;
@@ -251,20 +252,3 @@ export function TimerControls({
     );
 }
 
-/**
- * Gets the CSRF token from the cookie for API requests.
- */
-function getCsrfToken(): string {
-    const name = 'XSRF-TOKEN=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const cookies = decodedCookie.split(';');
-
-    for (const cookie of cookies) {
-        const trimmed = cookie.trim();
-        if (trimmed.startsWith(name)) {
-            return trimmed.substring(name.length);
-        }
-    }
-
-    return '';
-}

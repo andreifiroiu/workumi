@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { AnnotationPopoverProps, DocumentAnnotation } from '@/types/documents.d';
 import type { CommunicationMessage } from '@/types/communications.d';
+import { getCsrfToken } from '@/lib/csrf';
 
 /**
  * Format timestamp to relative time.
@@ -265,9 +266,7 @@ export function AnnotationPopover({
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                            'meta[name="csrf-token"]'
-                        )?.content ?? '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({ content: replyContent.trim() }),
                 }

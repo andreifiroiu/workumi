@@ -12,6 +12,7 @@ import {
 import { router } from '@inertiajs/react';
 import { TaskKanbanColumn, type TaskStatus } from './task-kanban-column';
 import { TaskKanbanCard, type TaskKanbanCardProps } from './task-kanban-card';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface Task {
     id: string;
@@ -142,12 +143,7 @@ export function TaskKanbanBoard({ tasks, workOrderId }: TaskKanbanBoardProps) {
             try {
                 const response = await fetch(`/work/tasks/${taskId}/transition`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
+                    headers: csrfHeaders(),
                     body: JSON.stringify({ status: targetStatus }),
                 });
 

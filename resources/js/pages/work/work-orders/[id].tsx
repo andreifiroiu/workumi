@@ -111,6 +111,7 @@ import {
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BreadcrumbItem } from '@/types';
+import { getCsrfToken } from '@/lib/csrf';
 
 /**
  * Team member type
@@ -730,8 +731,7 @@ export default function WorkOrderDetail({
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({ taskIds: newOrder.map((t) => t.id) }),
                 });
@@ -895,8 +895,7 @@ export default function WorkOrderDetail({
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
                         status: selectedTransition,
@@ -1010,8 +1009,7 @@ export default function WorkOrderDetail({
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
                         accountable_id: newValue.accountable_id,
@@ -1206,8 +1204,7 @@ export default function WorkOrderDetail({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ status: selectedTaskTransition }),
             });
@@ -1293,8 +1290,7 @@ export default function WorkOrderDetail({
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({ status }),
                 });
@@ -1335,8 +1331,7 @@ export default function WorkOrderDetail({
                         headers: {
                             'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN':
-                                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'X-XSRF-TOKEN': getCsrfToken(),
                         },
                         body: JSON.stringify({ taskIds: reordered.map((t) => t.id) }),
                     }).catch(() => {});

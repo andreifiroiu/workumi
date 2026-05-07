@@ -22,6 +22,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Copy, Check, Eye, EyeOff, Link2, AlertCircle } from 'lucide-react';
 import type { DocumentShareLink, ShareLinkDialogProps } from '@/types/documents.d';
 import shareLinks from '@/routes/documents/share-links';
+import { getCsrfToken } from '@/lib/csrf';
 
 const EXPIRATION_OPTIONS = [
     { value: '1', label: '1 day' },
@@ -95,9 +96,7 @@ export function ShareLinkDialog({
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content ?? '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({

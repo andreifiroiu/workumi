@@ -14,6 +14,7 @@ import { CheckSquare, EyeOff } from 'lucide-react';
 import { TaskKanbanColumn, type TaskStatus } from './task-kanban/task-kanban-column';
 import { TaskKanbanCard } from './task-kanban/task-kanban-card';
 import type { Task } from '@/types/work';
+import { csrfHeaders } from '@/lib/csrf';
 
 interface KanbanTasksViewProps {
     tasks: Task[];
@@ -43,12 +44,7 @@ const ALL_COLUMNS: { status: TaskStatus; title: string }[] = [
 async function transitionTask(taskId: string, status: string): Promise<boolean> {
     const response = await fetch(`/work/tasks/${taskId}/transition`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN':
-                document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-        },
+        headers: csrfHeaders(),
         body: JSON.stringify({ status }),
     });
 

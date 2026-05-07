@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import type { TodayApproval, TodayTask, TodayBlocker, QuickCaptureData, TodayPageProps } from '@/types/today';
+import { getCsrfToken } from '@/lib/csrf';
 import {
     DailySummaryCard,
     MetricsBar,
@@ -67,8 +68,7 @@ export default function Today({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ status: 'done' }),
             });
@@ -91,8 +91,7 @@ export default function Today({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ status: backendStatus }),
             });

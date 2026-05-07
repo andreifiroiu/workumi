@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { DocumentCommentsProps } from '@/types/documents.d';
 import type { CommunicationMessage, CommunicationThread } from '@/types/communications.d';
+import { getCsrfToken } from '@/lib/csrf';
 
 interface ApiResponse {
     thread: CommunicationThread | null;
@@ -274,9 +275,7 @@ export function DocumentComments({
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                        'meta[name="csrf-token"]'
-                    )?.content ?? '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
                 body: JSON.stringify({ content: newComment.trim() }),
             });
@@ -305,9 +304,7 @@ export function DocumentComments({
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                            'meta[name="csrf-token"]'
-                        )?.content ?? '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({ content }),
                 });
@@ -338,9 +335,7 @@ export function DocumentComments({
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                            'meta[name="csrf-token"]'
-                        )?.content ?? '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                 });
 

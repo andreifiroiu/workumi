@@ -17,6 +17,7 @@ import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
 import { KanbanTasksView } from './kanban-tasks-view';
 import type { WorkOrder, Task } from '@/types/work';
+import { csrfHeaders } from '@/lib/csrf';
 
 type KanbanSubtab = 'work_orders' | 'tasks';
 
@@ -126,12 +127,7 @@ export function KanbanView({ workOrders, tasks, onCreateWorkOrder }: KanbanViewP
             try {
                 const response = await fetch(`/work/work-orders/${workOrder.id}/transition`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                    },
+                    headers: csrfHeaders(),
                     body: JSON.stringify({ status: targetStatus }),
                 });
 

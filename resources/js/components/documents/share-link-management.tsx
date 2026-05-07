@@ -41,6 +41,7 @@ import type {
     ShareAccessLog,
 } from '@/types/documents.d';
 import shareLinks from '@/routes/documents/share-links';
+import { getCsrfToken } from '@/lib/csrf';
 
 export function ShareLinkManagement({
     documentId,
@@ -110,9 +111,7 @@ export function ShareLinkManagement({
                     method: 'DELETE',
                     headers: {
                         Accept: 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>(
-                            'meta[name="csrf-token"]'
-                        )?.content ?? '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     credentials: 'same-origin',
                 }

@@ -69,6 +69,7 @@ import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-orde
 import { taskStatusLabels } from '@/components/ui/status-badge';
 import { useState, useEffect, useCallback } from 'react';
 import type { BreadcrumbItem } from '@/types';
+import { getCsrfToken } from '@/lib/csrf';
 
 /**
  * Extended Task type with additional workflow properties
@@ -414,8 +415,7 @@ export default function TaskDetail({
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
                         status: selectedTransition,
@@ -526,8 +526,7 @@ export default function TaskDetail({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
             });
 
@@ -561,8 +560,7 @@ export default function TaskDetail({
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-XSRF-TOKEN': getCsrfToken(),
                 },
             });
 
