@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-08T18:20:01Z",
+  "fetched_at": "2026-05-08T18:27:19Z",
   "run_id": "db68fa6813a8",
   "issues": [
     {
@@ -29,7 +29,6 @@
   "pull_requests": [],
   "branches": [
     "feature/zenve",
-    "fix/csrf-cookie",
     "main"
   ]
 }
