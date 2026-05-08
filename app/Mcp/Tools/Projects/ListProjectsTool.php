@@ -21,6 +21,8 @@ class ListProjectsTool extends Tool
         $validated = $request->validate([
             'status' => ['nullable', 'string', Rule::in(['active', 'on_hold', 'completed', 'archived'])],
             'include_archived' => ['nullable', 'boolean'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $query = Project::forTeam($context->teamId)
@@ -33,12 +35,15 @@ class ListProjectsTool extends Tool
             $query->notArchived();
         }
 
-        $projects = $query->get([
+        $limit = $validated['limit'] ?? 50;
+        $offset = $validated['offset'] ?? 0;
+
+        $projects = $query->offset($offset)->limit($limit)->get([
             'id', 'name', 'status', 'progress', 'start_date',
             'target_end_date', 'party_id', 'owner_id', 'is_private',
         ]);
 
-        return Response::json($projects->toArray());
+        return Response::json(['data' => $projects->toArray(), 'limit' => $limit, 'offset' => $offset]);
     }
 
     public function schema(JsonSchema $schema): array
@@ -46,6 +51,8 @@ class ListProjectsTool extends Tool
         return [
             'status' => $schema->string()->enum(['active', 'on_hold', 'completed', 'archived'])->nullable()->description('Filter by project status'),
             'include_archived' => $schema->boolean()->nullable()->description('Include archived projects (default: false)'),
+            'limit' => $schema->integer()->nullable()->description('Max records to return (default 50, max 200)'),
+            'offset' => $schema->integer()->nullable()->description('Number of records to skip (default 0)'),
         ];
     }
 }

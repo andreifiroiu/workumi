@@ -4,14 +4,17 @@
   "default_branch": "fix/csrf-cookie",
   "commit_message_prefix": "[zenve]",
   "run_timeout_seconds": 600,
+  "run_schedule": "*/10 * * * *",
   "pipeline": {
-    "zenve:architect": null,
+    "zenve:architect": "zenve:backend-laravel",
     "zenve:code-review": null,
-    "zenve:frontend-dev": null,
-    "zenve:fullstack-dev": null,
-    "zenve:pm": null
+    "zenve:frontend-dev": "zenve:code-review",
+    "zenve:backend-laravel": "zenve:frontend-dev",
+    "zenve:pm": "zenve:architect"
   },
   "stack": [
+    "Laravel",
+    "Inertia.js",
     "react",
     "typescript"
   ]

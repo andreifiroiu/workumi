@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -22,6 +23,7 @@ class ApiTokenController extends Controller
             ->map(fn (PersonalAccessToken $token) => [
                 'id' => $token->id,
                 'name' => $token->name,
+                'abilities' => $token->abilities,
                 'lastUsedAt' => $token->last_used_at?->toISOString(),
                 'createdAt' => $token->created_at->toISOString(),
             ]);
@@ -36,9 +38,12 @@ class ApiTokenController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'access' => ['nullable', 'string', Rule::in(['full', 'read'])],
         ]);
 
-        $token = $request->user()->createToken($validated['name']);
+        $abilities = ($validated['access'] ?? 'full') === 'read' ? ['read'] : ['*'];
+
+        $token = $request->user()->createToken($validated['name'], $abilities);
 
         return to_route('account.api-tokens.index')
             ->with('newToken', $token->plainTextToken);
