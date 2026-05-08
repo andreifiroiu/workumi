@@ -4,7 +4,8 @@
   "adapter_type": "claude_code",
   "adapter_config": {
     "model": "claude-opus-4-7",
-    "max_tokens": 8096
+    "max_tokens": 8096,
+      "max_turns": 100
   },
   "skills": [
     "zenve-memory",

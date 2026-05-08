@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-08T18:43:12Z",
+  "fetched_at": "2026-05-08T18:43:55Z",
   "run_id": "8256198592c4",
   "issues": [
     {
@@ -7,8 +7,7 @@
       "title": "Don't display archived work orders in calendar",
       "body": "In the section Work/Calendar I don't want to see archived work orders.",
       "labels": [
-        "zenve:backend-laravel-dev",
-        "zenve:needs-input"
+        "zenve:backend-laravel-dev"
       ],
       "assignees": [],
       "state": "open",
