@@ -1,0 +1,19 @@
+{
+  "slug": "code-review",
+  "name": "Code Reviewer",
+  "adapter_type": "claude_code",
+  "adapter_config": {
+    "model": "claude-opus-4-6",
+    "max_tokens": 8096
+  },
+  "skills": [],
+  "tools": [
+    "Read",
+    "Bash",
+    "Grep"
+  ],
+  "heartbeat_interval_seconds": 0,
+  "github_label": "zenve:code-review",
+  "enabled": true,
+  "mode": "review_pr"
+}

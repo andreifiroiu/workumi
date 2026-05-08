@@ -1,0 +1,67 @@
+{
+  "agents": {
+    "architect": {
+      "files": {
+        "AGENTS.md": "sha256:3ea3ba120c175661aaaebba09e5164e2b46e6e1a1445bc985e24f1d30888b67e",
+        "HEARTBEAT.md": "sha256:2db8cc3ef60213b6057cac3c6a8912bd08f88f69bb4c200bafe2e3a3c42063a7",
+        "RUN.md": "sha256:60083563513b133c41512a920a835d5f3b1ca0b9ebdd9396c3fb0a387caba776",
+        "SOUL.md": "sha256:dc57d70085e77572e07ec1bfd93e8013ba28e15f1d30dda97767b840dfe8ee91"
+      },
+      "installedAt": "2026-05-08T15:24:23Z",
+      "source": "zenve-ai/zenve-registry",
+      "sourceCommitSha": "1344444333d50e88c1b95857572cb55fd3cb1140",
+      "template": "architect"
+    },
+    "code-review": {
+      "files": {
+        "AGENTS.md": "sha256:74a6a325765f96495d8285a3dd6c7d1b89e654433025cd1d566a24a08dabd774",
+        "HEARTBEAT.md": "sha256:e9106fc25114e3d54a35ead12f7cc708d6695dd844ede5805ee61bf81cb6a933",
+        "RUN.md": "sha256:63f03f7bf52b2a2ede5c4c1739a83f05d78ed35a162f0468ab3736ced251efde",
+        "SOUL.md": "sha256:f0c4a56cc7b78f583283302ce62229750fe90063eeb0c8388c8112609bd36f45"
+      },
+      "installedAt": "2026-05-08T15:24:25Z",
+      "source": "zenve-ai/zenve-registry",
+      "sourceCommitSha": "1344444333d50e88c1b95857572cb55fd3cb1140",
+      "template": "code-review"
+    },
+    "frontend-dev": {
+      "files": {
+        "AGENTS.md": "sha256:d98c36a36eb7bb8cd289af884572053b75ab2051527c91f3a96f98b2a87d7b54",
+        "DESIGN.md": "sha256:48c1e9cc1517ae2f7d33d4511e91aef655b99bc0d281d955eb9549ebd269811b",
+        "HEARTBEAT.md": "sha256:0f3a5f38c8f7dff2305931e32b7c8a3df5fbc381781943ace8e51b012e1223f7",
+        "RUN.md": "sha256:3a9bf57ea5aafecd4d0efb7f99094b79327560fd487ffef9d8257ebd636d711c",
+        "SOUL.md": "sha256:1b87aa76bafb1269ae13ce89ed28a84448f43014775628744c571e1a305be3b8"
+      },
+      "installedAt": "2026-05-08T15:24:27Z",
+      "source": "zenve-ai/zenve-registry",
+      "sourceCommitSha": "1344444333d50e88c1b95857572cb55fd3cb1140",
+      "template": "frontend-dev"
+    },
+    "fullstack-dev": {
+      "files": {
+        "AGENTS.md": "sha256:6a09985c12f1e49732e6d98602cece04a53d3a2a0d2cb66721fab306ec682569",
+        "HEARTBEAT.md": "sha256:6a77bde8a177f5bd8e5b45cbf2686da83be9a3adf015559d57bfbad5d4896969",
+        "RUN.md": "sha256:2ddd5aa2a3c140c70bda326df1f0a7d2ad54905cfbec06a2cdd525e55aee003c",
+        "SOUL.md": "sha256:6799e34f0e92b2394d82a789cae8f328acc6ea02a5d01971acc98ab8672e542d"
+      },
+      "installedAt": "2026-05-08T15:24:29Z",
+      "source": "zenve-ai/zenve-registry",
+      "sourceCommitSha": "1344444333d50e88c1b95857572cb55fd3cb1140",
+      "template": "fullstack-dev"
+    },
+    "pm": {
+      "files": {
+        "AGENTS.md": "sha256:13032ec13d47ba232665532eb2ee4918508ea418197d2d19db589990afb1a797",
+        "HEARTBEAT.md": "sha256:0f3a5f38c8f7dff2305931e32b7c8a3df5fbc381781943ace8e51b012e1223f7",
+        "PRODUCT.md": "sha256:65a7d86b2a5bdb33272ca2c48a44335eaf48f5514472e740b2a1dd2253ce2934",
+        "RUN.md": "sha256:6c72a063078b9dd746d611ab28d99854954adbfd43ca8ef4d093e8c79494f2d8",
+        "SOUL.md": "sha256:8eea8096448733b2f98d8256894deee0039a759a199bf8d6786b74b5c03a0659"
+      },
+      "installedAt": "2026-05-08T15:24:32Z",
+      "source": "zenve-ai/zenve-registry",
+      "sourceCommitSha": "1344444333d50e88c1b95857572cb55fd3cb1140",
+      "template": "pm"
+    }
+  },
+  "version": 1
+}

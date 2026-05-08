@@ -1,0 +1,22 @@
+{
+  "slug": "architect",
+  "name": "Architect Agent",
+  "adapter_type": "claude_code",
+  "adapter_config": {
+    "model": "claude-opus-4-6",
+    "max_tokens": 8096,
+    "turns": 30
+  },
+  "skills": [
+    "zenve-memory"
+  ],
+  "tools": [
+    "Read",
+    "Write",
+    "Bash"
+  ],
+  "heartbeat_interval_seconds": 0,
+  "github_label": "zenve:architect",
+  "enabled": true,
+  "mode": "artifact_pr"
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "fullstack-dev",
+  "name": "Fullstack Developer",
+  "adapter_type": "claude_code",
+  "adapter_config": {
+    "model": "claude-opus-4-6",
+    "max_tokens": 8096
+  },
+  "skills": [
+    "zenve-memory",
+    "react-setup",
+    "react-rules",
+    "fastapi-setup",
+    "fastapi-monorepo-setup",
+    "fastapi-rules"
+  ],
+  "tools": [
+    "Read",
+    "Write",
+    "Bash"
+  ],
+  "heartbeat_interval_seconds": 0,
+  "github_label": "zenve:fullstack-dev",
+  "enabled": true,
+  "mode": "code_pr"
+}

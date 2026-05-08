@@ -1,0 +1,18 @@
+{
+  "project": "workumi",
+  "description": "Workumi is a work orchestration platform that mix humans and AI agents to get the work done.",
+  "default_branch": "fix/csrf-cookie",
+  "commit_message_prefix": "[zenve]",
+  "run_timeout_seconds": 600,
+  "pipeline": {
+    "zenve:architect": null,
+    "zenve:code-review": null,
+    "zenve:frontend-dev": null,
+    "zenve:fullstack-dev": null,
+    "zenve:pm": null
+  },
+  "stack": [
+    "react",
+    "typescript"
+  ]
+}
