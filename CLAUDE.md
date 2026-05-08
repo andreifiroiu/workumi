@@ -2,6 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+
 ## Project Overview
 
 This is a Laravel 12 application using React 19, Inertia.js, TypeScript, and Radix UI for the frontend. The project uses Laravel Fortify for authentication, Tailwind CSS v4 with Vite for asset building, and Pest for testing. It includes the neuron-ai package (planned) for AI agent functionality.
