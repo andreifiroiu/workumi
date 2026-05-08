@@ -6,10 +6,10 @@
   "run_timeout_seconds": 600,
   "run_schedule": "*/10 * * * *",
   "pipeline": {
-    "zenve:architect": "zenve:backend-laravel",
+    "zenve:architect": "zenve:backend-laravel-dev",
     "zenve:code-review": null,
     "zenve:frontend-dev": "zenve:code-review",
-    "zenve:backend-laravel": "zenve:frontend-dev",
+    "zenve:backend-laravel-dev": "zenve:frontend-dev",
     "zenve:pm": "zenve:architect"
   },
   "stack": [
