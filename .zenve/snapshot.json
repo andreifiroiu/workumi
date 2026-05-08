@@ -1,6 +1,6 @@
 {
-  "fetched_at": "2026-05-08T18:27:19Z",
-  "run_id": "db68fa6813a8",
+  "fetched_at": "2026-05-08T18:37:44Z",
+  "run_id": "4ff728ec6e16",
   "issues": [
     {
       "number": 2,
@@ -28,7 +28,6 @@
   ],
   "pull_requests": [],
   "branches": [
-    "feature/zenve",
     "main"
   ]
 }
