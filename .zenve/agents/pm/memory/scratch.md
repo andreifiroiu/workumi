@@ -1,0 +1,2 @@
+- PRODUCT.md vision/north-star/KPIs still need defining. Ask user when appropriate.
+- Deferred idea logged: show/hide toggle for archived items on calendar. Revisit if users ask to temporarily view archived work.
