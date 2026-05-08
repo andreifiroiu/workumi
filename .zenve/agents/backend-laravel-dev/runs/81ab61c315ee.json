@@ -1,0 +1,27 @@
+{
+  "run_id": "81ab61c315ee",
+  "agent": "backend-laravel-dev",
+  "started_at": "2026-05-08T19:01:26Z",
+  "finished_at": "2026-05-08T19:24:23Z",
+  "duration_seconds": 1376.500118875003,
+  "status": "completed",
+  "exit_code": 0,
+  "item": {
+    "type": "issue",
+    "number": 2,
+    "title": "Don't display archived work orders in calendar"
+  },
+  "output": "Acknowledged — that was an early exploratory background task that's now obsolete. The implementation is complete and tests pass.\n\nRUN_OK: Issue #2 implemented — `WorkController::getWorkOrders()` applies `notArchived()` scope; feature tests pass.",
+  "pipeline_transition": {
+    "from_label": "zenve:backend-laravel-dev",
+    "to_label": [
+      "zenve:frontend-dev"
+    ]
+  },
+  "token_usage": {
+    "input_tokens": 6,
+    "output_tokens": 94,
+    "cost_usd": 1.7879027500000002
+  },
+  "error": null
+}
