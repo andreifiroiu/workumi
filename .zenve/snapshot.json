@@ -1,37 +1,7 @@
 {
-  "fetched_at": "2026-05-08T19:01:22Z",
+  "fetched_at": "2026-05-08T19:30:02Z",
   "run_id": "81ab61c315ee",
-  "issues": [
-    {
-      "number": 2,
-      "title": "Don't display archived work orders in calendar",
-      "body": "In the section Work/Calendar I don't want to see archived work orders.",
-      "labels": [
-        "zenve:claimed",
-        "zenve:backend-laravel-dev"
-      ],
-      "assignees": [],
-      "state": "open",
-      "created_at": "2026-05-08T18:06:55Z",
-      "comments": [
-        {
-          "author": "andreifiroiu",
-          "body": "Run complete\n\n---\n\nHere's what I produced for **Issue #2: Don't display archived work orders in calendar**:\n\n### PRD Created\n**`docs/product/hide-archived-work-orders-from-calendar.md`** — contains:\n\n- **Problem statement:** Archived work orders clutter the calendar, creating visual noise and misleading users about active obligations.\n- **User story** with 4 concrete acceptance criteria:\n  1. Archived work orders do not appear on any calendar date.\n  2. Non-archived work orders continue to appear as today.\n  3. Dates with only archived work orders appear empty.\n  4. Archiving a visible work order removes it on next page load.\n- **Explicit non-goals:** No toggle/filter, no project filtering, no other view changes.\n- **Dev-ready appendix** referencing the relevant files (`WorkController::getWorkOrders()`, `scopeNotArchived`, `WorkOrderStatus::Archived`, `calendar-view.tsx`).\n\n### PRODUCT.md Updated\n- Added `[MUST]` priority for this feature.\n- Logged two deferred ideas (archive toggle, project filtering).\n- Added provisional user personas (Team Member, Team Lead).\n\nRUN_OK: PRD created at `docs/product/hide-archived-work-orders-from-calendar.md` for Issue #2 — ready for dev handoff.",
-          "created_at": "2026-05-08T18:12:07Z"
-        },
-        {
-          "author": "andreifiroiu",
-          "body": "Run complete\n\nRUN_OK: wrote plan to docs/plans/hide-archived-work-orders-from-calendar.md",
-          "created_at": "2026-05-08T18:18:48Z"
-        },
-        {
-          "author": "andreifiroiu",
-          "body": "Run needs input\n\nRUN_NEEDS_INPUT: Edit permission for `app/Http/Controllers/Work/WorkController.php` is being denied. The implementation is a single one-line change (add `->notArchived()` to the `getWorkOrders()` query at line 312-314) plus a feature test. Please grant write permission to this file (and to `tests/Feature/Work/WorkControllerCalendarTest.php` for the new test) so I can apply the change per the plan in `docs/plans/hide-archived-work-orders-from-calendar.md`.",
-          "created_at": "2026-05-08T18:42:30Z"
-        }
-      ]
-    }
-  ],
+  "issues": [],
   "pull_requests": [],
   "branches": [
     "main"
