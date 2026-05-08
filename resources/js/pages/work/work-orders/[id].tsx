@@ -139,6 +139,8 @@ interface WorkOrderWithRaci {
     description: string | null;
     projectId: string;
     projectName: string;
+    workOrderListId?: string | null;
+    workOrderListName?: string | null;
     assignedToId: string | null;
     assignedToName: string;
     status: string;
@@ -254,6 +256,7 @@ interface WorkOrderDetailProps {
     rejectionFeedback?: RejectionFeedback | null;
     siblingProjects?: Array<{ id: string; name: string }>;
     siblingWorkOrders?: Array<{ id: string; title: string }>;
+    siblingLists?: Array<{ id: string; name: string }>;
 }
 
 /**
@@ -510,6 +513,7 @@ export default function WorkOrderDetail({
     rejectionFeedback = null,
     siblingProjects = [],
     siblingWorkOrders = [],
+    siblingLists = [],
 }: WorkOrderDetailProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
@@ -623,6 +627,18 @@ export default function WorkOrderDetail({
             href: `/work/projects/${workOrder.projectId}`,
             siblings: siblingProjects.map((p) => ({ title: p.name, href: `/work/projects/${p.id}` })),
         },
+        ...(workOrder.workOrderListName
+            ? [
+                  {
+                      title: workOrder.workOrderListName,
+                      href: `/work/projects/${workOrder.projectId}#list-${workOrder.workOrderListId}`,
+                      siblings: siblingLists.map((list) => ({
+                          title: list.name,
+                          href: `/work/projects/${workOrder.projectId}#list-${list.id}`,
+                      })),
+                  },
+              ]
+            : []),
         {
             title: workOrder.title,
             href: `/work/work-orders/${workOrder.id}`,
