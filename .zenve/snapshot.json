@@ -1,0 +1,24 @@
+{
+  "fetched_at": "2026-05-08T18:07:05Z",
+  "run_id": "456655ffe7c3",
+  "issues": [
+    {
+      "number": 2,
+      "title": "Don't display archived work orders in calendar",
+      "body": "In the section Work/Calendar I don't want to see archived work orders.",
+      "labels": [
+        "zenve:pm"
+      ],
+      "assignees": [],
+      "state": "open",
+      "created_at": "2026-05-08T18:06:55Z",
+      "comments": []
+    }
+  ],
+  "pull_requests": [],
+  "branches": [
+    "feature/zenve",
+    "fix/csrf-cookie",
+    "main"
+  ]
+}
