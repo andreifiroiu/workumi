@@ -1,0 +1,27 @@
+{
+  "run_id": "db68fa6813a8",
+  "agent": "architect",
+  "started_at": "2026-05-08T18:17:16Z",
+  "finished_at": "2026-05-08T18:18:36Z",
+  "duration_seconds": 79.95528333401307,
+  "status": "completed",
+  "exit_code": 0,
+  "item": {
+    "type": "issue",
+    "number": 2,
+    "title": "Don't display archived work orders in calendar"
+  },
+  "output": "RUN_OK: wrote plan to docs/plans/hide-archived-work-orders-from-calendar.md",
+  "pipeline_transition": {
+    "from_label": "zenve:architect",
+    "to_label": [
+      "zenve:backend-laravel"
+    ]
+  },
+  "token_usage": {
+    "input_tokens": 18,
+    "output_tokens": 2538,
+    "cost_usd": 0.5675224999999999
+  },
+  "error": null
+}
