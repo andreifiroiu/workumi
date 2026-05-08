@@ -1,4 +1,4 @@
-# Product: {project_name}
+# Product: Workumi
 
 ## Vision
 
@@ -16,7 +16,8 @@ _Not yet defined._
 
 | Persona | Description | Primary need |
 |---|---|---|
-| _TBD_ | _TBD_ | _TBD_ |
+| Team Member | Individual contributor using Workumi to track and complete assigned work | Clear visibility of current tasks and deadlines |
+| Team Lead / Manager | Oversees team workload and project progress | Accurate workload visibility and project status |
 
 ## Key Metrics / KPIs
 
@@ -31,12 +32,13 @@ _Not yet defined._
 ## Current Priorities
 
 <!-- MoSCoW-labelled backlog. Keep this list short and ordered. -->
-- _Not yet defined._
+- `[MUST]` Hide archived work orders from Calendar view — PRD: `docs/product/hide-archived-work-orders-from-calendar.md`
 
 ## Future / Deferred
 
 <!-- Ideas acknowledged but not committed. -->
-- _Nothing deferred yet._
+- Show/hide toggle for archived work orders on the calendar (allow users to optionally view archived items).
+- Filter archived projects from the calendar view.
 
 ## Open Questions
 
