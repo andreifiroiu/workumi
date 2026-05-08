@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Projects;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\Project;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -16,15 +17,19 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new project for the team. Returns the created project with its new ID.')]
 class CreateProjectTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', 'string', Rule::in(['active', 'on_hold', 'completed'])],
             'start_date' => ['nullable', 'date'],
             'target_end_date' => ['nullable', 'date'],
-            'party_id' => ['nullable', 'integer'],
+            'party_id' => ['nullable', 'integer', Rule::exists('parties', 'id')->where('team_id', $context->teamId)],
             'budget_hours' => ['nullable', 'numeric', 'min:0'],
             'budget_cost' => ['nullable', 'numeric', 'min:0'],
             'budget_type' => ['nullable', 'string', Rule::in(['fixed_price', 'time_and_materials', 'monthly_subscription'])],

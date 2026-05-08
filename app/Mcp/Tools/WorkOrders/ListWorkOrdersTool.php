@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\WorkOrders;
 
+use App\Enums\WorkOrderStatus;
 use App\Mcp\TeamContext;
 use App\Models\WorkOrder;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -23,6 +24,8 @@ class ListWorkOrdersTool extends Tool
             'status' => ['nullable', 'string', Rule::in(['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested', 'archived'])],
             'assigned_to_id' => ['nullable', 'integer'],
             'include_archived' => ['nullable', 'boolean'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $query = WorkOrder::forTeam($context->teamId)
@@ -34,7 +37,7 @@ class ListWorkOrdersTool extends Tool
         }
 
         if (isset($validated['status'])) {
-            $query->withStatus($validated['status']);
+            $query->withStatus(WorkOrderStatus::from($validated['status']));
         } elseif (empty($validated['include_archived'])) {
             $query->notArchived();
         }
@@ -43,12 +46,15 @@ class ListWorkOrdersTool extends Tool
             $query->assignedTo($validated['assigned_to_id']);
         }
 
-        $workOrders = $query->get([
+        $limit = $validated['limit'] ?? 50;
+        $offset = $validated['offset'] ?? 0;
+
+        $workOrders = $query->offset($offset)->limit($limit)->get([
             'id', 'title', 'status', 'priority', 'due_date',
             'estimated_hours', 'actual_hours', 'project_id', 'assigned_to_id',
         ]);
 
-        return Response::json($workOrders->toArray());
+        return Response::json(['data' => $workOrders->toArray(), 'limit' => $limit, 'offset' => $offset]);
     }
 
     public function schema(JsonSchema $schema): array
@@ -58,6 +64,8 @@ class ListWorkOrdersTool extends Tool
             'status' => $schema->string()->enum(['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested', 'archived'])->nullable()->description('Filter by status'),
             'assigned_to_id' => $schema->integer()->nullable()->description('Filter by assigned user ID'),
             'include_archived' => $schema->boolean()->nullable()->description('Include archived work orders (default: false)'),
+            'limit' => $schema->integer()->nullable()->description('Max records to return (default 50, max 200)'),
+            'offset' => $schema->integer()->nullable()->description('Number of records to skip (default 0)'),
         ];
     }
 }

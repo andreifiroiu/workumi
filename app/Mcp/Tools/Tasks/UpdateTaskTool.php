@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Tasks;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\Task;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -16,8 +17,11 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Update an existing task. Only provided fields are updated. Checklist items replace the full list when provided. Returns the updated task.')]
 class UpdateTaskTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'title' => ['sometimes', 'string', 'max:255'],
@@ -25,7 +29,7 @@ class UpdateTaskTool extends Tool
             'status' => ['sometimes', 'string', Rule::in(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested', 'archived'])],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'estimated_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['sometimes', 'nullable', 'integer'],
+            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($context->teamId)],
             'is_blocked' => ['sometimes', 'boolean'],
             'blocker_reason' => ['sometimes', 'nullable', 'string', Rule::in(['waiting_on_external', 'missing_information', 'technical_issue', 'waiting_on_approval'])],
             'blocker_details' => ['sometimes', 'nullable', 'string'],
@@ -38,8 +42,9 @@ class UpdateTaskTool extends Tool
 
         $task->update(collect($validated)->except('id')->toArray());
 
-        $data = $task->fresh()->load(['workOrder:id,title', 'assignedTo:id,name'])->toArray();
-        $data['checklist_progress'] = $task->fresh()->checklist_progress;
+        $freshTask = $task->fresh()->load(['workOrder:id,title', 'assignedTo:id,name']);
+        $data = $freshTask->toArray();
+        $data['checklist_progress'] = $freshTask->checklist_progress;
 
         return Response::json($data);
     }

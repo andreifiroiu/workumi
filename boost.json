@@ -4,16 +4,28 @@
         "codex",
         "copilot",
         "cursor",
-        "gemini"
-    ],
-    "editors": [
-        "claude_code",
-        "codex",
-        "cursor",
         "gemini",
-        "phpstorm"
+        "opencode"
     ],
-    "guidelines": [
-        "laravel/fortify"
+    "guidelines": true,
+    "herd_mcp": true,
+    "mcp": true,
+    "packages": [
+        "inertiajs/inertia-laravel",
+        "laravel/folio",
+        "laravel/wayfinder",
+        "laravel/fortify",
+        "spatie/laravel-ray"
+    ],
+    "sail": false,
+    "skills": [
+        "folio-routing",
+        "wayfinder-development",
+        "pest-testing",
+        "inertia-react-development",
+        "tailwindcss-development",
+        "fortify-development",
+        "debugging-output-and-previewing-html-using-ray",
+        "laravel-specialist"
     ]
 }
