@@ -155,3 +155,5 @@
 {"run_id": "456655ffe7c3", "timestamp": "2026-05-08T18:12:06Z", "type": "pipeline.transition", "agent": "pm", "data": {"number": 2, "from": "zenve:pm", "to": "zenve:architect"}}
 {"run_id": "456655ffe7c3", "timestamp": "2026-05-08T18:12:07Z", "type": "agent.completed", "agent": "pm", "data": {"exit_code": 0, "duration_seconds": 285.4059851660277}}
 {"run_id": "456655ffe7c3", "timestamp": "2026-05-08T18:12:07Z", "type": "run.committing", "agent": null, "data": {}}
+{"run_id": "456655ffe7c3", "timestamp": "2026-05-08T18:12:07Z", "type": "run.failed", "agent": null, "data": {"error": "git push origin fix/csrf-cookie failed: error: src refspec fix/csrf-cookie does not match any\nerror: failed to push some refs to 'github.com:andreifiroiu/workumi.git'"}}
+{"run_id": "456655ffe7c3", "timestamp": "2026-05-08T18:12:07Z", "type": "run.completed", "agent": null, "data": {"committed": false, "summary": "pm: completed #2", "agents": 1}}
