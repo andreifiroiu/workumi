@@ -14,7 +14,8 @@
   "tools": [
     "Read",
     "Write",
-    "Bash"
+    "Bash",
+      "Edit"
   ],
   "heartbeat_interval_seconds": 0,
   "github_label": "zenve:backend-laravel-dev",
