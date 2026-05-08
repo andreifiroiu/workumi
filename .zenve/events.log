@@ -1,3 +1,20 @@
 {"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:18:48Z", "type": "pipeline.transition", "agent": "architect", "data": {"number": 2, "from": "zenve:architect", "to": "zenve:backend-laravel"}}
 {"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:18:48Z", "type": "agent.completed", "agent": "architect", "data": {"exit_code": 0, "duration_seconds": 79.95528333401307}}
 {"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:18:48Z", "type": "run.committing", "agent": null, "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:18:49Z", "type": "run.failed", "agent": null, "data": {"error": "git push origin fix/csrf-cookie failed: error: src refspec fix/csrf-cookie does not match any\nerror: failed to push some refs to 'github.com:andreifiroiu/workumi.git'"}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:18:49Z", "type": "run.completed", "agent": null, "data": {"committed": false, "summary": "architect: completed #2", "agents": 1}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:00Z", "type": "run.started", "agent": null, "data": {"agents": ["architect", "backend-laravel-dev", "code-review", "frontend-dev", "fullstack-dev", "pm"], "repo": "andreifiroiu/workumi", "dry_run": false}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "snapshot.fetched", "agent": null, "data": {"issues": 1, "pull_requests": 0, "branches": 3}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "architect", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "architect", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "backend-laravel-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "backend-laravel-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "code-review", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "code-review", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "frontend-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "frontend-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "fullstack-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "fullstack-dev", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.started", "agent": "pm", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "agent.nothing_to_do", "agent": "pm", "data": {}}
+{"run_id": "db68fa6813a8", "timestamp": "2026-05-08T18:20:01Z", "type": "run.committing", "agent": null, "data": {}}
