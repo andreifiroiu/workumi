@@ -311,6 +311,7 @@ class WorkController extends Controller
     {
         return WorkOrder::forTeam($team->id)
             ->notArchived()
+            ->not
             ->with(['project', 'assignedTo', 'createdBy', 'workOrderList', 'tasks'])
             ->orderBy('due_date')
             ->get()
