@@ -12,6 +12,8 @@
     "zenve:pm": null
   },
   "stack": [
+    "Laravel",
+    "Inertia.js",
     "react",
     "typescript"
   ]
