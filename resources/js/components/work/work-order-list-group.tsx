@@ -70,8 +70,9 @@ export function WorkOrderListGroup({
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <div
                 ref={setNodeRef}
+                id={isUngrouped ? undefined : `list-${list.id}`}
                 className={cn(
-                    'border border-border rounded-lg overflow-hidden transition-colors',
+                    'border border-border rounded-lg overflow-hidden transition-colors scroll-mt-20',
                     showDropHighlight && 'border-primary bg-primary/5'
                 )}
             >

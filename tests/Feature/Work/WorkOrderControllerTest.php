@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderList;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -165,6 +166,55 @@ test('work order show includes agent assignment data for tasks', function () {
         ->has('tasks', 1)
         ->where('tasks.0.assignedAgentId', (string) $agent->id)
         ->where('tasks.0.assignedAgentName', $agent->name)
+    );
+});
+
+test('work order show exposes parent list and sibling lists for breadcrumbs', function () {
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'name' => 'Sprint 1',
+    ]);
+
+    $otherList = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'name' => 'Backlog',
+    ]);
+
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'work_order_list_id' => $list->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('work/work-orders/[id]')
+        ->where('workOrder.workOrderListId', (string) $list->id)
+        ->where('workOrder.workOrderListName', 'Sprint 1')
+        ->has('siblingLists', 2)
+    );
+});
+
+test('work order show returns null list fields when ungrouped', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'work_order_list_id' => null,
+    ]);
+
+    $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('work/work-orders/[id]')
+        ->where('workOrder.workOrderListId', null)
+        ->where('workOrder.workOrderListName', null)
     );
 });
 

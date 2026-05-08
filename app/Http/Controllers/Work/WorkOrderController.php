@@ -13,6 +13,7 @@ use App\Models\Message;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -78,7 +79,7 @@ class WorkOrderController extends Controller
     {
         $this->authorize('view', $workOrder);
 
-        $workOrder->load(['project', 'assignedTo', 'createdBy', 'tasks.assignedAgent', 'tasks.assignedTo', 'deliverables', 'documents', 'statusTransitions.user', 'statusTransitions.fromAssignedTo', 'statusTransitions.toAssignedTo', 'statusTransitions.fromAssignedAgent', 'statusTransitions.toAssignedAgent', 'accountable', 'responsible']);
+        $workOrder->load(['project', 'workOrderList', 'assignedTo', 'createdBy', 'tasks.assignedAgent', 'tasks.assignedTo', 'deliverables', 'documents', 'statusTransitions.user', 'statusTransitions.fromAssignedTo', 'statusTransitions.toAssignedTo', 'statusTransitions.fromAssignedAgent', 'statusTransitions.toAssignedAgent', 'accountable', 'responsible']);
 
         // Get communication thread and messages
         $thread = $workOrder->communicationThread;
@@ -107,6 +108,11 @@ class WorkOrderController extends Controller
             ->orderBy('title')
             ->get();
 
+        $siblingLists = WorkOrderList::forProject($workOrder->project_id)
+            ->ordered()
+            ->select('id', 'name')
+            ->get();
+
         return Inertia::render('work/work-orders/[id]', [
             'siblingProjects' => $siblingProjects->map(fn (Project $p) => [
                 'id' => (string) $p->id,
@@ -116,12 +122,18 @@ class WorkOrderController extends Controller
                 'id' => (string) $wo->id,
                 'title' => $wo->title,
             ]),
+            'siblingLists' => $siblingLists->map(fn (WorkOrderList $list) => [
+                'id' => (string) $list->id,
+                'name' => $list->name,
+            ]),
             'workOrder' => [
                 'id' => (string) $workOrder->id,
                 'title' => $workOrder->title,
                 'description' => $workOrder->description,
                 'projectId' => (string) $workOrder->project_id,
                 'projectName' => $workOrder->project?->name ?? 'Unknown',
+                'workOrderListId' => $workOrder->work_order_list_id ? (string) $workOrder->work_order_list_id : null,
+                'workOrderListName' => $workOrder->workOrderList?->name,
                 'assignedToId' => $workOrder->assigned_to_id ? (string) $workOrder->assigned_to_id : null,
                 'assignedToName' => $workOrder->assignedTo?->name ?? 'Unassigned',
                 'status' => $workOrder->status->value,
