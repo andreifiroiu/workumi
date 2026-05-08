@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\WorkOrders;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\Project;
 use App\Models\WorkOrder;
@@ -17,8 +18,12 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new work order within a project. Returns the created work order with its new ID.')]
 class CreateWorkOrderTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
+
         $validated = $request->validate([
             'project_id' => ['required', 'integer'],
             'title' => ['required', 'string', 'max:255'],
@@ -27,7 +32,7 @@ class CreateWorkOrderTool extends Tool
             'priority' => ['nullable', 'string', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_date' => ['nullable', 'date'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['nullable', 'integer'],
+            'assigned_to_id' => ['nullable', 'integer', $this->teamMemberRule($context->teamId)],
             'acceptance_criteria' => ['nullable', 'array'],
             'acceptance_criteria.*' => ['string'],
         ]);

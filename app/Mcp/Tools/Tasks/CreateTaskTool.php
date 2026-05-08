@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Tasks;
 
+use App\Mcp\Concerns\RequiresWriteAbility;
 use App\Mcp\TeamContext;
 use App\Models\Task;
 use App\Models\WorkOrder;
@@ -17,8 +18,12 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new task within a work order. The project_id is resolved automatically from the work order. Returns the created task with its new ID.')]
 class CreateTaskTool extends Tool
 {
+    use RequiresWriteAbility;
+
     public function handle(Request $request, TeamContext $context): Response
     {
+        $this->authorizeWrite($request);
+
         $validated = $request->validate([
             'work_order_id' => ['required', 'integer'],
             'title' => ['required', 'string', 'max:255'],
@@ -26,7 +31,7 @@ class CreateTaskTool extends Tool
             'status' => ['nullable', 'string', Rule::in(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested'])],
             'due_date' => ['nullable', 'date'],
             'estimated_hours' => ['nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['nullable', 'integer'],
+            'assigned_to_id' => ['nullable', 'integer', $this->teamMemberRule($context->teamId)],
             'checklist_items' => ['nullable', 'array'],
             'checklist_items.*.text' => ['required_with:checklist_items', 'string'],
         ]);
