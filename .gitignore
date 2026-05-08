@@ -34,3 +34,5 @@ yarn-error.log
 /.github/copilot-instructions.md
 /.junie/mcp/mcp.json
 /.mcp.json
+.zenve/events.log
+
