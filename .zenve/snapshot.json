@@ -1,13 +1,14 @@
 {
-  "fetched_at": "2026-05-08T18:41:38Z",
-  "run_id": "15bce02116ea",
+  "fetched_at": "2026-05-08T18:43:12Z",
+  "run_id": "8256198592c4",
   "issues": [
     {
       "number": 2,
       "title": "Don't display archived work orders in calendar",
       "body": "In the section Work/Calendar I don't want to see archived work orders.",
       "labels": [
-        "zenve:backend-laravel-dev"
+        "zenve:backend-laravel-dev",
+        "zenve:needs-input"
       ],
       "assignees": [],
       "state": "open",
@@ -22,6 +23,11 @@
           "author": "andreifiroiu",
           "body": "Run complete\n\nRUN_OK: wrote plan to docs/plans/hide-archived-work-orders-from-calendar.md",
           "created_at": "2026-05-08T18:18:48Z"
+        },
+        {
+          "author": "andreifiroiu",
+          "body": "Run needs input\n\nRUN_NEEDS_INPUT: Edit permission for `app/Http/Controllers/Work/WorkController.php` is being denied. The implementation is a single one-line change (add `->notArchived()` to the `getWorkOrders()` query at line 312-314) plus a feature test. Please grant write permission to this file (and to `tests/Feature/Work/WorkControllerCalendarTest.php` for the new test) so I can apply the change per the plan in `docs/plans/hide-archived-work-orders-from-calendar.md`.",
+          "created_at": "2026-05-08T18:42:30Z"
         }
       ]
     }
