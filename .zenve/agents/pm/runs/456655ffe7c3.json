@@ -1,0 +1,27 @@
+{
+  "run_id": "456655ffe7c3",
+  "agent": "pm",
+  "started_at": "2026-05-08T18:07:08Z",
+  "finished_at": "2026-05-08T18:11:54Z",
+  "duration_seconds": 285.4059851660277,
+  "status": "completed",
+  "exit_code": 0,
+  "item": {
+    "type": "issue",
+    "number": 2,
+    "title": "Don't display archived work orders in calendar"
+  },
+  "output": "---\n\nHere's what I produced for **Issue #2: Don't display archived work orders in calendar**:\n\n### PRD Created\n**`docs/product/hide-archived-work-orders-from-calendar.md`** — contains:\n\n- **Problem statement:** Archived work orders clutter the calendar, creating visual noise and misleading users about active obligations.\n- **User story** with 4 concrete acceptance criteria:\n  1. Archived work orders do not appear on any calendar date.\n  2. Non-archived work orders continue to appear as today.\n  3. Dates with only archived work orders appear empty.\n  4. Archiving a visible work order removes it on next page load.\n- **Explicit non-goals:** No toggle/filter, no project filtering, no other view changes.\n- **Dev-ready appendix** referencing the relevant files (`WorkController::getWorkOrders()`, `scopeNotArchived`, `WorkOrderStatus::Archived`, `calendar-view.tsx`).\n\n### PRODUCT.md Updated\n- Added `[MUST]` priority for this feature.\n- Logged two deferred ideas (archive toggle, project filtering).\n- Added provisional user personas (Team Member, Team Lead).\n\nRUN_OK: PRD created at `docs/product/hide-archived-work-orders-from-calendar.md` for Issue #2 — ready for dev handoff.",
+  "pipeline_transition": {
+    "from_label": "zenve:pm",
+    "to_label": [
+      "zenve:architect"
+    ]
+  },
+  "token_usage": {
+    "input_tokens": 18,
+    "output_tokens": 3942,
+    "cost_usd": 0.9765362999999999
+  },
+  "error": null
+}
