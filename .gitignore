@@ -36,3 +36,4 @@ yarn-error.log
 /.mcp.json
 .zenve/snapshot.json
 .zenve/events.log
+worktrees
