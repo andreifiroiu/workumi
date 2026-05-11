@@ -87,6 +87,7 @@ class ProjectInsightsService
 
         // Query overdue tasks
         $overdueTasks = Task::where('project_id', $project->id)
+            ->notArchived()
             ->whereNotNull('due_date')
             ->where('due_date', '<', $now)
             ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Approved, TaskStatus::Cancelled])
@@ -94,9 +95,11 @@ class ProjectInsightsService
 
         // Query overdue work orders
         $overdueWorkOrders = WorkOrder::where('project_id', $project->id)
+            ->notArchived()
+            ->notDelivered()
             ->whereNotNull('due_date')
             ->where('due_date', '<', $now)
-            ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled])
+            ->whereNotIn('status', [WorkOrderStatus::Cancelled])
             ->get();
 
         // Query overdue deliverables (using delivered_date as due date)
@@ -209,6 +212,7 @@ class ProjectInsightsService
 
         // Query blocked tasks
         $blockedTasks = Task::where('project_id', $project->id)
+            ->notArchived()
             ->where('is_blocked', true)
             ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Approved, TaskStatus::Cancelled])
             ->get();
@@ -375,6 +379,8 @@ class ProjectInsightsService
 
         // Analyze work orders for scope creep
         $workOrdersWithScopeIssues = WorkOrder::where('project_id', $project->id)
+            ->notArchived()
+            ->notDelivered()
             ->whereNotNull('estimated_hours')
             ->where('estimated_hours', '>', 0)
             ->whereNotNull('actual_hours')
@@ -426,6 +432,7 @@ class ProjectInsightsService
 
         // Check for tasks that are individually over estimate
         $tasksOverEstimate = Task::where('project_id', $project->id)
+            ->notArchived()
             ->whereNotNull('estimated_hours')
             ->where('estimated_hours', '>', 0)
             ->whereNotNull('actual_hours')
@@ -464,7 +471,7 @@ class ProjectInsightsService
     /**
      * Calculate days overdue for a given due date.
      */
-    private function getDaysOverdue(?\Carbon\Carbon $dueDate, Carbon $now): int
+    private function getDaysOverdue(?Carbon $dueDate, Carbon $now): int
     {
         if ($dueDate === null) {
             return 0;
