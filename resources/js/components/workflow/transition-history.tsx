@@ -1,13 +1,8 @@
 import * as React from 'react';
-import { ArrowRightIcon, MessageSquareIcon, UserIcon, BotIcon } from 'lucide-react';
+import { ArrowRightIcon, MessageSquareIcon, UserIcon, BotIcon, CalendarIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-    StatusBadge,
-    type TaskStatus,
-    type WorkOrderStatus,
-    type Status,
-} from '@/components/ui/status-badge';
+import { StatusBadge, type Status } from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 
 /**
@@ -44,9 +39,13 @@ export interface Assignee {
  */
 export interface StatusTransition {
     id: number;
-    actionType: 'status_change' | 'assignment_change';
+    actionType: 'status_change' | 'assignment_change' | 'due_date_change';
     fromStatus: string;
     toStatus: string;
+    /** Previous due date as a date-only `YYYY-MM-DD` string (null when no date was set) */
+    fromDueDate: string | null;
+    /** New due date as a date-only `YYYY-MM-DD` string (null when the date was cleared) */
+    toDueDate: string | null;
     fromAssignedTo: Assignee | null;
     toAssignedTo: Assignee | null;
     fromAssignedAgent: Assignee | null;
@@ -139,6 +138,50 @@ function formatTimestamp(dateString: string): string {
 }
 
 /**
+ * Format a date-only `YYYY-MM-DD` string for display in the team's locale.
+ *
+ * The string is parsed from its individual components into a local Date so the
+ * rendered day never shifts across timezones (unlike `new Date('2026-05-30')`,
+ * which parses as UTC midnight).
+ */
+function formatDueDate(dateString: string): string {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    });
+}
+
+/**
+ * Build the direction-neutral label and date badges for a due-date change.
+ *
+ * - null → date renders "set due date"
+ * - date → null renders "cleared due date"
+ * - date → date renders "changed due date"
+ */
+function getDueDateChangeDescription(transition: StatusTransition): {
+    label: string;
+    fromLabel: string | null;
+    toLabel: string | null;
+} {
+    const from = transition.fromDueDate ? formatDueDate(transition.fromDueDate) : null;
+    const to = transition.toDueDate ? formatDueDate(transition.toDueDate) : null;
+
+    let label: string;
+    if (from === null) {
+        label = 'set due date';
+    } else if (to === null) {
+        label = 'cleared due date';
+    } else {
+        label = 'changed due date';
+    }
+
+    return { label, fromLabel: from, toLabel: to };
+}
+
+/**
  * Get initials from a user's name for avatar fallback
  */
 function getInitials(name: string): string {
@@ -212,14 +255,42 @@ function AssignmentBadge({
 }
 
 /**
+ * DueDateBadge displays a single due date with a calendar icon
+ */
+function DueDateBadge({ label }: { label: string }) {
+    return (
+        <Badge
+            variant="outline"
+            className={cn(
+                'gap-1 text-xs font-normal',
+                'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900 dark:text-amber-300 dark:border-amber-800'
+            )}
+        >
+            <CalendarIcon className="size-3" aria-hidden="true" />
+            {label}
+        </Badge>
+    );
+}
+
+/**
  * TransitionHistoryItem displays a single transition with avatar, status badges, timestamp, and comment.
  */
 function TransitionHistoryItem({ transition, variant, isLast }: TransitionHistoryItemProps) {
     const isAssignmentChange = transition.actionType === 'assignment_change';
-    const isRejection = !isAssignmentChange && isRejectionTransition(transition.toStatus);
-    const hasComment = transition.comment !== null && transition.comment.trim().length > 0;
+    const isDueDateChange = transition.actionType === 'due_date_change';
+    const isRejection =
+        !isAssignmentChange && !isDueDateChange && isRejectionTransition(transition.toStatus);
+    // For due-date changes the comment holds the optional reason, which we render
+    // inline next to the dates rather than in the generic comment box below.
+    const hasComment =
+        !isDueDateChange && transition.comment !== null && transition.comment.trim().length > 0;
 
     const assignmentInfo = isAssignmentChange ? getAssignmentDescription(transition) : null;
+    const dueDateInfo = isDueDateChange ? getDueDateChangeDescription(transition) : null;
+    const dueDateReason =
+        isDueDateChange && transition.comment !== null && transition.comment.trim().length > 0
+            ? transition.comment.trim()
+            : null;
 
     return (
         <li
@@ -255,9 +326,30 @@ function TransitionHistoryItem({ transition, variant, isLast }: TransitionHistor
                     </span>
                 </div>
 
-                {/* Status transition badges or assignment change */}
+                {/* Status transition badges, assignment change, or due-date change */}
                 <div className="flex flex-wrap items-center gap-1.5">
-                    {isAssignmentChange && assignmentInfo ? (
+                    {isDueDateChange && dueDateInfo ? (
+                        <>
+                            <span className="text-muted-foreground text-sm">
+                                {dueDateInfo.label}
+                            </span>
+                            {dueDateInfo.fromLabel && (
+                                <DueDateBadge label={dueDateInfo.fromLabel} />
+                            )}
+                            {dueDateInfo.fromLabel && dueDateInfo.toLabel && (
+                                <ArrowRightIcon
+                                    className="text-muted-foreground size-3 shrink-0"
+                                    aria-label="changed to"
+                                />
+                            )}
+                            {dueDateInfo.toLabel && <DueDateBadge label={dueDateInfo.toLabel} />}
+                            {dueDateReason && (
+                                <span className="text-muted-foreground text-sm italic">
+                                    · {dueDateReason}
+                                </span>
+                            )}
+                        </>
+                    ) : isAssignmentChange && assignmentInfo ? (
                         <>
                             <AssignmentBadge
                                 name={assignmentInfo.from.name}
