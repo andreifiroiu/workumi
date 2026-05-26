@@ -2,16 +2,22 @@ import { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, MoreVertical, FolderMinus, Edit, Trash2, AlertTriangle, Archive, ArchiveRestore } from 'lucide-react';
+import { GripVertical, MoreVertical, FolderMinus, Edit, Trash2, AlertTriangle, Archive, ArchiveRestore, PackageCheck, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { workOrderStatusLabels, type WorkOrderStatus } from '@/components/ui/status-badge';
 import {
     Dialog,
     DialogContent,
@@ -54,6 +60,17 @@ export function WorkOrderListItem({
 
     const completedStatuses = ['delivered', 'approved', 'archived'];
     const isArchived = workOrder.status === 'archived';
+
+    // Statuses selectable from the "Change status" submenu. Mirrors the
+    // values accepted by WorkOrderController@updateStatus (archived is set
+    // via its own dedicated action, not this list).
+    const selectableStatuses: WorkOrderStatus[] = [
+        'draft',
+        'active',
+        'in_review',
+        'approved',
+        'delivered',
+    ];
     const isOverdue =
         !!workOrder.dueDate &&
         new Date(workOrder.dueDate) < new Date() &&
@@ -61,6 +78,25 @@ export function WorkOrderListItem({
 
     const handleArchive = () => {
         router.post(`/work/work-orders/${workOrder.id}/archive`, {}, { preserveScroll: true });
+    };
+
+    const handleStatusChange = (status: string) => {
+        if (status === workOrder.status) {
+            return;
+        }
+        router.patch(
+            `/work/work-orders/${workOrder.id}/status`,
+            { status },
+            { preserveScroll: true }
+        );
+    };
+
+    const handleDeliverAndArchive = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/deliver-and-archive`,
+            {},
+            { preserveScroll: true }
+        );
     };
 
     const handleUnarchive = () => {
@@ -174,6 +210,32 @@ export function WorkOrderListItem({
                             Edit Work Order
                         </Link>
                     </DropdownMenuItem>
+                    {!isArchived && (
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Change Status
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuRadioGroup
+                                    value={workOrder.status}
+                                    onValueChange={handleStatusChange}
+                                >
+                                    {selectableStatuses.map((status) => (
+                                        <DropdownMenuRadioItem key={status} value={status}>
+                                            {workOrderStatusLabels[status]}
+                                        </DropdownMenuRadioItem>
+                                    ))}
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                    )}
+                    {!isArchived && (
+                        <DropdownMenuItem onClick={handleDeliverAndArchive}>
+                            <PackageCheck className="h-4 w-4 mr-2" />
+                            Mark as Delivered & Archive
+                        </DropdownMenuItem>
+                    )}
                     {isArchived ? (
                         <DropdownMenuItem onClick={handleUnarchive}>
                             <ArchiveRestore className="h-4 w-4 mr-2" />

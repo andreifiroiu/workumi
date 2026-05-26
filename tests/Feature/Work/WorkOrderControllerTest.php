@@ -124,6 +124,68 @@ test('work order status transitions are valid', function () {
     expect($workOrder->fresh()->status->value)->toBe('delivered');
 });
 
+test('user can mark a work order as delivered and archived', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'status' => 'active',
+    ]);
+
+    $response = $this->actingAs($this->user)->post("/work/work-orders/{$workOrder->id}/deliver-and-archive");
+
+    $response->assertRedirect();
+
+    expect($workOrder->fresh()->status->value)->toBe('archived');
+
+    $this->assertDatabaseHas('status_transitions', [
+        'transitionable_type' => WorkOrder::class,
+        'transitionable_id' => $workOrder->id,
+        'from_status' => 'active',
+        'to_status' => 'delivered',
+    ]);
+});
+
+test('deliver and archive skips the delivered transition when already delivered', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'status' => 'delivered',
+    ]);
+
+    $this->actingAs($this->user)->post("/work/work-orders/{$workOrder->id}/deliver-and-archive");
+
+    expect($workOrder->fresh()->status->value)->toBe('archived');
+
+    $this->assertDatabaseMissing('status_transitions', [
+        'transitionable_id' => $workOrder->id,
+        'to_status' => 'delivered',
+    ]);
+});
+
+test('user cannot deliver and archive work orders from another team', function () {
+    $otherUser = User::factory()->create();
+    $otherTeam = $otherUser->createTeam(['name' => 'Other Team']);
+    $otherParty = Party::factory()->create(['team_id' => $otherTeam->id]);
+    $otherProject = Project::factory()->create([
+        'team_id' => $otherTeam->id,
+        'party_id' => $otherParty->id,
+        'owner_id' => $otherUser->id,
+    ]);
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $otherTeam->id,
+        'project_id' => $otherProject->id,
+        'created_by_id' => $otherUser->id,
+        'status' => 'active',
+    ]);
+
+    $response = $this->actingAs($this->user)->post("/work/work-orders/{$workOrder->id}/deliver-and-archive");
+
+    $response->assertForbidden();
+    expect($workOrder->fresh()->status->value)->toBe('active');
+});
+
 test('user can delete a work order', function () {
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id,

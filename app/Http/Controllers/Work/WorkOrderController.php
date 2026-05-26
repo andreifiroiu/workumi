@@ -17,6 +17,7 @@ use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -485,6 +486,32 @@ class WorkOrderController extends Controller
         $this->authorize('update', $workOrder);
 
         $workOrder->update(['status' => WorkOrderStatus::Archived]);
+
+        // Recalculate project progress
+        $workOrder->project->recalculateProgress();
+
+        return back();
+    }
+
+    public function deliverAndArchive(Request $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $this->authorize('update', $workOrder);
+
+        DB::transaction(function () use ($request, $workOrder): void {
+            $fromStatus = $workOrder->status;
+
+            if ($fromStatus !== WorkOrderStatus::Delivered) {
+                $workOrder->statusTransitions()->create([
+                    'user_id' => $request->user()?->id,
+                    'from_status' => $fromStatus->value,
+                    'to_status' => WorkOrderStatus::Delivered->value,
+                    'comment' => 'Marked as delivered and archived.',
+                    'created_at' => now(),
+                ]);
+            }
+
+            $workOrder->update(['status' => WorkOrderStatus::Archived]);
+        });
 
         // Recalculate project progress
         $workOrder->project->recalculateProgress();

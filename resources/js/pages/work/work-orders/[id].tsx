@@ -108,6 +108,7 @@ import {
     useDelegatePlan,
     useConfirmAssignments,
 } from '@/hooks/use-pm-copilot';
+import { useRecentAssignees } from '@/hooks/use-recent-assignees';
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BreadcrumbItem } from '@/types';
@@ -670,6 +671,8 @@ export default function WorkOrderDetail({
         assignedToId: '' as string,
     });
 
+    const { recentIds: recentAssigneeIds, recordAssignee } = useRecentAssignees();
+
     const deliverableForm = useForm({
         title: '',
         workOrderId: workOrder.id,
@@ -782,9 +785,11 @@ export default function WorkOrderDetail({
 
     const handleCreateTask = (e: React.FormEvent) => {
         e.preventDefault();
+        const assignedToId = taskForm.data.assignedToId;
         taskForm.post('/work/tasks', {
             preserveScroll: true,
             onSuccess: () => {
+                recordAssignee(assignedToId);
                 taskForm.reset();
                 setCreateTaskDialogOpen(false);
             },
@@ -2068,6 +2073,34 @@ export default function WorkOrderDetail({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {(() => {
+                                    const recentMembers = recentAssigneeIds
+                                        .map((id) => teamMembers.find((member) => member.id === id))
+                                        .filter((member): member is TeamMember => Boolean(member))
+                                        .filter((member) => member.id !== taskForm.data.assignedToId);
+
+                                    if (recentMembers.length === 0) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <div className="flex flex-wrap gap-1">
+                                            {recentMembers.map((member) => (
+                                                <Button
+                                                    key={member.id}
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-6 text-xs"
+                                                    onClick={() => taskForm.setData('assignedToId', member.id)}
+                                                >
+                                                    <User className="mr-1 h-3 w-3" />
+                                                    {member.name}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             <div className="grid gap-2">
                                 <Label>Due Date</Label>
