@@ -70,6 +70,7 @@ export default function Work({
     const workOrderForm = useForm({
         title: '',
         projectId: '',
+        workOrderListId: '',
         description: '',
         priority: 'medium' as const,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
@@ -94,9 +95,10 @@ export default function Work({
         }
     };
 
-    const handleCreateWorkOrder = (projectId: string) => {
+    const handleCreateWorkOrder = (projectId: string, listId?: string) => {
         setSelectedProjectId(projectId);
         workOrderForm.setData('projectId', projectId);
+        workOrderForm.setData('workOrderListId', listId ?? '');
         setCreateWorkOrderDialogOpen(true);
     };
 

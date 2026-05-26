@@ -42,6 +42,30 @@ test('user can create a work order', function () {
     ]);
 });
 
+test('user can create a work order inside a list', function () {
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->post('/work/work-orders', [
+        'title' => 'Listed Work Order',
+        'projectId' => $this->project->id,
+        'workOrderListId' => $list->id,
+        'priority' => 'medium',
+        'dueDate' => '2026-01-20',
+    ]);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('work_orders', [
+        'title' => 'Listed Work Order',
+        'project_id' => $this->project->id,
+        'team_id' => $this->team->id,
+        'work_order_list_id' => $list->id,
+    ]);
+});
+
 test('user can view a work order', function () {
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id,

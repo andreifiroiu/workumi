@@ -24,7 +24,7 @@ interface ProjectTreeItemProps {
     project: Project;
     workOrders: WorkOrder[];
     tasks: Task[];
-    onCreateWorkOrder: (projectId: string) => void;
+    onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
 }
 
@@ -150,7 +150,9 @@ export function ProjectTreeItem({
                         <WorkOrderListTreeItem
                             key={list.id}
                             list={list}
+                            projectId={project.id}
                             tasks={tasks}
+                            onCreateWorkOrder={onCreateWorkOrder}
                             onCreateTask={onCreateTask}
                         />
                     ))}
@@ -171,11 +173,13 @@ export function ProjectTreeItem({
 
 interface WorkOrderListTreeItemProps {
     list: WorkOrderList;
+    projectId: string;
     tasks: Task[];
+    onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
 }
 
-function WorkOrderListTreeItem({ list, tasks, onCreateTask }: WorkOrderListTreeItemProps) {
+function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCreateTask }: WorkOrderListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -213,6 +217,16 @@ function WorkOrderListTreeItem({ list, tasks, onCreateTask }: WorkOrderListTreeI
                         {list.workOrders.length} work orders
                     </span>
                 </div>
+
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onCreateWorkOrder(projectId, list.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
+                    title="Add work order"
+                >
+                    <Plus className="h-4 w-4" />
+                </Button>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
