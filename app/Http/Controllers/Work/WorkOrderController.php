@@ -516,7 +516,7 @@ class WorkOrderController extends Controller
         return back();
     }
 
-    public function update(Request $request, WorkOrder $workOrder): RedirectResponse
+    public function update(Request $request, WorkOrder $workOrder, WorkflowTransitionService $transitionService): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
@@ -528,7 +528,11 @@ class WorkOrderController extends Controller
             'due_date' => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'acceptanceCriteria' => 'nullable|array',
+            'reason' => 'nullable|string',
         ]);
+
+        // Capture current due date before update so we can log any change
+        $oldDueDate = $workOrder->due_date;
 
         $updateData = [];
         if (isset($validated['title'])) {
@@ -554,6 +558,18 @@ class WorkOrderController extends Controller
         }
 
         $workOrder->update($updateData);
+
+        // Log a due-date change only when the date actually changed
+        if (array_key_exists('due_date', $validated)
+            && $oldDueDate?->toDateString() !== $workOrder->due_date?->toDateString()) {
+            $transitionService->recordDueDateChange(
+                $workOrder,
+                $request->user(),
+                $oldDueDate,
+                $workOrder->due_date,
+                $validated['reason'] ?? null,
+            );
+        }
 
         return back();
     }
