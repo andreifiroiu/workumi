@@ -5,6 +5,7 @@ use App\Models\Party;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderList;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -78,5 +79,74 @@ test('non-archived work orders are included in work page workOrders prop', funct
         foreach ($created as $workOrder) {
             expect($ids)->toContain((string) $workOrder->id);
         }
+    });
+});
+
+test('archived work orders are excluded from grouped work orders in projects prop', function () {
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+    ]);
+
+    $active = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_list_id' => $list->id,
+        'created_by_id' => $this->user->id,
+        'status' => WorkOrderStatus::Active,
+    ]);
+
+    $archived = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_list_id' => $list->id,
+        'created_by_id' => $this->user->id,
+        'status' => WorkOrderStatus::Archived,
+    ]);
+
+    $response = $this->actingAs($this->user)->get('/work');
+
+    $response->assertStatus(200);
+    $response->assertInertia(function ($page) use ($active, $archived) {
+        $project = collect($page->toArray()['props']['projects'])
+            ->firstWhere('id', (string) $this->project->id);
+
+        $ids = collect($project['workOrderLists'])
+            ->flatMap(fn ($list) => collect($list['workOrders'])->pluck('id'))
+            ->all();
+
+        expect($ids)->toContain((string) $active->id);
+        expect($ids)->not->toContain((string) $archived->id);
+    });
+});
+
+test('archived work orders are excluded from ungrouped work orders in projects prop', function () {
+    $active = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_list_id' => null,
+        'created_by_id' => $this->user->id,
+        'status' => WorkOrderStatus::Active,
+    ]);
+
+    $archived = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_list_id' => null,
+        'created_by_id' => $this->user->id,
+        'status' => WorkOrderStatus::Archived,
+    ]);
+
+    $response = $this->actingAs($this->user)->get('/work');
+
+    $response->assertStatus(200);
+    $response->assertInertia(function ($page) use ($active, $archived) {
+        $project = collect($page->toArray()['props']['projects'])
+            ->firstWhere('id', (string) $this->project->id);
+
+        $ids = collect($project['ungroupedWorkOrders'])->pluck('id')->all();
+
+        expect($ids)->toContain((string) $active->id);
+        expect($ids)->not->toContain((string) $archived->id);
     });
 });

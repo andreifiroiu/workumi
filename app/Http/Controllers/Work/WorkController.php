@@ -251,6 +251,7 @@ class WorkController extends Controller
             ->with([
                 'party',
                 'owner',
+                'workOrderLists.workOrders' => fn ($query) => $query->notArchived(),
                 'workOrderLists.workOrders.tasks',
                 'workOrderLists.workOrders.assignedTo',
             ])
@@ -290,6 +291,7 @@ class WorkController extends Controller
                     ])->all(),
                 ])->all(),
                 'ungroupedWorkOrders' => $project->ungroupedWorkOrders()
+                    ->notArchived()
                     ->with(['tasks', 'assignedTo'])
                     ->get()
                     ->map(fn ($wo) => [
