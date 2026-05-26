@@ -188,6 +188,8 @@ class TaskController extends Controller
                 'actionType' => $transition->action_type ?? 'status_change',
                 'fromStatus' => $transition->from_status,
                 'toStatus' => $transition->to_status,
+                'fromDueDate' => $transition->from_due_date?->format('Y-m-d'),
+                'toDueDate' => $transition->to_due_date?->format('Y-m-d'),
                 'fromAssignedTo' => $transition->fromAssignedTo ? [
                     'id' => $transition->fromAssignedTo->id,
                     'name' => $transition->fromAssignedTo->name,
@@ -228,10 +230,11 @@ class TaskController extends Controller
             'description' => 'nullable|string',
             'assignedToId' => 'nullable|exists:users,id',
             'assignedAgentId' => 'nullable|exists:ai_agents,id',
-            'dueDate' => 'sometimes|required|date',
+            'dueDate' => 'sometimes|nullable|date',
             'estimatedHours' => 'nullable|numeric|min:0',
             'checklistItems' => 'nullable|array',
             'isBlocked' => 'sometimes|boolean',
+            'reason' => 'nullable|string',
         ]);
 
         // Validate mutual exclusivity: can't assign to both user and agent
@@ -244,6 +247,9 @@ class TaskController extends Controller
         // Capture current assignment values before update
         $oldAssignedToId = $task->assigned_to_id;
         $oldAssignedAgentId = $task->assigned_agent_id;
+
+        // Capture current due date before update so we can log any change
+        $oldDueDate = $task->due_date;
 
         $updateData = [];
         if (isset($validated['title'])) {
@@ -269,7 +275,7 @@ class TaskController extends Controller
             }
         }
 
-        if (isset($validated['dueDate'])) {
+        if (array_key_exists('dueDate', $validated)) {
             $updateData['due_date'] = $validated['dueDate'];
         }
         if (array_key_exists('estimatedHours', $validated)) {
@@ -303,6 +309,18 @@ class TaskController extends Controller
                 'from_assigned_agent_id' => $oldAssignedAgentId,
                 'to_assigned_agent_id' => $newAssignedAgentId,
             ]);
+        }
+
+        // Log a due-date change only when the date actually changed
+        if (array_key_exists('dueDate', $validated)
+            && $oldDueDate?->toDateString() !== $task->due_date?->toDateString()) {
+            $this->transitionService->recordDueDateChange(
+                $task,
+                $request->user(),
+                $oldDueDate,
+                $task->due_date,
+                $validated['reason'] ?? null,
+            );
         }
 
         return back();
