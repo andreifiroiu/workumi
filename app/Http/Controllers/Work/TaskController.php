@@ -188,6 +188,8 @@ class TaskController extends Controller
                 'actionType' => $transition->action_type ?? 'status_change',
                 'fromStatus' => $transition->from_status,
                 'toStatus' => $transition->to_status,
+                'fromDueDate' => $transition->from_due_date?->format('Y-m-d'),
+                'toDueDate' => $transition->to_due_date?->format('Y-m-d'),
                 'fromAssignedTo' => $transition->fromAssignedTo ? [
                     'id' => $transition->fromAssignedTo->id,
                     'name' => $transition->fromAssignedTo->name,
