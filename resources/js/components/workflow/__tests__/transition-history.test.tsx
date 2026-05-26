@@ -15,6 +15,8 @@ const mockTransitions: StatusTransition[] = [
         actionType: 'status_change',
         fromStatus: 'todo',
         toStatus: 'in_progress',
+        fromDueDate: null,
+        toDueDate: null,
         fromAssignedTo: null,
         toAssignedTo: null,
         fromAssignedAgent: null,
@@ -29,6 +31,8 @@ const mockTransitions: StatusTransition[] = [
         actionType: 'status_change',
         fromStatus: 'in_progress',
         toStatus: 'in_review',
+        fromDueDate: null,
+        toDueDate: null,
         fromAssignedTo: null,
         toAssignedTo: null,
         fromAssignedAgent: null,
@@ -43,6 +47,8 @@ const mockTransitions: StatusTransition[] = [
         actionType: 'status_change',
         fromStatus: 'in_review',
         toStatus: 'revision_requested',
+        fromDueDate: null,
+        toDueDate: null,
         fromAssignedTo: null,
         toAssignedTo: null,
         fromAssignedAgent: null,
@@ -57,6 +63,8 @@ const mockTransitions: StatusTransition[] = [
         actionType: 'status_change',
         fromStatus: 'in_progress',
         toStatus: 'in_review',
+        fromDueDate: null,
+        toDueDate: null,
         fromAssignedTo: null,
         toAssignedTo: null,
         fromAssignedAgent: null,
@@ -67,6 +75,30 @@ const mockTransitions: StatusTransition[] = [
         commentCategory: null,
     },
 ];
+
+/**
+ * Build a `due_date_change` transition with sensible defaults so individual
+ * tests only specify the fields under test.
+ */
+function dueDateTransition(overrides: Partial<StatusTransition>): StatusTransition {
+    return {
+        id: 99,
+        actionType: 'due_date_change',
+        fromStatus: '',
+        toStatus: '',
+        fromDueDate: null,
+        toDueDate: null,
+        fromAssignedTo: null,
+        toAssignedTo: null,
+        fromAssignedAgent: null,
+        toAssignedAgent: null,
+        user: mockUser,
+        createdAt: '2024-01-15T10:00:00Z',
+        comment: null,
+        commentCategory: null,
+        ...overrides,
+    };
+}
 
 describe('TransitionHistory', () => {
     it('displays transitions in chronological order', () => {
@@ -113,5 +145,97 @@ describe('TransitionHistory', () => {
         render(<TransitionHistory transitions={[]} variant="task" />);
 
         expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
+    });
+
+    describe('due-date changes', () => {
+        it('renders a "changed due date" variant for a date → date change', () => {
+            const transition = dueDateTransition({
+                fromDueDate: '2024-05-30',
+                toDueDate: '2024-06-06',
+            });
+
+            render(<TransitionHistory transitions={[transition]} variant="task" />);
+
+            const item = screen.getByRole('listitem');
+            expect(within(item).getByText('changed due date')).toBeInTheDocument();
+            expect(within(item).getByText(/May 30/)).toBeInTheDocument();
+            expect(within(item).getByText(/Jun 6/)).toBeInTheDocument();
+            // Both dates are present, so the directional arrow is rendered
+            expect(within(item).getByLabelText('changed to')).toBeInTheDocument();
+        });
+
+        it('renders a "set due date" variant for a null → date change', () => {
+            const transition = dueDateTransition({
+                fromDueDate: null,
+                toDueDate: '2024-06-06',
+            });
+
+            render(<TransitionHistory transitions={[transition]} variant="task" />);
+
+            const item = screen.getByRole('listitem');
+            expect(within(item).getByText('set due date')).toBeInTheDocument();
+            expect(within(item).getByText(/Jun 6/)).toBeInTheDocument();
+            expect(within(item).queryByLabelText('changed to')).not.toBeInTheDocument();
+        });
+
+        it('renders a "cleared due date" variant for a date → null change', () => {
+            const transition = dueDateTransition({
+                fromDueDate: '2024-05-30',
+                toDueDate: null,
+            });
+
+            render(<TransitionHistory transitions={[transition]} variant="task" />);
+
+            const item = screen.getByRole('listitem');
+            expect(within(item).getByText('cleared due date')).toBeInTheDocument();
+            expect(within(item).getByText(/May 30/)).toBeInTheDocument();
+            expect(within(item).queryByLabelText('changed to')).not.toBeInTheDocument();
+        });
+
+        it('renders the optional reason inline when present', () => {
+            const transition = dueDateTransition({
+                fromDueDate: '2024-05-30',
+                toDueDate: '2024-06-06',
+                comment: 'waiting on client assets',
+            });
+
+            render(<TransitionHistory transitions={[transition]} variant="task" />);
+
+            expect(screen.getByText(/waiting on client assets/i)).toBeInTheDocument();
+        });
+
+        it('omits the reason text when no reason was given', () => {
+            const transition = dueDateTransition({
+                fromDueDate: '2024-05-30',
+                toDueDate: '2024-06-06',
+                comment: null,
+            });
+
+            render(<TransitionHistory transitions={[transition]} variant="task" />);
+
+            // Only the date badges + label render; no extra "·" reason separator
+            expect(screen.queryByText(/·/)).not.toBeInTheDocument();
+        });
+
+        it('interleaves a due-date change chronologically with status entries', () => {
+            const transitions: StatusTransition[] = [
+                mockTransitions[0],
+                dueDateTransition({
+                    id: 50,
+                    fromDueDate: '2024-05-30',
+                    toDueDate: '2024-06-06',
+                    createdAt: '2024-01-15T12:00:00Z',
+                }),
+                mockTransitions[1],
+            ];
+
+            render(<TransitionHistory transitions={transitions} variant="task" />);
+
+            const items = screen.getAllByRole('listitem');
+            expect(items).toHaveLength(3);
+            // The due-date change sits between the two status changes, preserving input order
+            expect(items[1]).toHaveAttribute('data-transition-id', '50');
+            expect(within(items[1]).getByText('changed due date')).toBeInTheDocument();
+        });
     });
 });

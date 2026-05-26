@@ -208,7 +208,11 @@ export default function TaskDetail({
         assignment: getInitialAssignment(),
         due_date: task.dueDate || '',
         estimated_hours: task.estimatedHours.toString(),
+        reason: '',
     });
+
+    // The reason field is only relevant once the user actually edits the due date.
+    const dueDateChanged = editForm.data.due_date !== (task.dueDate || '');
 
     const timeForm = useForm({
         hours: '',
@@ -279,9 +283,13 @@ export default function TaskDetail({
             assignedAgentId,
             dueDate: editForm.data.due_date,
             estimatedHours: editForm.data.estimated_hours,
+            reason: dueDateChanged ? editForm.data.reason || null : null,
         }, {
             preserveScroll: true,
-            onSuccess: () => setEditDialogOpen(false),
+            onSuccess: () => {
+                editForm.setData('reason', '');
+                setEditDialogOpen(false);
+            },
         });
     };
 
@@ -1173,6 +1181,17 @@ export default function TaskDetail({
                                     onChange={(e) => editForm.setData('due_date', e.target.value)}
                                 />
                             </div>
+                            {dueDateChanged && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="due-date-reason">Reason for due date change (optional)</Label>
+                                    <Input
+                                        id="due-date-reason"
+                                        placeholder="e.g. waiting on client assets"
+                                        value={editForm.data.reason}
+                                        onChange={(e) => editForm.setData('reason', e.target.value)}
+                                    />
+                                </div>
+                            )}
                             <div className="grid gap-2">
                                 <Label>Description</Label>
                                 <Input

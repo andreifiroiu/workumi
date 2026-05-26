@@ -226,6 +226,8 @@ class WorkOrderController extends Controller
                 'actionType' => $transition->action_type ?? 'status_change',
                 'fromStatus' => $transition->from_status,
                 'toStatus' => $transition->to_status,
+                'fromDueDate' => $transition->from_due_date?->format('Y-m-d'),
+                'toDueDate' => $transition->to_due_date?->format('Y-m-d'),
                 'user' => $transition->user ? [
                     'id' => $transition->user->id,
                     'name' => $transition->user->name,
