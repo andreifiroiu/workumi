@@ -66,6 +66,7 @@ import {
 } from '@/components/workflow';
 import { CommunicationsPanel } from '@/components/communications';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
+import { useRecentAssignees } from '@/hooks/use-recent-assignees';
 import { taskStatusLabels } from '@/components/ui/status-badge';
 import { useState, useEffect, useCallback } from 'react';
 import type { BreadcrumbItem } from '@/types';
@@ -210,6 +211,8 @@ export default function TaskDetail({
         estimated_hours: task.estimatedHours.toString(),
     });
 
+    const { recentIds: recentAssigneeIds, recordAssignee } = useRecentAssignees();
+
     const timeForm = useForm({
         hours: '',
         date: new Date().toISOString().split('T')[0],
@@ -281,7 +284,10 @@ export default function TaskDetail({
             estimatedHours: editForm.data.estimated_hours,
         }, {
             preserveScroll: true,
-            onSuccess: () => setEditDialogOpen(false),
+            onSuccess: () => {
+                recordAssignee(assignedToId);
+                setEditDialogOpen(false);
+            },
         });
     };
 
@@ -1155,6 +1161,34 @@ export default function TaskDetail({
                                             )}
                                         </SelectContent>
                                     </Select>
+                                    {(() => {
+                                        const recentMembers = recentAssigneeIds
+                                            .map((id) => teamMembers.find((member) => member.id === id))
+                                            .filter((member): member is { id: string; name: string } => Boolean(member))
+                                            .filter((member) => `user:${member.id}` !== editForm.data.assignment);
+
+                                        if (recentMembers.length === 0) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <div className="flex flex-wrap gap-1">
+                                                {recentMembers.map((member) => (
+                                                    <Button
+                                                        key={member.id}
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-6 text-xs"
+                                                        onClick={() => editForm.setData('assignment', `user:${member.id}`)}
+                                                    >
+                                                        <User className="mr-1 h-3 w-3" />
+                                                        {member.name}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Estimated Hours</Label>
