@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Work;
 
 use App\Enums\DocumentType;
 use App\Enums\Priority;
+use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
+use App\Exceptions\InvalidTransitionException;
 use App\Http\Controllers\Controller;
 use App\Models\AIAgent;
 use App\Models\Document;
@@ -12,11 +14,13 @@ use App\Models\Folder;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -227,6 +231,8 @@ class WorkOrderController extends Controller
                 'actionType' => $transition->action_type ?? 'status_change',
                 'fromStatus' => $transition->from_status,
                 'toStatus' => $transition->to_status,
+                'fromDueDate' => $transition->from_due_date?->format('Y-m-d'),
+                'toDueDate' => $transition->to_due_date?->format('Y-m-d'),
                 'user' => $transition->user ? [
                     'id' => $transition->user->id,
                     'name' => $transition->user->name,
@@ -479,11 +485,23 @@ class WorkOrderController extends Controller
         ])->toArray();
     }
 
-    public function archive(Request $request, WorkOrder $workOrder): RedirectResponse
+    public function archive(Request $request, WorkOrder $workOrder, WorkflowTransitionService $service): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
-        $workOrder->update(['status' => WorkOrderStatus::Archived]);
+        $user = $request->user();
+
+        if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+            return back()->withErrors([
+                'tasks' => $this->uncompletableTasksMessage(),
+            ]);
+        }
+
+        DB::transaction(function () use ($workOrder, $user, $service): void {
+            $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order archived.');
+
+            $workOrder->update(['status' => WorkOrderStatus::Archived]);
+        });
 
         // Recalculate project progress
         $workOrder->project->recalculateProgress();
@@ -491,11 +509,21 @@ class WorkOrderController extends Controller
         return back();
     }
 
-    public function deliverAndArchive(Request $request, WorkOrder $workOrder): RedirectResponse
+    public function deliverAndArchive(Request $request, WorkOrder $workOrder, WorkflowTransitionService $service): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
-        DB::transaction(function () use ($request, $workOrder): void {
+        $user = $request->user();
+
+        if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+            return back()->withErrors([
+                'tasks' => $this->uncompletableTasksMessage(),
+            ]);
+        }
+
+        DB::transaction(function () use ($request, $workOrder, $user, $service): void {
+            $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order delivered and archived.');
+
             $fromStatus = $workOrder->status;
 
             if ($fromStatus !== WorkOrderStatus::Delivered) {
@@ -529,13 +557,32 @@ class WorkOrderController extends Controller
         return back();
     }
 
-    public function bulkArchiveDelivered(Request $request, Project $project): RedirectResponse
+    public function bulkArchiveDelivered(Request $request, Project $project, WorkflowTransitionService $service): RedirectResponse
     {
         $this->authorize('update', $project);
 
-        $project->workOrders()
+        $user = $request->user();
+
+        $deliveredWorkOrders = $project->workOrders()
             ->where('status', WorkOrderStatus::Delivered)
-            ->update(['status' => WorkOrderStatus::Archived]);
+            ->with('tasks')
+            ->get();
+
+        foreach ($deliveredWorkOrders as $workOrder) {
+            if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+                return back()->withErrors([
+                    'tasks' => $this->uncompletableTasksMessage(),
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($deliveredWorkOrders, $user, $service): void {
+            foreach ($deliveredWorkOrders as $workOrder) {
+                $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order archived.');
+
+                $workOrder->update(['status' => WorkOrderStatus::Archived]);
+            }
+        });
 
         // Recalculate project progress
         $project->recalculateProgress();
@@ -543,7 +590,60 @@ class WorkOrderController extends Controller
         return back();
     }
 
-    public function update(Request $request, WorkOrder $workOrder): RedirectResponse
+    /**
+     * Return titles of the work order's open tasks that cannot transition
+     * directly to Done. Open tasks are those not already in a finished state
+     * (Done, Cancelled, or Archived).
+     *
+     * @return array<int, string>
+     */
+    private function findUncompletableTasks(WorkOrder $workOrder, User $user, WorkflowTransitionService $service): array
+    {
+        return $this->openTasks($workOrder)
+            ->reject(fn (Task $task) => in_array(TaskStatus::Done->value, $service->getAvailableTransitions($task, $user), true))
+            ->map(fn (Task $task) => $task->title)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Transition every open task on the work order to Done through the workflow
+     * service. Tasks whose transition is denied (e.g. an Approved task whose
+     * actor lacks delivery permission) are skipped.
+     *
+     * Only call this after findUncompletableTasks() returns an empty array.
+     */
+    private function completeOpenTasks(WorkOrder $workOrder, User $user, WorkflowTransitionService $service, string $comment): void
+    {
+        foreach ($this->openTasks($workOrder) as $task) {
+            try {
+                $service->transition($task, $user, TaskStatus::Done, $comment);
+            } catch (InvalidTransitionException) {
+                continue;
+            }
+        }
+    }
+
+    /**
+     * The work order's tasks that are not yet in a finished state.
+     *
+     * @return Collection<int, Task>
+     */
+    private function openTasks(WorkOrder $workOrder): Collection
+    {
+        $finished = [TaskStatus::Done, TaskStatus::Cancelled, TaskStatus::Archived];
+
+        return $workOrder->tasks
+            ->reject(fn (Task $task) => in_array($task->status, $finished, true))
+            ->values();
+    }
+
+    private function uncompletableTasksMessage(): string
+    {
+        return 'Cannot complete this work order: one or more tasks are in review, blocked, or awaiting revision and must be resolved first.';
+    }
+
+    public function update(Request $request, WorkOrder $workOrder, WorkflowTransitionService $transitionService): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
@@ -555,7 +655,11 @@ class WorkOrderController extends Controller
             'due_date' => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'acceptanceCriteria' => 'nullable|array',
+            'reason' => 'nullable|string',
         ]);
+
+        // Capture current due date before update so we can log any change
+        $oldDueDate = $workOrder->due_date;
 
         $updateData = [];
         if (isset($validated['title'])) {
@@ -581,6 +685,18 @@ class WorkOrderController extends Controller
         }
 
         $workOrder->update($updateData);
+
+        // Log a due-date change only when the date actually changed
+        if (array_key_exists('due_date', $validated)
+            && $oldDueDate?->toDateString() !== $workOrder->due_date?->toDateString()) {
+            $transitionService->recordDueDateChange(
+                $workOrder,
+                $request->user(),
+                $oldDueDate,
+                $workOrder->due_date,
+                $validated['reason'] ?? null,
+            );
+        }
 
         return back();
     }

@@ -657,7 +657,11 @@ export default function WorkOrderDetail({
         budget_type: (workOrder.budgetType ?? undefined) as BudgetType | undefined,
         budget_cost: workOrder.budgetCost?.toString() || '',
         budget_hours: workOrder.budgetHours?.toString() || '',
+        reason: '',
     });
+
+    // The reason field is only relevant once the user actually edits the due date.
+    const dueDateChanged = editForm.data.due_date !== (workOrder.dueDate || '');
 
     const taskForm = useForm({
         title: '',
@@ -765,9 +769,17 @@ export default function WorkOrderDetail({
 
     const handleUpdateWorkOrder = (e: React.FormEvent) => {
         e.preventDefault();
+        // Only send a reason when the due date actually changed; normalise empty to null.
+        editForm.transform((data) => ({
+            ...data,
+            reason: dueDateChanged ? data.reason || null : null,
+        }));
         editForm.patch(`/work/work-orders/${workOrder.id}`, {
             preserveScroll: true,
-            onSuccess: () => setEditDialogOpen(false),
+            onSuccess: () => {
+                editForm.setData('reason', '');
+                setEditDialogOpen(false);
+            },
         });
     };
 
@@ -1974,6 +1986,17 @@ export default function WorkOrderDetail({
                                     />
                                 </div>
                             </div>
+                            {dueDateChanged && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="wo-due-date-reason">Reason for due date change (optional)</Label>
+                                    <Input
+                                        id="wo-due-date-reason"
+                                        placeholder="e.g. waiting on client assets"
+                                        value={editForm.data.reason}
+                                        onChange={(e) => editForm.setData('reason', e.target.value)}
+                                    />
+                                </div>
+                            )}
                             <div className="grid gap-2">
                                 <Label>Description</Label>
                                 <Input
