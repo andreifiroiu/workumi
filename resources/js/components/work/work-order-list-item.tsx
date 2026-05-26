@@ -41,6 +41,7 @@ export function WorkOrderListItem({
     isDragOverlay = false,
 }: WorkOrderListItemProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
     const {
         attributes,
         listeners,
@@ -77,7 +78,10 @@ export function WorkOrderListItem({
         !completedStatuses.includes(workOrder.status);
 
     const handleArchive = () => {
-        router.post(`/work/work-orders/${workOrder.id}/archive`, {}, { preserveScroll: true });
+        router.post(`/work/work-orders/${workOrder.id}/archive`, {}, {
+            preserveScroll: true,
+            onError: (errors) => setActionError(errors.tasks ?? 'Failed to archive work order.'),
+        });
     };
 
     const handleStatusChange = (status: string) => {
@@ -95,7 +99,10 @@ export function WorkOrderListItem({
         router.post(
             `/work/work-orders/${workOrder.id}/deliver-and-archive`,
             {},
-            { preserveScroll: true }
+            {
+                preserveScroll: true,
+                onError: (errors) => setActionError(errors.tasks ?? 'Failed to deliver and archive work order.'),
+            }
         );
     };
 
@@ -286,6 +293,18 @@ export function WorkOrderListItem({
                         >
                             Delete
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={actionError !== null} onOpenChange={(open) => !open && setActionError(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cannot complete work order</DialogTitle>
+                        <DialogDescription>{actionError}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => setActionError(null)}>OK</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

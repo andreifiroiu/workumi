@@ -93,6 +93,7 @@ export default function ProjectDetail({
     const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] = useState(false);
     const [selectedListId, setSelectedListId] = useState<string | undefined>(undefined);
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
+    const [bulkArchiveError, setBulkArchiveError] = useState<string | null>(null);
     const [insightsPanelOpen, setInsightsPanelOpen] = useState(true);
 
     // Project insights hook
@@ -163,7 +164,10 @@ export default function ProjectDetail({
     };
 
     const handleBulkArchiveDelivered = () => {
-        router.post(`/work/projects/${project.id}/work-orders/bulk-archive-delivered`, {}, { preserveScroll: true });
+        router.post(`/work/projects/${project.id}/work-orders/bulk-archive-delivered`, {}, {
+            preserveScroll: true,
+            onError: (errors) => setBulkArchiveError(errors.tasks ?? 'Failed to archive delivered work orders.'),
+        });
     };
 
     const handleTogglePrivacy = () => {
@@ -619,6 +623,18 @@ export default function ProjectDetail({
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={bulkArchiveError !== null} onOpenChange={(open) => !open && setBulkArchiveError(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Cannot archive delivered work orders</DialogTitle>
+                        <DialogDescription>{bulkArchiveError}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => setBulkArchiveError(null)}>OK</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </AppLayout>
