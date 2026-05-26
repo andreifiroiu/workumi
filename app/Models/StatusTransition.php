@@ -23,11 +23,15 @@ class StatusTransition extends Model
         'to_assigned_to_id',
         'from_assigned_agent_id',
         'to_assigned_agent_id',
+        'from_due_date',
+        'to_due_date',
         'comment',
         'created_at',
     ];
 
     protected $casts = [
+        'from_due_date' => 'date',
+        'to_due_date' => 'date',
         'created_at' => 'datetime',
     ];
 
@@ -93,5 +97,13 @@ class StatusTransition extends Model
     public function isStatusChange(): bool
     {
         return $this->action_type === 'status_change';
+    }
+
+    /**
+     * Check if this transition is a due-date change.
+     */
+    public function isDueDateChange(): bool
+    {
+        return $this->action_type === 'due_date_change';
     }
 }

@@ -275,6 +275,34 @@ class WorkflowTransitionService
     }
 
     /**
+     * Record a due-date change for a Task or WorkOrder.
+     *
+     * Writes a StatusTransition row with action_type 'due_date_change' capturing
+     * the previous and new due dates. The actor may be a human user or an AI agent
+     * and is recorded the same way assignment/status changes record theirs.
+     */
+    public function recordDueDateChange(
+        Model $item,
+        User|AIAgent $actor,
+        \DateTimeInterface|string|null $fromDate,
+        \DateTimeInterface|string|null $toDate,
+        ?string $comment = null,
+    ): StatusTransition {
+        return DB::transaction(function () use ($item, $actor, $fromDate, $toDate, $comment) {
+            return StatusTransition::create([
+                'transitionable_type' => get_class($item),
+                'transitionable_id' => $item->id,
+                'user_id' => $actor instanceof User ? $actor->id : null,
+                'action_type' => 'due_date_change',
+                'from_due_date' => $fromDate,
+                'to_due_date' => $toDate,
+                'comment' => $comment,
+                'created_at' => now(),
+            ]);
+        });
+    }
+
+    /**
      * Get the current status of the model.
      */
     private function getCurrentStatus(Model $item): TaskStatus|WorkOrderStatus
