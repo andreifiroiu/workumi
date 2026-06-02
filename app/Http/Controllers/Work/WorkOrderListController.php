@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Work;
 
+use App\Enums\ProjectStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class WorkOrderListController extends Controller
 {
@@ -88,6 +90,50 @@ class WorkOrderListController extends Controller
         $workOrderList->delete();
 
         return back();
+    }
+
+    public function convertToProject(Request $request, WorkOrderList $workOrderList): RedirectResponse
+    {
+        $this->authorize('update', $workOrderList);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'partyId' => 'required|exists:parties,id',
+            'startDate' => 'required|date',
+            'targetEndDate' => 'nullable|date|after_or_equal:startDate',
+        ]);
+
+        $user = $request->user();
+        $sourceProject = $workOrderList->project;
+
+        $newProject = DB::transaction(function () use ($workOrderList, $validated, $user): Project {
+            $project = Project::create([
+                'team_id' => $workOrderList->team_id,
+                'party_id' => $validated['partyId'],
+                'owner_id' => $user->id,
+                'accountable_id' => $user->id,
+                'name' => $validated['name'],
+                'description' => $workOrderList->description,
+                'status' => ProjectStatus::Active,
+                'start_date' => $validated['startDate'],
+                'target_end_date' => $validated['targetEndDate'] ?? null,
+            ]);
+
+            WorkOrder::where('work_order_list_id', $workOrderList->id)
+                ->update([
+                    'project_id' => $project->id,
+                    'work_order_list_id' => null,
+                ]);
+
+            $workOrderList->delete();
+
+            return $project;
+        });
+
+        $sourceProject->refresh()->recalculateProgress();
+        $newProject->refresh()->recalculateProgress();
+
+        return redirect()->route('projects.show', $newProject);
     }
 
     public function moveWorkOrder(Request $request, WorkOrderList $workOrderList): RedirectResponse

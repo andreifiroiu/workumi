@@ -2,7 +2,6 @@
 
 use App\Models\Party;
 use App\Models\Project;
-use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
@@ -302,4 +301,93 @@ test('user can create work order with list assignment', function () {
         'title' => 'Test Work Order',
         'work_order_list_id' => $list->id,
     ]);
+});
+
+test('user can convert a work order list into a new project', function () {
+    $otherParty = Party::factory()->create(['team_id' => $this->team->id]);
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'description' => 'Phase two scope',
+    ]);
+    $workOrders = WorkOrder::factory()->count(2)->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_list_id' => $list->id,
+        'accountable_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->post(
+        "/work/work-order-lists/{$list->id}/convert-to-project",
+        [
+            'name' => 'Phase Two',
+            'partyId' => $otherParty->id,
+            'startDate' => '2026-06-01',
+            'targetEndDate' => '2026-07-01',
+        ]
+    );
+
+    $newProject = Project::where('name', 'Phase Two')->first();
+
+    expect($newProject)->not->toBeNull();
+    $response->assertRedirect("/work/projects/{$newProject->id}");
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $newProject->id,
+        'team_id' => $this->team->id,
+        'party_id' => $otherParty->id,
+        'owner_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'description' => 'Phase two scope',
+    ]);
+
+    foreach ($workOrders as $workOrder) {
+        $this->assertDatabaseHas('work_orders', [
+            'id' => $workOrder->id,
+            'project_id' => $newProject->id,
+            'work_order_list_id' => null,
+        ]);
+    }
+
+    $this->assertSoftDeleted('work_order_lists', ['id' => $list->id]);
+});
+
+test('converting a list requires name, party and start date', function () {
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->post(
+        "/work/work-order-lists/{$list->id}/convert-to-project",
+        []
+    );
+
+    $response->assertSessionHasErrors(['name', 'partyId', 'startDate']);
+});
+
+test('user cannot convert a list from another team', function () {
+    $otherUser = User::factory()->create();
+    $otherTeam = $otherUser->createTeam(['name' => 'Other Team']);
+    $otherUser->current_team_id = $otherTeam->id;
+    $otherUser->save();
+    $otherParty = Party::factory()->create(['team_id' => $otherTeam->id]);
+
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+    ]);
+
+    $response = $this->actingAs($otherUser)->post(
+        "/work/work-order-lists/{$list->id}/convert-to-project",
+        [
+            'name' => 'Hijacked',
+            'partyId' => $otherParty->id,
+            'startDate' => '2026-06-01',
+        ]
+    );
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('work_order_lists', ['id' => $list->id, 'deleted_at' => null]);
+    $this->assertDatabaseMissing('projects', ['name' => 'Hijacked']);
 });

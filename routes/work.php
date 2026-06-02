@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::patch('/work-order-lists/{workOrderList}', [WorkOrderListController::class, 'update'])->name('work-order-lists.update');
     Route::delete('/work-order-lists/{workOrderList}', [WorkOrderListController::class, 'destroy'])->name('work-order-lists.destroy');
     Route::post('/work-order-lists/{workOrderList}/move-work-order', [WorkOrderListController::class, 'moveWorkOrder'])->name('work-order-lists.move-work-order');
+    Route::post('/work-order-lists/{workOrderList}/convert-to-project', [WorkOrderListController::class, 'convertToProject'])->name('work-order-lists.convert-to-project');
     Route::post('/work-orders/{workOrder}/remove-from-list', [WorkOrderListController::class, 'removeFromList'])->name('work-orders.remove-from-list');
     Route::post('/projects/{project}/lists/reorder', [WorkOrderListController::class, 'reorder'])->name('projects.lists.reorder');
     Route::post('/projects/{project}/work-orders/reorder', [WorkOrderListController::class, 'reorderWorkOrders'])->name('projects.work-orders.reorder');

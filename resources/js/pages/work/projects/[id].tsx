@@ -388,6 +388,8 @@ export default function ProjectDetail({
                     <WorkOrderListSection
                         projectId={project.id}
                         projectName={project.name}
+                        projectPartyId={project.partyId}
+                        parties={parties}
                         workOrderLists={workOrderLists}
                         ungroupedWorkOrders={ungroupedWorkOrders}
                         onCreateWorkOrder={handleOpenCreateWorkOrderDialog}

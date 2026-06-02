@@ -10,6 +10,7 @@ import {
     Edit,
     Trash2,
     FolderOpen,
+    FolderSymlink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/collapsible';
 import { WorkOrderListItem } from './work-order-list-item';
 import { EditListDialog } from './edit-list-dialog';
+import { ConvertListToProjectDialog } from './convert-list-to-project-dialog';
 import type { WorkOrderList } from '@/types/work';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +37,8 @@ interface WorkOrderListGroupProps {
     onCreateWorkOrder: () => void;
     isUngrouped?: boolean;
     isDropTarget?: boolean;
+    parties?: Array<{ id: string; name: string }>;
+    projectPartyId?: string;
 }
 
 export function WorkOrderListGroup({
@@ -43,9 +47,12 @@ export function WorkOrderListGroup({
     onCreateWorkOrder,
     isUngrouped = false,
     isDropTarget = false,
+    parties = [],
+    projectPartyId = '',
 }: WorkOrderListGroupProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [convertDialogOpen, setConvertDialogOpen] = useState(false);
 
     const { setNodeRef, isOver } = useDroppable({
         id: list.id,
@@ -131,6 +138,13 @@ export function WorkOrderListGroup({
                                     <Plus className="h-4 w-4 mr-2" />
                                     Add Work Order
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setConvertDialogOpen(true)}
+                                    disabled={list.workOrders.length === 0}
+                                >
+                                    <FolderSymlink className="h-4 w-4 mr-2" />
+                                    Convert to Project
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                     onClick={handleDelete}
@@ -172,11 +186,20 @@ export function WorkOrderListGroup({
             </div>
 
             {!isUngrouped && (
-                <EditListDialog
-                    open={editDialogOpen}
-                    onOpenChange={setEditDialogOpen}
-                    list={list}
-                />
+                <>
+                    <EditListDialog
+                        open={editDialogOpen}
+                        onOpenChange={setEditDialogOpen}
+                        list={list}
+                    />
+                    <ConvertListToProjectDialog
+                        open={convertDialogOpen}
+                        onOpenChange={setConvertDialogOpen}
+                        list={list}
+                        parties={parties}
+                        defaultPartyId={projectPartyId}
+                    />
+                </>
             )}
         </Collapsible>
     );
