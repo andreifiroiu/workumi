@@ -148,13 +148,39 @@ export default function Work({
         });
     };
 
-    // Filter projects based on search
-    const filteredProjects = searchQuery
-        ? projects.filter(
-              (p) =>
-                  p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  (p.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-          )
+    // Filter projects based on search across projects, lists, work orders, and tasks
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchesQuery = (...values: Array<string | null | undefined>): boolean =>
+        values.some((value) => value?.toLowerCase().includes(normalizedQuery) ?? false);
+
+    const filteredProjects = normalizedQuery
+        ? projects.filter((p) => {
+              if (matchesQuery(p.name, p.description)) {
+                  return true;
+              }
+
+              const listMatches = p.workOrderLists.some(
+                  (list) =>
+                      matchesQuery(list.name, list.description) ||
+                      list.workOrders.some((wo) => matchesQuery(wo.title))
+              );
+              if (listMatches) {
+                  return true;
+              }
+
+              if (p.ungroupedWorkOrders.some((wo) => matchesQuery(wo.title))) {
+                  return true;
+              }
+
+              const workOrderMatches = workOrders.some(
+                  (wo) => wo.projectId === p.id && matchesQuery(wo.title, wo.description)
+              );
+              if (workOrderMatches) {
+                  return true;
+              }
+
+              return tasks.some((task) => task.projectId === p.id && matchesQuery(task.title, task.description));
+          })
         : projects;
 
     const activeProjects = filteredProjects.filter((p) => p.status === 'active' || p.status === 'on_hold');
