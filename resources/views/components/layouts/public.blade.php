@@ -19,7 +19,7 @@
 <body class="bg-background text-foreground font-sans antialiased">
     {{-- Navigation --}}
     <header class="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
             <a href="/" class="flex items-center gap-2">
                 <img src="/logo.svg" alt="{{ config('app.name') }}" class="h-8 w-auto">
 {{--                <span class="text-lg tracking-tight">{{ __('public.nav.tagline') }}</span>--}}
@@ -31,35 +31,63 @@
                 <a href="/use-cases/operations" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.operations') }}</a>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
                 {{-- Language Switcher --}}
                 @php
                     $currentLocale = app()->getLocale();
                     $locales = [
-                        'en' => 'English',
-                        'es' => 'Español',
-                        'fr' => 'Français',
-                        'de' => 'Deutsch',
-                        'ro' => 'Română',
+                        'en' => ['label' => 'English',  'flag' => '🇬🇧'],
+                        'es' => ['label' => 'Español',  'flag' => '🇪🇸'],
+                        'fr' => ['label' => 'Français', 'flag' => '🇫🇷'],
+                        'de' => ['label' => 'Deutsch',  'flag' => '🇩🇪'],
+                        'ro' => ['label' => 'Română',   'flag' => '🇷🇴'],
                     ];
+                    $current = $locales[$currentLocale] ?? $locales['en'];
                 @endphp
-                <select
-                    onchange="window.location.href='/language/'+this.value"
-                    class="rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                    @foreach ($locales as $code => $label)
-                        <option value="{{ $code }}" {{ $code === $currentLocale ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
+                <details class="group relative" data-dropdown>
+                    <summary class="flex cursor-pointer list-none items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground focus:outline-none focus:ring-1 focus:ring-ring [&::-webkit-details-marker]:hidden">
+                        <span class="text-sm leading-none">{{ $current['flag'] }}</span>
+                        <span class="hidden sm:inline">{{ $current['label'] }}</span>
+                    </summary>
+                    <div class="absolute right-0 mt-2 min-w-[10rem] overflow-hidden rounded-md border border-border bg-background py-1 shadow-md">
+                        @foreach ($locales as $code => $locale)
+                            <a
+                                href="/language/{{ $code }}"
+                                class="flex items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-secondary {{ $code === $currentLocale ? 'font-semibold text-foreground' : 'text-muted-foreground' }}"
+                            >
+                                <span class="text-sm leading-none">{{ $locale['flag'] }}</span>
+                                <span>{{ $locale['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </details>
 
                 @auth
-                    <span class="text-sm text-muted-foreground">{{ Auth::user()->name }}</span>
-                    <a href="/today" class="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
+                    <details class="group relative" data-dropdown>
+                        <summary class="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:text-foreground focus:outline-none focus:ring-1 focus:ring-ring [&::-webkit-details-marker]:hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span class="sr-only">{{ Auth::user()->name }}</span>
+                        </summary>
+                        <div class="absolute right-0 mt-2 min-w-[12rem] overflow-hidden rounded-md border border-border bg-background py-1 shadow-md">
+                            <div class="border-b border-border px-3 py-2">
+                                <p class="truncate text-sm font-medium text-foreground">{{ Auth::user()->name }}</p>
+                                <p class="truncate text-xs text-muted-foreground">{{ Auth::user()->email }}</p>
+                            </div>
+                            <form method="POST" action="/logout">
+                                @csrf
+                                <button type="submit" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-muted-foreground transition hover:bg-secondary hover:text-foreground">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                                    {{ __('public.nav.logout') }}
+                                </button>
+                            </form>
+                        </div>
+                    </details>
+                    <a href="/today" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 sm:px-4">
                         {{ __('public.nav.go_to_app') }}
                     </a>
                 @else
-                    <a href="/login" class="text-sm font-medium text-muted-foreground transition hover:text-foreground">{{ __('public.nav.login') }}</a>
-                    <a href="/register" class="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:bg-primary/90">
+                    <a href="/login" class="whitespace-nowrap text-sm font-medium text-muted-foreground transition hover:text-foreground">{{ __('public.nav.login') }}</a>
+                    <a href="/register" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 sm:px-4">
                         {{ __('public.nav.get_started') }}
                     </a>
                 @endauth
@@ -89,5 +117,14 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('click', function (event) {
+            document.querySelectorAll('details[data-dropdown][open]').forEach(function (dropdown) {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.open = false;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

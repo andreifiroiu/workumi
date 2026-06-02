@@ -10,6 +10,7 @@ return [
         'login' => 'Anmelden',
         'get_started' => 'Jetzt starten',
         'go_to_app' => 'Zur App',
+        'logout' => 'Abmelden',
         'copyright' => '© :year :name. Alle Rechte vorbehalten.',
         'language' => 'Sprache',
     ],
