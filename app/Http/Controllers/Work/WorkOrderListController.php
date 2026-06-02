@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Work;
 
 use App\Enums\ProjectStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Deliverable;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use Illuminate\Http\RedirectResponse;
@@ -119,11 +121,18 @@ class WorkOrderListController extends Controller
                 'target_end_date' => $validated['targetEndDate'] ?? null,
             ]);
 
-            WorkOrder::where('work_order_list_id', $workOrderList->id)
+            $workOrderIds = WorkOrder::where('work_order_list_id', $workOrderList->id)->pluck('id');
+
+            WorkOrder::whereIn('id', $workOrderIds)
                 ->update([
                     'project_id' => $project->id,
                     'work_order_list_id' => null,
                 ]);
+
+            // Tasks and deliverables denormalize their work order's project_id,
+            // so they must follow the work orders into the new project.
+            Task::whereIn('work_order_id', $workOrderIds)->update(['project_id' => $project->id]);
+            Deliverable::whereIn('work_order_id', $workOrderIds)->update(['project_id' => $project->id]);
 
             $workOrderList->delete();
 
