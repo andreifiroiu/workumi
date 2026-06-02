@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Console\Commands\WorkumiMcpCommand;
+use App\Http\Middleware\EnsureMcpScope;
 use App\Http\Middleware\ResolveMcpTeamContext;
 use App\Mcp\Servers\WorkumiServer;
 use Illuminate\Support\ServiceProvider;
@@ -21,10 +22,12 @@ class WorkumiMcpServiceProvider extends ServiceProvider
         Mcp::oauthRoutes();
 
         // HTTP transport (remote clients — Claude.ai, Claude Code remote, etc.).
-        // Accepts Passport OAuth bearer tokens (api guard) or Sanctum personal
-        // access tokens, so both the Claude app and CLI clients can connect.
+        // Accepts Sanctum personal access tokens or Passport OAuth bearer tokens,
+        // so both the CLI and the Claude app can connect. Sanctum is tried first:
+        // it validates its own tokens (and silently ignores OAuth JWTs) without
+        // the Passport guard reporting an OAuthServerException on every request.
         Mcp::web('/mcp', WorkumiServer::class)
-            ->middleware(['auth:api,sanctum', ResolveMcpTeamContext::class]);
+            ->middleware(['auth:sanctum,api', EnsureMcpScope::class, ResolveMcpTeamContext::class]);
 
         if ($this->app->runningInConsole()) {
             $this->commands([WorkumiMcpCommand::class]);
