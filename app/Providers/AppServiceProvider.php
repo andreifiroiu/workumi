@@ -26,6 +26,7 @@ use App\Observers\TimeEntryObserver;
 use App\Observers\WorkOrderObserver;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 use OpenTelemetry\API\Globals;
 use OpenTelemetry\API\Logs\LoggerProviderInterface;
 use OpenTelemetry\API\Metrics\MeterProviderInterface;
@@ -74,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Display Laravel MCP's authorization consent screen during the OAuth flow.
+        Passport::authorizationView(fn ($parameters) => view('mcp.authorize', $parameters));
+
         // Register model observers
         Team::observe(TeamObserver::class);
         TimeEntry::observe(TimeEntryObserver::class);
