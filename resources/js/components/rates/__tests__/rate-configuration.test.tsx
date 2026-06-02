@@ -1,5 +1,4 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { TeamMemberRateTable } from '../team-member-rate-table';
 import { RateEditForm } from '../rate-edit-form';

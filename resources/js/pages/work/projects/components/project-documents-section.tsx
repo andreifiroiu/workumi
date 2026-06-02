@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,8 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { FolderTree, FolderNode } from '@/components/documents/folder-tree';
+import { FolderNode } from '@/components/documents/folder-tree';
 import { FolderManagement } from '@/components/documents/folder-management';
 import { DocumentPreviewWithAnnotations } from '@/components/documents/document-preview-with-annotations';
 import { ShareLinkDialog } from '@/components/documents/share-link-dialog';

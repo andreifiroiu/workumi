@@ -143,7 +143,7 @@ export interface Integration {
   connectedAt: string | null
   connectedBy: string | null
   lastSyncAt: string | null
-  settings: Record<string, any> | null
+  settings: Record<string, unknown> | null
 }
 
 export interface BillingInfo {
@@ -328,7 +328,7 @@ export interface SettingsProps {
   onDisconnectIntegration?: (integrationId: string) => void
 
   /** Called when user configures integration settings */
-  onConfigureIntegration?: (integrationId: string, settings: Record<string, any>) => void
+  onConfigureIntegration?: (integrationId: string, settings: Record<string, unknown>) => void
 
   /** Called when user downloads an invoice */
   onDownloadInvoice?: (invoiceId: string) => void

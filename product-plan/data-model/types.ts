@@ -804,7 +804,7 @@ export interface Integration {
   connectedAt: string | null
   connectedBy: string | null
   lastSyncAt: string | null
-  settings: Record<string, any> | null
+  settings: Record<string, unknown> | null
 }
 
 export interface BillingInfo {

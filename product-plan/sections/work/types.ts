@@ -283,5 +283,5 @@ export interface WorkProps {
   onSearch?: (query: string) => void
 
   /** Called when user applies filters */
-  onFilter?: (filters: Record<string, any>) => void
+  onFilter?: (filters: Record<string, unknown>) => void
 }

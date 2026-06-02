@@ -205,7 +205,7 @@ export interface PlaybooksProps {
   onGenerateTemplate?: (type: PlaybookType, prompt: string) => void
 
   /** Called when user saves playbook changes */
-  onSavePlaybook?: (id: string, data: any) => void
+  onSavePlaybook?: (id: string, data: unknown) => void
 
   /** Called when user applies filters or search */
   onFilter?: (filters: PlaybookFilters) => void

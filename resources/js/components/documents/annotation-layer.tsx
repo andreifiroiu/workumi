@@ -17,7 +17,6 @@ import type { AnnotationLayerProps, AnnotationPosition, DocumentAnnotation } fro
  * - Default state: annotations visible
  */
 export function AnnotationLayer({
-    documentId,
     annotations,
     currentPage,
     onAnnotationClick,

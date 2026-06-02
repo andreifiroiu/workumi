@@ -1,7 +1,7 @@
 import type { InboxListItemProps } from '@/types/inbox';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Bot, User, Clock, Link as LinkIcon, Briefcase, FolderKanban } from 'lucide-react';
+import { Bot, User, Clock, Briefcase, FolderKanban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**

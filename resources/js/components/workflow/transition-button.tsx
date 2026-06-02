@@ -45,7 +45,6 @@ export interface TransitionButtonProps {
  * It only displays valid transitions based on the allowedTransitions prop.
  */
 function TransitionButton({
-    currentStatus,
     allowedTransitions,
     onTransition,
     isLoading = false,

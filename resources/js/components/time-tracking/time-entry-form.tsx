@@ -23,8 +23,6 @@ const timeEntrySchema = z.object({
     is_billable: z.boolean(),
 });
 
-type TimeEntryFormData = z.infer<typeof timeEntrySchema>;
-
 type TimeEntryFormValues = {
     hours: number | '';
     date: string;

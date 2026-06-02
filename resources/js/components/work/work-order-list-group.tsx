@@ -43,7 +43,6 @@ interface WorkOrderListGroupProps {
 
 export function WorkOrderListGroup({
     list,
-    projectId,
     onCreateWorkOrder,
     isUngrouped = false,
     isDropTarget = false,

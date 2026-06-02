@@ -474,7 +474,7 @@ export default function TaskDetail({
 
                 // Reload page to get fresh data
                 router.reload({ only: ['task', 'statusTransitions', 'allowedTransitions', 'rejectionFeedback'] });
-            } catch (error) {
+            } catch {
                 setTransitionError('An error occurred while updating the status');
             } finally {
                 setIsTransitioning(false);
@@ -552,7 +552,7 @@ export default function TaskDetail({
                 // Timer started successfully
                 router.reload();
             }
-        } catch (error) {
+        } catch {
             alert('Failed to start timer');
         } finally {
             setIsStartingTimer(false);
@@ -583,7 +583,7 @@ export default function TaskDetail({
             } else {
                 alert(data.message || 'Failed to start timer');
             }
-        } catch (error) {
+        } catch {
             alert('Failed to start timer');
         } finally {
             setIsStartingTimer(false);

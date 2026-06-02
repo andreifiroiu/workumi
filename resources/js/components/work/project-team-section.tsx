@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/collapsible';
 import { RoleBadge } from './role-badge';
 import type { ProjectTeamMember, TeamMemberRole } from '@/types/work';
-import { cn } from '@/lib/utils';
 
 interface ProjectTeamSectionProps {
     teamMembers: ProjectTeamMember[];
@@ -54,7 +53,7 @@ function formatWorkload(workload: ProjectTeamMember['workload']): string {
     return parts.join(' \u2022 ');
 }
 
-export function ProjectTeamSection({ teamMembers, projectId }: ProjectTeamSectionProps) {
+export function ProjectTeamSection({ teamMembers }: ProjectTeamSectionProps) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     if (teamMembers.length === 0) {

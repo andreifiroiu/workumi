@@ -8,7 +8,6 @@ import {
     Eye,
     CheckCircle,
     XCircle,
-    Mail,
     User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

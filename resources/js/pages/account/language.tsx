@@ -42,7 +42,7 @@ export default function Language({
     const { language, changeLanguage } = useLanguage();
     const [selectedLanguage, setSelectedLanguage] = useState(language);
 
-    const { patch, processing, recentlySuccessful } = useForm({
+    const { processing, recentlySuccessful } = useForm({
         language: language,
     });
 

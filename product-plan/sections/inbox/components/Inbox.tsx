@@ -10,9 +10,6 @@ import { InboxSidePanel } from './InboxSidePanel'
 
 export function Inbox({
   inboxItems,
-  teamMembers,
-  projects,
-  workOrders,
   currentTab = 'all',
   selectedItemIds = [],
   onTabChange,
@@ -23,7 +20,6 @@ export function Inbox({
   onDefer,
   onSelectItems,
   onBulkAction,
-  onFilter,
   onSearch,
   onCloseSidePanel,
 }: InboxProps) {
