@@ -45,28 +45,23 @@ export function ActiveTimerIndicator({ className }: ActiveTimerIndicatorProps) {
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
-    const [elapsedSeconds, setElapsedSeconds] = useState(() => {
-        if (activeTimer?.startedAt) {
-            return calculateElapsedSeconds(activeTimer.startedAt);
-        }
-        return 0;
-    });
+    const [, setTick] = useState(0);
 
-    // Update elapsed time every second when timer is active
+    const startedAt = activeTimer?.startedAt;
+    const elapsedSeconds = startedAt ? calculateElapsedSeconds(startedAt) : 0;
+
+    // Re-render every second while a timer is active so elapsed time stays current
     useEffect(() => {
-        if (!activeTimer?.startedAt) {
-            setElapsedSeconds(0);
+        if (!startedAt) {
             return;
         }
 
-        setElapsedSeconds(calculateElapsedSeconds(activeTimer.startedAt));
-
         const interval = setInterval(() => {
-            setElapsedSeconds(calculateElapsedSeconds(activeTimer.startedAt));
+            setTick((value) => value + 1);
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [activeTimer?.startedAt]);
+    }, [startedAt]);
 
     const handleStopTimer = useCallback(() => {
         if (!activeTimer) return;

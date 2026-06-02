@@ -78,20 +78,18 @@ function formatCurrency(value: number | null | undefined): string {
 
 export default function ProjectDetail({
     project,
-    workOrders,
     workOrderLists,
     ungroupedWorkOrders,
     documents,
     folders,
     communicationThread,
-    messages,
     parties,
     teamMembers,
     siblingProjects,
 }: ProjectDetailPageProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] = useState(false);
-    const [selectedListId, setSelectedListId] = useState<string | undefined>(undefined);
+    const [, setSelectedListId] = useState<string | undefined>(undefined);
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
     const [bulkArchiveError, setBulkArchiveError] = useState<string | null>(null);
     const [insightsPanelOpen, setInsightsPanelOpen] = useState(true);
@@ -128,7 +126,7 @@ export default function ProjectDetail({
         title: '',
         projectId: project.id,
         description: '',
-        priority: 'medium' as const,
+        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
         dueDate: '',
         workOrderListId: undefined as string | undefined,
     });
@@ -183,10 +181,6 @@ export default function ProjectDetail({
             router.delete(`/work/projects/${project.id}`);
         }
     };
-
-    const completedWorkOrders = workOrders.filter(
-        (wo) => wo.status === 'delivered' || wo.status === 'approved'
-    ).length;
 
     // Determine budget display value based on budget type
     const getBudgetDisplayValue = () => {
@@ -436,7 +430,7 @@ export default function ProjectDetail({
                                 <Label>Status</Label>
                                 <Select
                                     value={editForm.data.status}
-                                    onValueChange={(value) => editForm.setData('status', value as any)}
+                                    onValueChange={(value) => editForm.setData('status', value as typeof project.status)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -542,7 +536,7 @@ export default function ProjectDetail({
                                 <Select
                                     value={workOrderForm.data.priority}
                                     onValueChange={(value) =>
-                                        workOrderForm.setData('priority', value as any)
+                                        workOrderForm.setData('priority', value as 'low' | 'medium' | 'high' | 'urgent')
                                     }
                                 >
                                     <SelectTrigger>

@@ -11,6 +11,7 @@ import {
     Calendar,
     Edit,
     Trash2,
+    type LucideIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,7 @@ const commPrefLabels: Record<string, string> = {
     slack: 'Slack',
 };
 
-const commPrefIcons: Record<string, any> = {
+const commPrefIcons: Record<string, LucideIcon> = {
     email: Mail,
     phone: Phone,
     slack: MessageSquare,

@@ -9,9 +9,17 @@ use App\Http\Controllers\PlaybooksController;
 use App\Http\Controllers\Reports\ProfitabilityReportsController;
 use App\Http\Controllers\Reports\TimeReportsController;
 use App\Http\Controllers\TodayController;
+use App\Http\Controllers\Webhooks\MailgunInboundController;
+use App\Http\Middleware\VerifyMailgunSignature;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 // Root (/) is handled by Laravel Folio → resources/views/pages/index.blade.php
+
+// Mailgun inbound email webhook (signature-verified, no auth/session)
+Route::post('/webhooks/mailgun/inbound', [MailgunInboundController::class, 'handle'])
+    ->middleware(VerifyMailgunSignature::class)
+    ->name('webhooks.mailgun.inbound');
 
 // Language switcher (sets cookie + updates user record if authenticated)
 Route::get('/language/{locale}', function (string $locale) {

@@ -20,7 +20,7 @@ export function MyWorkCard({ workOrder, task, onView, onUpdateStatus }: MyWorkCa
   return null
 }
 
-function WorkOrderCard({ workOrder, onView, onUpdateStatus }: { workOrder: WorkOrder; onView?: () => void; onUpdateStatus?: () => void }) {
+function WorkOrderCard({ workOrder, onView }: { workOrder: WorkOrder; onView?: () => void; onUpdateStatus?: () => void }) {
   const statusColors = {
     draft: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
     active: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400',
@@ -107,7 +107,7 @@ function WorkOrderCard({ workOrder, onView, onUpdateStatus }: { workOrder: WorkO
   )
 }
 
-function TaskCard({ task, onView, onUpdateStatus }: { task: Task; onView?: () => void; onUpdateStatus?: () => void }) {
+function TaskCard({ task, onView }: { task: Task; onView?: () => void; onUpdateStatus?: () => void }) {
   const statusColors = {
     todo: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
     in_progress: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400',

@@ -7,7 +7,7 @@ interface KanbanColumnProps {
   title: string
   workOrders: WorkOrder[]
   onViewWorkOrder?: (id: string) => void
-  onCreateWorkOrder?: (data: any) => void
+  onCreateWorkOrder?: (data: { status: WorkOrder['status'] }) => void
   onUpdateWorkOrderStatus?: (id: string, status: WorkOrder['status']) => void
 }
 
@@ -17,7 +17,6 @@ export function KanbanColumn({
   workOrders,
   onViewWorkOrder,
   onCreateWorkOrder,
-  onUpdateWorkOrderStatus,
 }: KanbanColumnProps) {
   const statusColors = {
     draft: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',

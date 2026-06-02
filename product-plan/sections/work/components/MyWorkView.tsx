@@ -18,8 +18,6 @@ export function MyWorkView({
   currentUserId,
   onViewWorkOrder,
   onViewTask,
-  onUpdateWorkOrderStatus,
-  onUpdateTaskStatus,
 }: MyWorkViewProps) {
   // Filter work orders and tasks assigned to current user
   const myWorkOrders = workOrders.filter(wo => wo.assignedToId === currentUserId)

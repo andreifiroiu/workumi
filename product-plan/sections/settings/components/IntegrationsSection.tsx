@@ -4,7 +4,7 @@ interface IntegrationsSectionProps {
   integrations: Integration[]
   onConnect?: (integrationId: string) => void
   onDisconnect?: (integrationId: string) => void
-  onConfigure?: (integrationId: string, settings: Record<string, any>) => void
+  onConfigure?: (integrationId: string, settings: Record<string, unknown>) => void
 }
 
 export function IntegrationsSection({

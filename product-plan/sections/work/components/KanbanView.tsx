@@ -5,7 +5,7 @@ import { KanbanColumn } from './KanbanColumn'
 interface KanbanViewProps {
   workOrders: WorkOrder[]
   onViewWorkOrder?: (id: string) => void
-  onCreateWorkOrder?: (data: any) => void
+  onCreateWorkOrder?: (data: { status: WorkOrder['status'] }) => void
   onUpdateWorkOrderStatus?: (id: string, status: WorkOrder['status']) => void
 }
 

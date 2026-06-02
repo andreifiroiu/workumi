@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlertCircle, Bot, Check, ChevronDown, Clock, RotateCcw, Sparkles, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,16 +38,15 @@ export function PlanExecutionPanel({
     delegationError,
 }: PlanExecutionPanelProps) {
     const [draftAssignments, setDraftAssignments] = useState<Record<string, string>>({});
+    const [appliedSuggestions, setAppliedSuggestions] = useState<typeof aiSuggestions | null>(null);
 
     const getSuggestionForTask = (taskId: string) =>
         aiSuggestions.find((s) => s.taskId === taskId);
 
-    // When AI suggestions arrive, populate drafts for tasks that aren't already assigned
-    useEffect(() => {
-        if (aiSuggestions.length === 0) {
-            return;
-        }
-
+    // When AI suggestions arrive, populate drafts for tasks that aren't already assigned.
+    // Applied once per new suggestions array during render to avoid a cascading effect.
+    if (aiSuggestions.length > 0 && appliedSuggestions !== aiSuggestions) {
+        setAppliedSuggestions(aiSuggestions);
         setDraftAssignments((prev) => {
             const next = { ...prev };
             for (const suggestion of aiSuggestions) {
@@ -59,7 +58,7 @@ export function PlanExecutionPanel({
             }
             return next;
         });
-    }, [aiSuggestions, tasks]);
+    }
 
     const getServerValue = (task: PlanExecutionPanelProps['tasks'][0]): string => {
         if (task.assignedAgentId) {
@@ -112,19 +111,17 @@ export function PlanExecutionPanel({
         setDraftAssignments({});
     };
 
-    const allAssigned = useMemo(() => {
-        return tasks.every((task) => {
-            const current = getCurrentValue(task);
-            return current !== '';
-        });
-    }, [tasks, draftAssignments]);
+    const allAssigned = tasks.every((task) => getCurrentValue(task) !== '');
 
     const [isOpen, setIsOpen] = useState(!allAssigned);
 
-    // Auto-collapse when all tasks become assigned, auto-expand when any become unassigned
-    useEffect(() => {
+    // Auto-collapse when all tasks become assigned, auto-expand when any become unassigned.
+    // Track the previous value in state and adjust during render to avoid a cascading effect.
+    const [prevAllAssigned, setPrevAllAssigned] = useState(allAssigned);
+    if (prevAllAssigned !== allAssigned) {
+        setPrevAllAssigned(allAssigned);
         setIsOpen(!allAssigned);
-    }, [allAssigned]);
+    }
 
     if (tasks.length === 0) {
         return null;

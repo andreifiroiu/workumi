@@ -194,12 +194,13 @@ function sortProjects(
                 else if (!b.targetEndDate) comparison = -1;
                 else comparison = new Date(a.targetEndDate).getTime() - new Date(b.targetEndDate).getTime();
                 break;
-            case 'priority':
+            case 'priority': {
                 // Sort by RACI prominence for projects
                 const aHighestRoleP = Math.min(...a.userRaciRoles.map((r) => raciOrder[r]));
                 const bHighestRoleP = Math.min(...b.userRaciRoles.map((r) => raciOrder[r]));
                 comparison = aHighestRoleP - bHighestRoleP;
                 break;
+            }
             case 'recently_updated':
                 // Sort by start date as proxy for recency
                 comparison = new Date(b.startDate).getTime() - new Date(a.startDate).getTime();

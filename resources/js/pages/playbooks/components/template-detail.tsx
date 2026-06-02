@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { FileStack, Briefcase, FileText } from 'lucide-react';
 import type { TemplatePlaybook } from '@/types/playbooks';
@@ -7,21 +6,22 @@ interface TemplateDetailProps {
     playbook: TemplatePlaybook;
 }
 
+function TemplateTypeIcon({ type }: { type: string }) {
+    const className = 'size-5 text-muted-foreground';
+    switch (type) {
+        case 'project':
+            return <Briefcase className={className} />;
+        case 'work-order':
+            return <FileStack className={className} />;
+        case 'document':
+            return <FileText className={className} />;
+        default:
+            return <FileStack className={className} />;
+    }
+}
+
 export function TemplateDetail({ playbook }: TemplateDetailProps) {
     const content = playbook.content;
-
-    const getTemplateTypeIcon = (type: string) => {
-        switch (type) {
-            case 'project':
-                return Briefcase;
-            case 'work-order':
-                return FileStack;
-            case 'document':
-                return FileText;
-            default:
-                return FileStack;
-        }
-    };
 
     const getTemplateTypeLabel = (type: string) => {
         switch (type) {
@@ -36,15 +36,13 @@ export function TemplateDetail({ playbook }: TemplateDetailProps) {
         }
     };
 
-    const Icon = getTemplateTypeIcon(content.templateType);
-
     return (
         <div className="space-y-6">
             {/* Template Type */}
             <div>
                 <h3 className="mb-3 text-sm font-semibold">Template Type</h3>
                 <div className="flex items-center gap-2 rounded-lg border p-3">
-                    <Icon className="size-5 text-muted-foreground" />
+                    <TemplateTypeIcon type={content.templateType} />
                     <span className="font-medium">
                         {getTemplateTypeLabel(content.templateType)}
                     </span>

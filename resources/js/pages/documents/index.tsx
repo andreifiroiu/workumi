@@ -27,16 +27,13 @@ import {
     Image,
     File,
     FileSpreadsheet,
-    Package,
     MoreVertical,
     Eye,
     Share2,
     Trash2,
     ExternalLink,
-    FolderPlus,
     Settings,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Documents', href: '/documents' }];

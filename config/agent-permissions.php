@@ -17,6 +17,7 @@ return [
     'category_permissions' => [
         'tasks' => 'can_modify_tasks',
         'work_orders' => 'can_create_work_orders',
+        'projects' => 'can_create_work_orders',
         'client_data' => 'can_access_client_data',
         'email' => 'can_send_emails',
         'deliverables' => 'can_modify_deliverables',

@@ -13,7 +13,7 @@ export function ChecklistDetail({ playbook }: ChecklistDetailProps) {
         <div className="space-y-4">
             {content.items && content.items.length > 0 ? (
                 <div className="space-y-2">
-                    {content.items.map((item, index) => (
+                    {content.items.map((item) => (
                         <div
                             key={item.id}
                             className="flex gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"

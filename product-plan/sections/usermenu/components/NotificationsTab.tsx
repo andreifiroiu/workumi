@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bell, Mail, Smartphone, Monitor, Moon } from 'lucide-react'
+import { Mail, Smartphone, Monitor, Moon } from 'lucide-react'
 import type { NotificationPreferences } from '@/../product/sections/usermenu/types'
 
 interface NotificationsTabProps {

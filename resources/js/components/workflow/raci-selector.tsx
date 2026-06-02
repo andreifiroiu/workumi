@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronDown, User, X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -325,7 +325,6 @@ function RaciSelector({
     value,
     onChange,
     users,
-    entityType,
     disabled = false,
     onConfirmationRequired,
     className,

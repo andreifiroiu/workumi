@@ -8,7 +8,6 @@ import type { PMCopilotTriggerButtonProps } from '@/types/pm-copilot.d';
  * Displays "Generate Plan" button with loading state and feedback alerts.
  */
 export function PMCopilotTriggerButton({
-    workOrderId,
     onTrigger,
     isRunning = false,
     disabled = false,

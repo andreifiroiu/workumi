@@ -21,7 +21,7 @@ const QUICK_EMOJIS = [
     { emoji: '\u{1F4A1}', label: 'Light bulb' },     // light bulb
 ];
 
-export function ReactionPicker({ messageId, onReactionAdd }: ReactionPickerProps) {
+export function ReactionPicker({ onReactionAdd }: ReactionPickerProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleEmojiSelect = (emoji: string) => {

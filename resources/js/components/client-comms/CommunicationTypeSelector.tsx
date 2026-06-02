@@ -6,12 +6,9 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-    Tooltip,
-    TooltipContent,
     TooltipProvider,
-    TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Info, FileText, Bell, HelpCircle, Award } from 'lucide-react';
+import { FileText, Bell, HelpCircle, Award } from 'lucide-react';
 import type { CommunicationTypeSelectorProps, CommunicationType, CommunicationTypeOption } from '@/types/client-comms.d';
 
 /**

@@ -1,6 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import React from 'react';
 
 /**
@@ -200,7 +199,7 @@ vi.mock('@/components/workflow', () => ({
             <button onClick={onCancel}>Cancel</button>
         </div>
     ) : null,
-    TransitionHistory: ({ transitions, variant }: {
+    TransitionHistory: ({ transitions }: {
         transitions: Array<{
             id: number;
             fromStatus: string;
@@ -222,7 +221,7 @@ vi.mock('@/components/workflow', () => ({
             ))}
         </div>
     ),
-    RaciSelector: ({ value, onChange, users, disabled }: {
+    RaciSelector: ({ value, users, disabled }: {
         value: { responsible_id: number | null; accountable_id: number | null; consulted_ids: number[]; informed_ids: number[] };
         onChange: (v: typeof value) => void;
         users: Array<{ id: number; name: string }>;
@@ -371,8 +370,6 @@ describe('WorkOrderDetail - RACI Selector', () => {
     });
 
     it('allows updating RACI assignments', async () => {
-        const user = userEvent.setup();
-
         render(
             <WorkOrderDetail
                 workOrder={mockWorkOrder}

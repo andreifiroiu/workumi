@@ -23,7 +23,7 @@ export function AcceptanceCriteriaDetail({ playbook }: AcceptanceCriteriaDetailP
         <div className="space-y-4">
             {content.criteria && content.criteria.length > 0 ? (
                 <div className="space-y-3">
-                    {content.criteria.map((criterion, index) => {
+                    {content.criteria.map((criterion) => {
                         const ValidationIcon = getValidationIcon(criterion.validationType);
                         return (
                             <div

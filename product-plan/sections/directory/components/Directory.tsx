@@ -11,7 +11,6 @@ export function Directory({
   parties,
   contacts,
   teamMembers,
-  projects,
   currentTab = 'parties',
   onTabChange,
   onViewParty,
@@ -27,8 +26,6 @@ export function Directory({
   onDeleteContact,
   onDeleteTeamMember,
   onSearch,
-  onFilter,
-  onViewProject,
 }: DirectoryProps) {
   const [activeTab, setActiveTab] = useState<DirectoryTab>(currentTab)
   const [searchQuery, setSearchQuery] = useState('')
@@ -188,8 +185,6 @@ export function Directory({
 function PartiesList({
   parties,
   onViewParty,
-  onEditParty,
-  onDeleteParty,
 }: {
   parties: Party[]
   onViewParty?: (id: string) => void
@@ -337,8 +332,6 @@ function PartiesList({
 function ContactsList({
   contacts,
   onViewContact,
-  onEditContact,
-  onDeleteContact,
 }: {
   contacts: Contact[]
   onViewContact?: (id: string) => void
@@ -454,8 +447,6 @@ function ContactsList({
 function TeamList({
   teamMembers,
   onViewTeamMember,
-  onEditTeamMember,
-  onDeleteTeamMember,
 }: {
   teamMembers: TeamMember[]
   onViewTeamMember?: (id: string) => void

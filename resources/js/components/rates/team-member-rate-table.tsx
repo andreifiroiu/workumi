@@ -44,7 +44,7 @@ interface TeamMemberRateTableProps {
     teamMembers: TeamMember[];
 }
 
-export function TeamMemberRateTable({ rates, teamMembers }: TeamMemberRateTableProps) {
+export function TeamMemberRateTable({ rates }: TeamMemberRateTableProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<{
         userId: string;

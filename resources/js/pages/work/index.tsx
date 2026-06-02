@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Lock, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ import {
     CalendarView,
     ArchiveView,
 } from '@/components/work';
-import type { WorkPageProps, WorkView, QuickAddData, Project, Party } from '@/types/work';
+import type { WorkPageProps, WorkView, QuickAddData } from '@/types/work';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Work', href: '/work' }];
@@ -40,10 +40,7 @@ export default function Work({
     projects,
     workOrders,
     tasks,
-    deliverables,
     parties,
-    teamMembers,
-    communicationThreads,
     currentView,
     currentUserId,
     myWorkData,
@@ -55,9 +52,9 @@ export default function Work({
     const [searchQuery, setSearchQuery] = useState('');
     const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
     const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] = useState(false);
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [, setSelectedProjectId] = useState<string | null>(null);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
-    const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string | null>(null);
+    const [, setSelectedWorkOrderId] = useState<string | null>(null);
 
     const projectForm = useForm({
         name: '',
@@ -72,15 +69,15 @@ export default function Work({
         projectId: '',
         workOrderListId: '',
         description: '',
-        priority: 'medium' as const,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
     });
 
     const taskForm = useForm({
         title: '',
         workOrderId: '',
         description: '',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
     });
 
     const handleViewChange = (newView: WorkView) => {
@@ -108,7 +105,7 @@ export default function Work({
         setCreateTaskDialogOpen(true);
     };
 
-    const handleCreateWorkOrderFromKanban = (status: string) => {
+    const handleCreateWorkOrderFromKanban = () => {
         workOrderForm.reset();
         setCreateWorkOrderDialogOpen(true);
     };
@@ -441,7 +438,7 @@ export default function Work({
                                 <Select
                                     value={workOrderForm.data.priority}
                                     onValueChange={(value) =>
-                                        workOrderForm.setData('priority', value as any)
+                                        workOrderForm.setData('priority', value as 'low' | 'medium' | 'high' | 'urgent')
                                     }
                                 >
                                     <SelectTrigger>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import {
     DndContext,
@@ -11,11 +11,8 @@ import {
     DragStartEvent,
     DragEndEvent,
     DragOverEvent,
-    DragCancelEvent,
 } from '@dnd-kit/core';
 import {
-    SortableContext,
-    verticalListSortingStrategy,
     arrayMove,
 } from '@dnd-kit/sortable';
 import { Plus, Archive } from 'lucide-react';
@@ -60,19 +57,22 @@ export function WorkOrderListSection({
     const currentContainerRef = useRef<string | null>(null);
     // Track whether we're currently dragging (to prevent state sync during drag)
     const isDraggingRef = useRef(false);
+    // Track the latest props we've synced to local state
+    const [syncedLists, setSyncedLists] = useState(workOrderLists);
+    const [syncedUngrouped, setSyncedUngrouped] = useState(ungroupedWorkOrders);
 
-    // Sync props to local state when Inertia updates them (only when not dragging)
-    useEffect(() => {
-        if (!isDraggingRef.current) {
-            setLists(workOrderLists);
-        }
-    }, [workOrderLists]);
-
-    useEffect(() => {
-        if (!isDraggingRef.current) {
-            setUngrouped(ungroupedWorkOrders);
-        }
-    }, [ungroupedWorkOrders]);
+    // Sync props to local state when Inertia updates them (only when not dragging).
+    // Done during render via the "adjust state on prop change" pattern to avoid
+    // cascading renders from setState inside an effect. `activeItem` is non-null
+    // only while a drag is in progress, so it acts as the not-dragging guard.
+    if (!activeItem && workOrderLists !== syncedLists) {
+        setSyncedLists(workOrderLists);
+        setLists(workOrderLists);
+    }
+    if (!activeItem && ungroupedWorkOrders !== syncedUngrouped) {
+        setSyncedUngrouped(ungroupedWorkOrders);
+        setUngrouped(ungroupedWorkOrders);
+    }
 
     const sensors = useSensors(
         useSensor(PointerSensor, {

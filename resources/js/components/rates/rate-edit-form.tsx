@@ -22,7 +22,6 @@ interface FormErrors {
 
 export function RateEditForm({
     userId,
-    userName,
     onSuccess,
     onCancel,
 }: RateEditFormProps) {

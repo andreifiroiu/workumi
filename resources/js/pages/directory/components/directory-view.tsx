@@ -41,7 +41,6 @@ export function DirectoryView({
     parties,
     contacts,
     teamMembers,
-    projects,
     activeTab,
     onTabChange,
     onPartyClick,

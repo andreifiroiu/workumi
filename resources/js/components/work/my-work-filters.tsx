@@ -16,7 +16,6 @@ import type {
     RaciRole,
     DueDateRange,
     SortBy,
-    SortDirection,
 } from '@/types/work';
 
 interface MyWorkFiltersProps {

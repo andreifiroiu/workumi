@@ -19,12 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
  * Inbox page component for reviewing agent drafts, approvals, flagged items, and mentions.
  * Supports filtering by tab, search, bulk selection, and detailed item view via side panel.
  */
-export default function Inbox({
-    inboxItems,
-    teamMembers,
-    projects,
-    workOrders,
-}: InboxPageProps) {
+export default function Inbox({ inboxItems }: InboxPageProps) {
     const [selectedTab, setSelectedTab] = useState<InboxTab>('all');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);

@@ -16,3 +16,6 @@ Schedule::command('agents:reset-daily-spend')->daily();
 
 // Generate weekly client communication summaries every Monday at 9am
 Schedule::command('client-comms:weekly-summaries')->weeklyOn(1, '09:00');
+
+// Send daily task digests; runs hourly and emails each user at their local digest hour
+Schedule::command('notifications:daily-task-digest')->hourly()->withoutOverlapping();

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import type { InboxAction, BulkActionPayload } from '@/types/inbox';
+import type { BulkActionPayload } from '@/types/inbox';
 
 interface ActionCallbacks {
     onSuccess?: () => void;

@@ -282,7 +282,7 @@ export function AppearanceTab({
             ].map((page) => (
               <button
                 key={page.value}
-                onClick={() => updateSetting('startPage', page.value as any)}
+                onClick={() => updateSetting('startPage', page.value as 'today' | 'work' | 'inbox')}
                 className={`
                   relative p-6 rounded-xl border-2 transition-all text-left
                   ${
