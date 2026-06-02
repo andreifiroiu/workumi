@@ -22,7 +22,7 @@
         <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
             <a href="/" class="flex items-center gap-2">
                 <img src="/logo.svg" alt="{{ config('app.name') }}" class="h-8 w-auto">
-                <span class="text-lg tracking-tight">{{ __('public.nav.tagline') }}</span>
+{{--                <span class="text-lg tracking-tight">{{ __('public.nav.tagline') }}</span>--}}
             </a>
 
             <div class="hidden items-center gap-8 md:flex">
