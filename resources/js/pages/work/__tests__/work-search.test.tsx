@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi, afterEach } from 'vitest';
+import type { Task, WorkOrder, WorkPageProps } from '@/types/work';
 
 vi.mock('@inertiajs/react', () => ({
     Head: ({ title }: { title: string }) => <title>{title}</title>,
@@ -61,20 +62,73 @@ function makeProject(overrides: Record<string, unknown> = {}) {
     };
 }
 
-const baseProps = {
+function makeWorkOrder(overrides: Partial<WorkOrder> = {}): WorkOrder {
+    return {
+        id: 'wo-1',
+        title: 'Work Order',
+        description: null,
+        projectId: 'proj-1',
+        projectName: 'Acme',
+        assignedToId: null,
+        assignedToName: '',
+        status: 'active',
+        priority: 'medium',
+        dueDate: null,
+        estimatedHours: 0,
+        actualHours: 0,
+        budgetType: null,
+        budgetCost: null,
+        budgetHours: null,
+        actualCost: null,
+        actualRevenue: null,
+        acceptanceCriteria: [],
+        sopAttached: false,
+        sopName: null,
+        partyContactId: null,
+        createdBy: 'user-1',
+        createdByName: 'Owner',
+        ...overrides,
+    };
+}
+
+function makeTask(overrides: Partial<Task> = {}): Task {
+    return {
+        id: 't-1',
+        title: 'Task',
+        description: null,
+        workOrderId: 'wo-1',
+        workOrderTitle: 'Work Order',
+        projectId: 'proj-1',
+        projectName: 'Acme',
+        assignedToId: null,
+        assignedToName: '',
+        assignedAgentId: null,
+        assignedAgentName: null,
+        status: 'todo',
+        dueDate: null,
+        estimatedHours: 0,
+        actualHours: 0,
+        checklistItems: [],
+        dependencies: [],
+        isBlocked: false,
+        ...overrides,
+    };
+}
+
+const baseProps: WorkPageProps = {
+    projects: [],
     workOrders: [],
     tasks: [],
     deliverables: [],
     parties: [],
     teamMembers: [],
     communicationThreads: [],
-    currentView: 'all_projects' as const,
+    currentView: 'all_projects',
     currentUserId: 'user-1',
 };
 
-function renderWork(props: Partial<Parameters<typeof Work>[0]>) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return render(<Work {...(baseProps as any)} {...(props as any)} />);
+function renderWork(props: Partial<WorkPageProps>) {
+    return render(<Work {...baseProps} {...props} />);
 }
 
 function search(term: string) {
@@ -166,8 +220,7 @@ describe('Work page universal search', () => {
     it('matches a project via the top-level work orders array (title and description)', () => {
         renderWork({
             projects: [makeProject({ id: 'a', name: 'Acme Project' }), makeProject({ id: 'b', name: 'Other Project' })],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            workOrders: [{ id: 'wo1', title: 'Redesign', description: 'database migration work', projectId: 'b' } as any],
+            workOrders: [makeWorkOrder({ id: 'wo1', title: 'Redesign', description: 'database migration work', projectId: 'b' })],
         });
 
         search('migration');
@@ -178,8 +231,7 @@ describe('Work page universal search', () => {
     it('matches a project via a task title', () => {
         renderWork({
             projects: [makeProject({ id: 'a', name: 'Acme Project' }), makeProject({ id: 'b', name: 'Other Project' })],
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            tasks: [{ id: 't1', title: 'Write release notes', description: null, projectId: 'a' } as any],
+            tasks: [makeTask({ id: 't1', title: 'Write release notes', description: null, projectId: 'a' })],
         });
 
         search('release notes');
