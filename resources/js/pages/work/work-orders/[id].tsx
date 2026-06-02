@@ -505,7 +505,6 @@ export default function WorkOrderDetail({
     documents,
     folders = [],
     communicationThread,
-    messages,
     teamMembers,
     availableAgents = [],
     statusTransitions = [],
@@ -976,7 +975,7 @@ export default function WorkOrderDetail({
 
                 // Reload page to get fresh data
                 router.reload({ only: ['workOrder', 'statusTransitions', 'allowedTransitions', 'rejectionFeedback'] });
-            } catch (error) {
+            } catch {
                 setTransitionError('An error occurred while updating the status');
             } finally {
                 setIsTransitioning(false);
@@ -1062,7 +1061,7 @@ export default function WorkOrderDetail({
 
                 // Reload to get fresh data
                 router.reload({ only: ['workOrder', 'raciValue'] });
-            } catch (error) {
+            } catch {
                 setRaciError('An error occurred while updating RACI assignments');
             } finally {
                 setIsUpdatingRaci(false);
@@ -1256,7 +1255,7 @@ export default function WorkOrderDetail({
 
             // Reload to get fresh task data
             router.reload({ only: ['tasks'] });
-        } catch (error) {
+        } catch {
             setTaskTransitionError('An error occurred while updating the task status');
         } finally {
             setIsTaskTransitioning(false);
@@ -1955,7 +1954,7 @@ export default function WorkOrderDetail({
                                 <Label>Priority</Label>
                                 <Select
                                     value={editForm.data.priority}
-                                    onValueChange={(v) => editForm.setData('priority', v as any)}
+                                    onValueChange={(v) => editForm.setData('priority', v as typeof editForm.data.priority)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -2199,7 +2198,7 @@ export default function WorkOrderDetail({
                                 <Select
                                     value={deliverableForm.data.type}
                                     onValueChange={(value) =>
-                                        deliverableForm.setData('type', value as any)
+                                        deliverableForm.setData('type', value as typeof deliverableForm.data.type)
                                     }
                                 >
                                     <SelectTrigger>
@@ -2320,7 +2319,7 @@ export default function WorkOrderDetail({
                                     <Label>Type</Label>
                                     <Select
                                         value={editDeliverableForm.data.type}
-                                        onValueChange={(value) => editDeliverableForm.setData('type', value as any)}
+                                        onValueChange={(value) => editDeliverableForm.setData('type', value as typeof editDeliverableForm.data.type)}
                                     >
                                         <SelectTrigger>
                                             <SelectValue />
@@ -2347,7 +2346,7 @@ export default function WorkOrderDetail({
                                 <Label>Status</Label>
                                 <Select
                                     value={editDeliverableForm.data.status}
-                                    onValueChange={(value) => editDeliverableForm.setData('status', value as any)}
+                                    onValueChange={(value) => editDeliverableForm.setData('status', value as typeof editDeliverableForm.data.status)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />

@@ -56,7 +56,7 @@ const VISIBLE_COLUMNS: { status: TaskStatus; title: string }[] = [
     { status: 'blocked', title: 'Blocked' },
 ];
 
-export function TaskKanbanBoard({ tasks, workOrderId }: TaskKanbanBoardProps) {
+export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
 

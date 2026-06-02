@@ -30,7 +30,7 @@ export function TemplateForm({ form }: TemplateFormProps) {
                 ...content,
                 structure: parsed,
             });
-        } catch (error) {
+        } catch {
             // Invalid JSON, update anyway to show the user their input
             form.setData('content', {
                 ...content,

@@ -7,7 +7,6 @@ import {
     Download,
     ExternalLink,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MessageAttachmentsProps, MessageAttachment } from '@/types/communications';
 

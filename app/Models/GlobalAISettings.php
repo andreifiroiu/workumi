@@ -31,6 +31,8 @@ class GlobalAISettings extends Model
         'pm_copilot_auto_suggest',
         'pm_copilot_auto_approval_threshold',
         'client_comms_auto_draft',
+        'daily_task_digest_enabled',
+        'inbound_email_enabled',
     ];
 
     protected $casts = [
@@ -50,6 +52,8 @@ class GlobalAISettings extends Model
         'pm_copilot_auto_suggest' => 'boolean',
         'pm_copilot_auto_approval_threshold' => 'float',
         'client_comms_auto_draft' => 'boolean',
+        'daily_task_digest_enabled' => 'boolean',
+        'inbound_email_enabled' => 'boolean',
     ];
 
     /**
@@ -63,6 +67,8 @@ class GlobalAISettings extends Model
         'pm_copilot_auto_suggest' => false,
         'pm_copilot_auto_approval_threshold' => 0.8,
         'client_comms_auto_draft' => false,
+        'daily_task_digest_enabled' => false,
+        'inbound_email_enabled' => false,
     ];
 
     /**
@@ -149,5 +155,21 @@ class GlobalAISettings extends Model
     public function isClientCommsAutoDraftEnabled(): bool
     {
         return (bool) $this->client_comms_auto_draft;
+    }
+
+    /**
+     * Check if daily task digest emails are enabled for this team.
+     */
+    public function isDailyTaskDigestEnabled(): bool
+    {
+        return (bool) $this->daily_task_digest_enabled;
+    }
+
+    /**
+     * Check if inbound email processing by the Dispatcher Agent is enabled for this team.
+     */
+    public function isInboundEmailEnabled(): bool
+    {
+        return (bool) $this->inbound_email_enabled;
     }
 }

@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { FilePreview } from '@/components/work/file-preview';
-import { cn } from '@/lib/utils';
 import { Download, Lock, AlertTriangle, FileWarning } from 'lucide-react';
 import type { SharedDocumentPageProps, SharedDocument } from '@/types/documents.d';
 import shared from '@/routes/shared';

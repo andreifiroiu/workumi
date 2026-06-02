@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select';
 import { MentionInput } from './mention-input';
 import { Send, Paperclip, X, Loader2, File } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { MessageInputProps, MessageType } from '@/types/communications';
 
 const MESSAGE_TYPES: Array<{ value: MessageType; label: string }> = [

@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { router } from '@inertiajs/react';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { MyWorkMetrics, metricFilterToRaciRole } from './my-work-metrics';
 import { MyWorkSubtabs } from './my-work-subtabs';
 import { MyWorkFilters, getDefaultFilters } from './my-work-filters';
@@ -8,19 +8,15 @@ import { MyWorkTasksList } from './my-work-tasks-list';
 import { MyWorkOrdersList } from './my-work-orders-list';
 import { MyWorkProjectsList } from './my-work-projects-list';
 import { MyWorkTreeView } from './my-work-tree-view';
-import { cn } from '@/lib/utils';
 import type {
     WorkOrder,
     Task,
-    Project,
-    RaciRole,
     MyWorkSubtab,
     MyWorkFiltersState,
     MyWorkMetrics as MyWorkMetricsType,
     MyWorkData,
     MyWorkTreeData,
     MyWorkTreeProject,
-    MyWorkTreeWorkOrder,
 } from '@/types/work';
 
 interface MyWorkViewProps {

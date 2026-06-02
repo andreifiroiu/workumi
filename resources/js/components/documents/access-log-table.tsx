@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Globe } from 'lucide-react';
-import type { AccessLogTableProps, ShareAccessLog } from '@/types/documents.d';
+import type { AccessLogTableProps } from '@/types/documents.d';
 
 const ITEMS_PER_PAGE = 10;
 

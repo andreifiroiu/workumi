@@ -25,9 +25,6 @@ export function BlockersCard({
   onExport,
 }: BlockersCardProps) {
   const criticalBlockers = reports.filter((r) => r.impact === 'critical').length
-  const avgDays = Math.round(
-    reports.reduce((sum, r) => sum + r.daysBlocked, 0) / (reports.length || 1)
-  )
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 hover:shadow-lg transition-shadow">

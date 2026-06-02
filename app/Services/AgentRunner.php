@@ -271,11 +271,12 @@ class AgentRunner
      */
     protected function resolveAgentClass(AIAgent $agent): string
     {
-        $templateSlug = $agent->template?->slug ?? $agent->type ?? 'default';
+        $type = $agent->type instanceof \BackedEnum ? $agent->type->value : $agent->type;
+        $templateSlug = $agent->template?->slug ?? $type ?? 'default';
 
         return match ($templateSlug) {
-            'dispatcher', 'work-router' => DispatcherAgent::class,
-            'client-comms', 'communication' => ClientCommsAgent::class,
+            'dispatcher', 'work-router', 'work-routing' => DispatcherAgent::class,
+            'client-comms', 'communication', 'client-communication' => ClientCommsAgent::class,
             'pm-copilot', 'project-management' => PMCopilotAgent::class,
             default => $this->resolveDefaultAgentClass($agent),
         };

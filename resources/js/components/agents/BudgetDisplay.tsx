@@ -1,5 +1,5 @@
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, TrendingUp, Calendar, Clock } from 'lucide-react';
+import { TrendingUp, Calendar, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CostByCategory {

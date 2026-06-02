@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, FileCheck, Timer, AlertTriangle } from 'lucide-react';
+import { CheckCircle, FileCheck, Timer, AlertTriangle } from 'lucide-react';
 import type { TodayMetrics } from '@/types/today';
 
 interface MetricsBarProps {

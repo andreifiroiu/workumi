@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Search, Pencil, Trash2, Clock, Calendar, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Clock, Calendar, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

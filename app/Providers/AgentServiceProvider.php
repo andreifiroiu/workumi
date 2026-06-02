@@ -7,6 +7,7 @@ namespace App\Providers;
 use App\Agents\Tools\CreateDeliverableTool;
 use App\Agents\Tools\CreateDraftWorkOrderTool;
 use App\Agents\Tools\CreateNoteTool;
+use App\Agents\Tools\CreateProjectTool;
 use App\Agents\Tools\CreateTaskTool;
 use App\Agents\Tools\GetDocumentsTool;
 use App\Agents\Tools\GetPlaybooksTool;
@@ -105,6 +106,7 @@ class AgentServiceProvider extends ServiceProvider
             GetTeamSkillsTool::class,
             GetTeamCapacityTool::class,
             CreateDraftWorkOrderTool::class,
+            CreateProjectTool::class,
             GetPlaybooksTool::class,
             GetDocumentsTool::class,
             // PM Copilot Agent tools
@@ -155,6 +157,7 @@ class AgentServiceProvider extends ServiceProvider
             GetTeamSkillsTool::class,
             GetTeamCapacityTool::class,
             CreateDraftWorkOrderTool::class,
+            CreateProjectTool::class,
             GetPlaybooksTool::class,
             GetDocumentsTool::class,
             // PM Copilot Agent tools

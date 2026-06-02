@@ -1,4 +1,4 @@
-import { FileCheck, Clock, ChevronRight } from 'lucide-react'
+import { FileCheck, ChevronRight } from 'lucide-react'
 import type { Approval } from '@/../product/sections/today/types'
 
 interface ApprovalsCardProps {

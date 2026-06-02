@@ -14,6 +14,17 @@ return [
     |
     */
 
+    'mailgun' => [
+        'transport' => 'mailgun',
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        // US region: api.mailgun.net (default). EU region: api.eu.mailgun.net
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
+        // Used to validate inbound/webhook signatures (Mailgun HTTP webhook signing key).
+        'webhook_signing_key' => env('MAILGUN_WEBHOOK_SIGNING_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

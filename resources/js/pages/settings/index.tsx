@@ -10,7 +10,6 @@ import { AuditLogSection } from './components/audit-log-section';
 import { IntegrationsSection } from './components/integrations-section';
 import { BillingSection } from './components/billing-section';
 import { ApiKeysSection } from './components/api-keys-section';
-import { ComingSoonSection } from './components/coming-soon-section';
 import type { BreadcrumbItem } from '@/types';
 import type { SettingsPageProps } from '@/types/settings';
 

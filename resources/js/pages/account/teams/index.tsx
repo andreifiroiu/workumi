@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import {
     Card,
-    CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
@@ -46,7 +45,7 @@ interface Props {
     currentTeamId: number;
 }
 
-export default function TeamsIndex({ teams, currentTeamId }: Props) {
+export default function TeamsIndex({ teams }: Props) {
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);

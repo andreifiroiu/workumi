@@ -42,7 +42,6 @@ interface VersionHistoryPanelProps {
 }
 
 export function VersionHistoryPanel({
-    deliverableId,
     versions,
     currentVersionNumber,
     onVersionRestore,

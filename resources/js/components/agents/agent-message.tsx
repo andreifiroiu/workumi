@@ -7,7 +7,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Bot, ChevronDown, ChevronUp, FileText, ExternalLink, Zap, User, Clock } from 'lucide-react';
+import { Bot, ChevronDown, ChevronUp, FileText, ExternalLink, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** Extraction result field with confidence */

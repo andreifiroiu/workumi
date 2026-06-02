@@ -74,12 +74,10 @@ export function TimerControls({
     className,
 }: TimerControlsProps) {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [elapsedSeconds, setElapsedSeconds] = useState(() => {
-        if (activeTimerForTask?.startedAt) {
-            return calculateElapsedSeconds(activeTimerForTask.startedAt);
-        }
-        return 0;
-    });
+    const [, setTick] = useState(0);
+
+    const startedAt = activeTimerForTask?.startedAt;
+    const elapsedSeconds = startedAt ? calculateElapsedSeconds(startedAt) : 0;
 
     // Confirmation dialog state
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -87,23 +85,18 @@ export function TimerControls({
 
     const isTimerActive = Boolean(activeTimerForTask);
 
-    // Update elapsed time every second when timer is active
+    // Re-render every second while a timer is active so elapsed time stays current
     useEffect(() => {
-        if (!activeTimerForTask?.startedAt) {
-            setElapsedSeconds(0);
+        if (!startedAt) {
             return;
         }
 
-        // Calculate initial elapsed time
-        setElapsedSeconds(calculateElapsedSeconds(activeTimerForTask.startedAt));
-
-        // Set up interval to update every second
         const interval = setInterval(() => {
-            setElapsedSeconds(calculateElapsedSeconds(activeTimerForTask.startedAt));
+            setTick((value) => value + 1);
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [activeTimerForTask?.startedAt]);
+    }, [startedAt]);
 
     /**
      * Initiates timer start - checks if confirmation is required first.

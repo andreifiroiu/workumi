@@ -9,21 +9,11 @@ import { PlaybookCard } from './PlaybookCard'
 
 export function Playbooks({
   playbooks,
-  workOrders,
   currentTab = 'all',
   onTabChange,
   onViewPlaybook,
   onCreatePlaybook,
-  onEditPlaybook,
-  onDeletePlaybook,
-  onDuplicatePlaybook,
-  onApplyPlaybook,
-  onGenerateTemplate,
-  onSavePlaybook,
-  onFilter,
   onSearch,
-  onViewUsageHistory,
-  onViewVersionHistory,
 }: PlaybooksProps) {
   const [tab, setTab] = useState<PlaybookTab>(currentTab)
   const [searchQuery, setSearchQuery] = useState('')

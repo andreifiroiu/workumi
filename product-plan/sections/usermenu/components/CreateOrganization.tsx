@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, ArrowLeft, Check, Building2, CreditCard, Users, Sparkles } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { CreateOrganizationProps, TeamInvite } from '@/../product/sections/usermenu/types'
 
 type Step = 'name' | 'plan' | 'team' | 'confirm'
@@ -12,7 +13,7 @@ export function CreateOrganization({ plans, onCreate, onCancel }: CreateOrganiza
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Member'>('Member')
 
-  const steps: { id: Step; label: string; icon: any }[] = [
+  const steps: { id: Step; label: string; icon: LucideIcon }[] = [
     { id: 'name', label: 'Name', icon: Building2 },
     { id: 'plan', label: 'Plan', icon: CreditCard },
     { id: 'team', label: 'Team', icon: Users },

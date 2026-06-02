@@ -4,8 +4,6 @@ import type { MessageReactionsProps } from '@/types/communications';
 
 export function MessageReactions({
     reactions,
-    messageId,
-    currentUserId,
     onToggleReaction,
 }: MessageReactionsProps) {
     if (reactions.length === 0) {

@@ -186,7 +186,7 @@ describe('ProfitabilitySummaryCards', () => {
             avgMarginPercent: -10,
         };
 
-        const { container } = render(<ProfitabilitySummaryCards summary={negativeSummary} />);
+        render(<ProfitabilitySummaryCards summary={negativeSummary} />);
 
         // Find the margin value element and check it has red color class
         const marginValue = screen.getByText('-$5,000.00');

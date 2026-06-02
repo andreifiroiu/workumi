@@ -17,11 +17,9 @@ interface ProjectStatusCardProps {
 
 export function ProjectStatusCard({
   reports,
-  viewMode,
   timeRange,
   onTimeRangeChange,
   onView,
-  onDrillDown,
   onExport,
 }: ProjectStatusCardProps) {
   const onTrack = reports.filter((r) => r.status === 'on-track').length

@@ -38,7 +38,11 @@ class DispatcherAgent extends BaseAgent
     /**
      * Get the Workumi tools available to the Dispatcher Agent.
      *
-     * Returns dispatcher-specific tools filtered through ToolGateway permissions.
+     * The dispatcher is an ANALYZER: it inspects skills, capacity, playbooks and
+     * existing work, then returns a structured plan. It is intentionally given
+     * READ-ONLY tools. Entity creation is performed by the caller (e.g. the
+     * ProcessInboundEmail job) so that creation can be gated by confidence and
+     * never happens twice (once in the chat tool-loop and once by the caller).
      *
      * @return array<string, ToolInterface>
      */
@@ -46,11 +50,10 @@ class DispatcherAgent extends BaseAgent
     {
         $allTools = parent::getLaboTools();
 
-        // Filter to only include dispatcher-relevant tools
+        // Read-only tools only — the dispatcher must not mutate state directly.
         $dispatcherToolNames = [
             'get-team-skills',
             'get-team-capacity',
-            'create-draft-work-order',
             'get-playbooks',
             'get-documents',
             'work-order-info',
@@ -213,16 +216,54 @@ You are the Dispatcher Agent, responsible for routing work to appropriate team m
    - Set responsible_id to top-ranked candidate
    - Include detailed routing reasoning in metadata
 
-## Tools Available
+## Inbound Email Triage
+
+When the input is an inbound email (subject + body from an external sender), your job is to
+convert it into a PROPOSAL for actionable work. You do NOT create anything yourself — you
+return JSON and a separate system decides what to persist based on your confidence. Decide
+what should be created:
+
+- **Project**: a new, distinct body of work that is not part of an existing project.
+- **WorkOrder**: a scoped piece of work; it will be attached to a project (the system supplies
+  a default project_id when no better project applies).
+- **Task**: a single action item; it will be attached to a work order.
+
+For every entity you propose, assign a `confidence` of `high`, `medium`, or `low`:
+- **high**: the email clearly and unambiguously describes this entity (created live).
+- **medium**: reasonable inference but some details are assumed (created as a draft for review).
+- **low**: speculative; a human must review before it is created.
+
+## Tools Available (read-only)
 
 - **get-team-skills**: Query team member skills and proficiency levels
 - **get-team-capacity**: Get capacity and workload for team members
-- **create-draft-work-order**: Create a draft work order with extracted data
 - **get-playbooks**: Search for relevant SOPs and templates
 - **get-documents**: List documents attached to a project or work order (metadata and URLs)
 - **work-order-info**: Get details about existing work orders
 
+These tools are for analysis only. Never assume you can create or modify records; express all
+proposed work through the JSON response below.
+
 ## Response Format
+
+For inbound email triage, return ONLY JSON describing the proposed entities:
+```json
+{
+  "entities": [
+    {
+      "kind": "project|work_order|task",
+      "title": "...",
+      "description": "...",
+      "priority": "low|medium|high|urgent",
+      "due_date": "YYYY-MM-DD",
+      "confidence": "high|medium|low"
+    }
+  ],
+  "summary": "Brief explanation of the triage decision"
+}
+```
+
+For thread-based routing recommendations, use this format:
 
 When providing routing recommendations, structure your response as JSON:
 ```json

@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { RoutingRecommendations } from '../routing-recommendations';
 import { DispatcherToggle } from '../dispatcher-toggle';
 
@@ -166,7 +166,6 @@ describe('RoutingRecommendations', () => {
     });
 
     it('shows skill matches and proficiency levels', async () => {
-        const user = userEvent.setup();
         const onSelect = vi.fn();
 
         render(
