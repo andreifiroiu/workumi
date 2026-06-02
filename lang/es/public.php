@@ -10,6 +10,7 @@ return [
         'login' => 'Iniciar sesion',
         'get_started' => 'Comenzar',
         'go_to_app' => 'Ir a la App',
+        'logout' => 'Cerrar sesión',
         'copyright' => '© :year :name. Todos los derechos reservados.',
         'language' => 'Idioma',
     ],

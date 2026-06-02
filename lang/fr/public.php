@@ -10,6 +10,7 @@ return [
         'login' => 'Se connecter',
         'get_started' => 'Commencer',
         'go_to_app' => 'Accéder à l\'appli',
+        'logout' => 'Se déconnecter',
         'copyright' => '© :year :name. Tous droits réservés.',
         'language' => 'Langue',
     ],
