@@ -22,6 +22,7 @@ export { WorkOrderListGroup } from './work-order-list-group';
 export { WorkOrderListItem } from './work-order-list-item';
 export { CreateListDialog } from './create-list-dialog';
 export { EditListDialog } from './edit-list-dialog';
+export { ConvertListToProjectDialog } from './convert-list-to-project-dialog';
 
 // File Management Components
 export { FilePreview } from './file-preview';

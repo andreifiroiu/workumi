@@ -28,6 +28,8 @@ import type { WorkOrderList, WorkOrderInList } from '@/types/work';
 interface WorkOrderListSectionProps {
     projectId: string;
     projectName: string;
+    projectPartyId: string;
+    parties: Array<{ id: string; name: string }>;
     workOrderLists: WorkOrderList[];
     ungroupedWorkOrders: WorkOrderInList[];
     onCreateWorkOrder: (listId?: string) => void;
@@ -37,6 +39,8 @@ interface WorkOrderListSectionProps {
 export function WorkOrderListSection({
     projectId,
     projectName,
+    projectPartyId,
+    parties,
     workOrderLists,
     ungroupedWorkOrders,
     onCreateWorkOrder,
@@ -380,6 +384,8 @@ export function WorkOrderListSection({
                                 projectId={projectId}
                                 onCreateWorkOrder={() => onCreateWorkOrder(list.id)}
                                 isDropTarget={overContainerId === list.id}
+                                parties={parties}
+                                projectPartyId={projectPartyId}
                             />
                         ))}
 
