@@ -24,6 +24,7 @@ interface ProjectTreeItemProps {
     project: Project;
     workOrders: WorkOrder[];
     tasks: Task[];
+    forceExpand?: boolean;
     onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
 }
@@ -32,11 +33,13 @@ export function ProjectTreeItem({
     project,
     workOrders,
     tasks,
+    forceExpand = false,
     onCreateWorkOrder,
     onCreateTask,
 }: ProjectTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const expanded = forceExpand || isExpanded;
 
     const totalWorkOrders =
         (project.workOrderLists?.reduce((sum, list) => sum + list.workOrders.length, 0) ?? 0) +
@@ -53,7 +56,7 @@ export function ProjectTreeItem({
                     onClick={() => setIsExpanded(!isExpanded)}
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 >
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </button>
 
                 <Folder className="flex-shrink-0 w-5 h-5 text-primary" />
@@ -143,7 +146,7 @@ export function ProjectTreeItem({
             </div>
 
             {/* Work Order Lists and Ungrouped Work Orders */}
-            {isExpanded && (hasLists || hasUngrouped) && (
+            {expanded && (hasLists || hasUngrouped) && (
                 <div className="ml-7">
                     {/* Work Order Lists */}
                     {project.workOrderLists?.map((list) => (
@@ -152,6 +155,7 @@ export function ProjectTreeItem({
                             list={list}
                             projectId={project.id}
                             tasks={tasks}
+                            forceExpand={forceExpand}
                             onCreateWorkOrder={onCreateWorkOrder}
                             onCreateTask={onCreateTask}
                         />
@@ -162,6 +166,7 @@ export function ProjectTreeItem({
                         <UngroupedWorkOrdersTreeItem
                             workOrders={project.ungroupedWorkOrders}
                             tasks={tasks}
+                            forceExpand={forceExpand}
                             onCreateTask={onCreateTask}
                         />
                     )}
@@ -175,13 +180,15 @@ interface WorkOrderListTreeItemProps {
     list: WorkOrderList;
     projectId: string;
     tasks: Task[];
+    forceExpand?: boolean;
     onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
 }
 
-function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCreateTask }: WorkOrderListTreeItemProps) {
+function WorkOrderListTreeItem({ list, projectId, tasks, forceExpand = false, onCreateWorkOrder, onCreateTask }: WorkOrderListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const expanded = forceExpand || isExpanded;
 
     return (
         <div className="border-l-2 border-muted">
@@ -192,7 +199,7 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 >
                     {list.workOrders.length > 0 ? (
-                        isExpanded ? (
+                        expanded ? (
                             <ChevronDown className="h-4 w-4" />
                         ) : (
                             <ChevronRight className="h-4 w-4" />
@@ -279,13 +286,14 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
             </div>
 
             {/* Work Orders in List */}
-            {isExpanded && list.workOrders.length > 0 && (
+            {expanded && list.workOrders.length > 0 && (
                 <div className="ml-7">
                     {list.workOrders.map((workOrder) => (
                         <WorkOrderInListTreeItem
                             key={workOrder.id}
                             workOrder={workOrder}
                             tasks={tasks.filter((t) => t.workOrderId === workOrder.id)}
+                            forceExpand={forceExpand}
                             onCreateTask={onCreateTask}
                         />
                     ))}
@@ -298,11 +306,13 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
 interface UngroupedWorkOrdersTreeItemProps {
     workOrders: WorkOrderInList[];
     tasks: Task[];
+    forceExpand?: boolean;
     onCreateTask: (workOrderId: string) => void;
 }
 
-function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: UngroupedWorkOrdersTreeItemProps) {
+function UngroupedWorkOrdersTreeItem({ workOrders, tasks, forceExpand = false, onCreateTask }: UngroupedWorkOrdersTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const expanded = forceExpand || isExpanded;
 
     return (
         <div className="border-l-2 border-muted">
@@ -313,7 +323,7 @@ function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: Ungrou
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 >
                     {workOrders.length > 0 ? (
-                        isExpanded ? (
+                        expanded ? (
                             <ChevronDown className="h-4 w-4" />
                         ) : (
                             <ChevronRight className="h-4 w-4" />
@@ -335,13 +345,14 @@ function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: Ungrou
             </div>
 
             {/* Ungrouped Work Orders */}
-            {isExpanded && workOrders.length > 0 && (
+            {expanded && workOrders.length > 0 && (
                 <div className="ml-7">
                     {workOrders.map((workOrder) => (
                         <WorkOrderInListTreeItem
                             key={workOrder.id}
                             workOrder={workOrder}
                             tasks={tasks.filter((t) => t.workOrderId === workOrder.id)}
+                            forceExpand={forceExpand}
                             onCreateTask={onCreateTask}
                         />
                     ))}
@@ -354,12 +365,14 @@ function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: Ungrou
 interface WorkOrderInListTreeItemProps {
     workOrder: WorkOrderInList;
     tasks: Task[];
+    forceExpand?: boolean;
     onCreateTask: (workOrderId: string) => void;
 }
 
-function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderInListTreeItemProps) {
+function WorkOrderInListTreeItem({ workOrder, tasks, forceExpand = false, onCreateTask }: WorkOrderInListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const expanded = forceExpand || isExpanded;
 
     const priorityColors: Record<string, string> = {
         low: 'text-muted-foreground',
@@ -377,7 +390,7 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                 >
                     {workOrder.tasksCount > 0 ? (
-                        isExpanded ? (
+                        expanded ? (
                             <ChevronDown className="h-4 w-4" />
                         ) : (
                             <ChevronRight className="h-4 w-4" />
@@ -475,7 +488,7 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
             </div>
 
             {/* Tasks */}
-            {isExpanded && tasks.length > 0 && (
+            {expanded && tasks.length > 0 && (
                 <div className="ml-7">
                     {tasks.map((task) => (
                         <TaskTreeItem key={task.id} task={task} />

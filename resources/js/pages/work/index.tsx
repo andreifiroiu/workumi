@@ -31,7 +31,16 @@ import {
     CalendarView,
     ArchiveView,
 } from '@/components/work';
-import type { WorkPageProps, WorkView, QuickAddData, Project, Party } from '@/types/work';
+import type {
+    WorkPageProps,
+    WorkView,
+    QuickAddData,
+    Project,
+    Party,
+    Task,
+    WorkOrderList,
+    WorkOrderInList,
+} from '@/types/work';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Work', href: '/work' }];
@@ -148,42 +157,83 @@ export default function Work({
         });
     };
 
-    // Filter projects based on search across projects, lists, work orders, and tasks
+    // Filter the project tree by search, keeping parent nodes of any match.
+    // A matched node shows its full subtree; an unmatched ancestor is pruned to
+    // only the branches that contain a match.
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const matchesQuery = (...values: Array<string | null | undefined>): boolean =>
         values.some((value) => value?.toLowerCase().includes(normalizedQuery) ?? false);
 
-    const filteredProjects = normalizedQuery
-        ? projects.filter((p) => {
-              if (matchesQuery(p.name, p.description)) {
-                  return true;
-              }
+    const pruneTreeForSearch = (): { projects: Project[]; tasks: Task[] } => {
+        if (!normalizedQuery) {
+            return { projects, tasks };
+        }
 
-              const listMatches = p.workOrderLists.some(
-                  (list) =>
-                      matchesQuery(list.name, list.description) ||
-                      list.workOrders.some((wo) => matchesQuery(wo.title))
-              );
-              if (listMatches) {
-                  return true;
-              }
+        const workOrderDescription = (workOrderId: string): string | null =>
+            workOrders.find((wo) => wo.id === workOrderId)?.description ?? null;
+        const tasksForWorkOrder = (workOrderId: string): Task[] =>
+            tasks.filter((task) => task.workOrderId === workOrderId);
 
-              if (p.ungroupedWorkOrders.some((wo) => matchesQuery(wo.title))) {
-                  return true;
-              }
+        const displayProjects: Project[] = [];
+        const displayTasks: Task[] = [];
 
-              const workOrderMatches = workOrders.some(
-                  (wo) => wo.projectId === p.id && matchesQuery(wo.title, wo.description)
-              );
-              if (workOrderMatches) {
-                  return true;
-              }
+        // Keep each work order whose title/description matches (with all its tasks)
+        // or that has matching tasks (with only those tasks). Returns kept orders.
+        const pruneWorkOrders = (workOrdersInList: WorkOrderInList[]): WorkOrderInList[] => {
+            const kept: WorkOrderInList[] = [];
+            workOrdersInList.forEach((workOrder) => {
+                const workOrderTasks = tasksForWorkOrder(workOrder.id);
+                if (matchesQuery(workOrder.title, workOrderDescription(workOrder.id))) {
+                    kept.push(workOrder);
+                    displayTasks.push(...workOrderTasks);
+                    return;
+                }
 
-              return tasks.some((task) => task.projectId === p.id && matchesQuery(task.title, task.description));
-          })
-        : projects;
+                const matchingTasks = workOrderTasks.filter((task) => matchesQuery(task.title, task.description));
+                if (matchingTasks.length > 0) {
+                    kept.push(workOrder);
+                    displayTasks.push(...matchingTasks);
+                }
+            });
+            return kept;
+        };
 
-    const activeProjects = filteredProjects.filter((p) => p.status === 'active' || p.status === 'on_hold');
+        projects.forEach((project) => {
+            if (matchesQuery(project.name, project.description)) {
+                displayProjects.push(project);
+                displayTasks.push(...tasks.filter((task) => task.projectId === project.id));
+                return;
+            }
+
+            const prunedLists = (project.workOrderLists ?? [])
+                .map((list): WorkOrderList | null => {
+                    if (matchesQuery(list.name, list.description)) {
+                        displayTasks.push(...list.workOrders.flatMap((wo) => tasksForWorkOrder(wo.id)));
+                        return list;
+                    }
+
+                    const keptWorkOrders = pruneWorkOrders(list.workOrders);
+                    return keptWorkOrders.length > 0 ? { ...list, workOrders: keptWorkOrders } : null;
+                })
+                .filter((list): list is WorkOrderList => list !== null);
+
+            const prunedUngrouped = pruneWorkOrders(project.ungroupedWorkOrders ?? []);
+
+            if (prunedLists.length > 0 || prunedUngrouped.length > 0) {
+                displayProjects.push({
+                    ...project,
+                    workOrderLists: prunedLists,
+                    ungroupedWorkOrders: prunedUngrouped,
+                });
+            }
+        });
+
+        return { projects: displayProjects, tasks: displayTasks };
+    };
+
+    const { projects: searchedProjects, tasks: searchedTasks } = pruneTreeForSearch();
+
+    const activeProjects = searchedProjects.filter((p) => p.status === 'active' || p.status === 'on_hold');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -253,7 +303,8 @@ export default function Work({
                                                 key={project.id}
                                                 project={project}
                                                 workOrders={workOrders}
-                                                tasks={tasks}
+                                                tasks={searchedTasks}
+                                                forceExpand={!!normalizedQuery}
                                                 onCreateWorkOrder={handleCreateWorkOrder}
                                                 onCreateTask={handleCreateTask}
                                             />
