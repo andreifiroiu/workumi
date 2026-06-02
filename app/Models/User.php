@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasTeams, Notifiable, TwoFactorAuthenticatable;
 
     /**
@@ -31,6 +32,8 @@ class User extends Authenticatable
         'role',
         'capacity_hours_per_week',
         'current_workload_hours',
+        'daily_digest_hour',
+        'last_digest_sent_on',
     ];
 
     /**
@@ -56,6 +59,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'daily_digest_hour' => 'integer',
+            'last_digest_sent_on' => 'date',
         ];
     }
 
