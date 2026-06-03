@@ -73,7 +73,7 @@ class WorkOrderController extends Controller
             'status' => WorkOrderStatus::Draft,
             'priority' => Priority::from($validated['priority']),
             'due_date' => $validated['dueDate'] ?? null,
-            'estimated_hours' => $validated['estimatedHours'] ?? 0,
+            'estimated_hours' => $validated['estimatedHours'] ?? null,
             'acceptance_criteria' => $validated['acceptanceCriteria'] ?? [],
             'accountable_id' => $user->id, // Creator is initially accountable (RACI)
         ]);
@@ -145,7 +145,9 @@ class WorkOrderController extends Controller
                 'status' => $workOrder->status->value,
                 'priority' => $workOrder->priority->value,
                 'dueDate' => $workOrder->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $workOrder->estimated_hours,
+                'estimatedHours' => $workOrder->effective_estimated_hours,
+                'estimatedHoursManual' => $workOrder->estimated_hours !== null ? (float) $workOrder->estimated_hours : null,
+                'estimatedHoursIsManual' => $workOrder->estimated_hours !== null,
                 'actualHours' => (float) $workOrder->actual_hours,
                 'acceptanceCriteria' => $workOrder->acceptance_criteria ?? [],
                 'sopAttached' => $workOrder->sop_attached,
@@ -679,7 +681,7 @@ class WorkOrderController extends Controller
             $updateData['due_date'] = $validated['due_date'];
         }
         if (array_key_exists('estimated_hours', $validated)) {
-            $updateData['estimated_hours'] = $validated['estimated_hours'] ?? 0;
+            $updateData['estimated_hours'] = $validated['estimated_hours'] ?? null;
         }
         if (isset($validated['acceptanceCriteria'])) {
             $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];

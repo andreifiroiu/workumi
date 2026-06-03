@@ -71,6 +71,28 @@ export function formatLocalDate(date: Date): string {
     return `${y}-${m}-${d}`;
 }
 
+/**
+ * Calculate smart default due date based on work order due date.
+ * If work order due date is within 1 week and in the future, use it.
+ * Otherwise, default to 7 days from now.
+ */
+export function calculateDefaultDueDate(workOrderDueDate: string | null): string {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    if (workOrderDueDate) {
+        const woDueDate = new Date(workOrderDueDate);
+        // If work order due date is within 1 week and in the future, use it
+        if (woDueDate <= oneWeekFromNow && woDueDate >= today) {
+            return workOrderDueDate;
+        }
+    }
+
+    // Default to 7 days from now
+    return formatLocalDate(oneWeekFromNow);
+}
+
 export type DatePreset = 'today' | 'tomorrow' | 'nextMonday' | 'nextMonth';
 
 /** Get a YYYY-MM-DD value for a quick-select date preset. */

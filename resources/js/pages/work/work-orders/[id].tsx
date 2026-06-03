@@ -74,7 +74,6 @@ import { BudgetFieldsGroup } from '@/components/budget';
 import type { BudgetType } from '@/types/work';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusBadge, PriorityBadge, ProgressBar, DatePresetButtons } from '@/components/work';
-import { formatLocalDate } from '@/lib/date-utils';
 import { TaskKanbanBoard } from '@/components/work/task-kanban';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import { HoursProgressIndicator } from '@/components/time-tracking';
@@ -114,6 +113,7 @@ import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import { getCsrfToken } from '@/lib/csrf';
+import { calculateDefaultDueDate } from '@/lib/date-utils';
 
 /**
  * Team member type
@@ -149,6 +149,8 @@ interface WorkOrderWithRaci {
     priority: string;
     dueDate: string | null;
     estimatedHours: number;
+    estimatedHoursManual: number | null;
+    estimatedHoursIsManual: boolean;
     actualHours: number;
     acceptanceCriteria: string[];
     sopAttached: boolean;
@@ -440,28 +442,6 @@ function SortableTaskCard({
     );
 }
 
-/**
- * Calculate smart default due date based on work order due date.
- * If work order due date is within 1 week and in the future, use it.
- * Otherwise, default to 7 days from now.
- */
-const calculateDefaultDueDate = (workOrderDueDate: string | null): string => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    if (workOrderDueDate) {
-        const woDueDate = new Date(workOrderDueDate);
-        // If work order due date is within 1 week and in the future, use it
-        if (woDueDate <= oneWeekFromNow && woDueDate >= today) {
-            return workOrderDueDate;
-        }
-    }
-
-    // Default to 7 days from now
-    return formatLocalDate(oneWeekFromNow);
-};
-
 export default function WorkOrderDetail({
     workOrder,
     tasks,
@@ -616,7 +596,7 @@ export default function WorkOrderDetail({
         status: workOrder.status,
         priority: workOrder.priority as 'low' | 'medium' | 'high' | 'urgent',
         due_date: workOrder.dueDate || '',
-        estimated_hours: workOrder.estimatedHours.toString(),
+        estimated_hours: workOrder.estimatedHoursManual?.toString() ?? '',
         budget_type: (workOrder.budgetType ?? undefined) as BudgetType | undefined,
         budget_cost: workOrder.budgetCost?.toString() || '',
         budget_hours: workOrder.budgetHours?.toString() || '',
@@ -632,6 +612,7 @@ export default function WorkOrderDetail({
         description: '',
         dueDate: calculateDefaultDueDate(workOrder.dueDate),
         assignedToId: '' as string,
+        estimatedHours: '',
     });
 
     const { recentIds: recentAssigneeIds, recordAssignee } = useRecentAssignees();
@@ -766,6 +747,7 @@ export default function WorkOrderDetail({
             description: '',
             dueDate: calculateDefaultDueDate(workOrder.dueDate),
             assignedToId: '',
+            estimatedHours: '',
         });
         setCreateTaskDialogOpen(true);
     };
@@ -1498,6 +1480,9 @@ export default function WorkOrderDetail({
                                 <div className="text-muted-foreground text-xs">Hours</div>
                                 <div className="font-medium">
                                     {workOrder.actualHours} / {workOrder.estimatedHours}h
+                                    {!workOrder.estimatedHoursIsManual && (
+                                        <span className="text-muted-foreground ml-1 text-xs font-normal">(auto)</span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1931,24 +1916,32 @@ export default function WorkOrderDetail({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="grid gap-2">
-                                <Label>Due Date</Label>
-                                <Input
-                                    type="date"
-                                    value={editForm.data.due_date}
-                                    onChange={(e) => editForm.setData('due_date', e.target.value)}
-                                />
-                                <DatePresetButtons
-                                    onSelect={(date) => editForm.setData('due_date', date)}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Estimated Hours</Label>
-                                <Input
-                                    type="number"
-                                    value={editForm.data.estimated_hours}
-                                    onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Due Date</Label>
+                                    <Input
+                                        type="date"
+                                        value={editForm.data.due_date}
+                                        onChange={(e) => editForm.setData('due_date', e.target.value)}
+                                    />
+                                    <DatePresetButtons
+                                        onSelect={(date) => editForm.setData('due_date', date)}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Estimated Hours</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.25"
+                                        placeholder={`Auto: ${workOrder.estimatedHours}h from tasks`}
+                                        value={editForm.data.estimated_hours}
+                                        onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
+                                    />
+                                    <p className="text-muted-foreground text-xs">
+                                        Leave empty to auto-sum from tasks.
+                                    </p>
+                                </div>
                             </div>
                             {dueDateChanged && (
                                 <div className="grid gap-2">
@@ -2077,6 +2070,18 @@ export default function WorkOrderDetail({
                                     onSelect={(date) => taskForm.setData('dueDate', date)}
                                 />
                                 <InputError message={taskForm.errors.dueDate} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Estimated Hours</Label>
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.25"
+                                    value={taskForm.data.estimatedHours}
+                                    onChange={(e) => taskForm.setData('estimatedHours', e.target.value)}
+                                    placeholder="0"
+                                />
+                                <InputError message={taskForm.errors.estimatedHours} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Description</Label>
