@@ -73,7 +73,7 @@ import InputError from '@/components/input-error';
 import { BudgetFieldsGroup } from '@/components/budget';
 import type { BudgetType } from '@/types/work';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatusBadge, PriorityBadge, ProgressBar } from '@/components/work';
+import { StatusBadge, PriorityBadge, ProgressBar, DatePresetButtons } from '@/components/work';
 import { TaskKanbanBoard } from '@/components/work/task-kanban';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import { HoursProgressIndicator } from '@/components/time-tracking';
@@ -113,7 +113,7 @@ import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import { getCsrfToken } from '@/lib/csrf';
-import { calculateDefaultDueDate, getPresetDate } from '@/lib/date-utils';
+import { calculateDefaultDueDate } from '@/lib/date-utils';
 
 /**
  * Team member type
@@ -1924,6 +1924,9 @@ export default function WorkOrderDetail({
                                         value={editForm.data.due_date}
                                         onChange={(e) => editForm.setData('due_date', e.target.value)}
                                     />
+                                    <DatePresetButtons
+                                        onSelect={(date) => editForm.setData('due_date', date)}
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Estimated Hours</Label>
@@ -2063,44 +2066,9 @@ export default function WorkOrderDetail({
                                     value={taskForm.data.dueDate}
                                     onChange={(e) => taskForm.setData('dueDate', e.target.value)}
                                 />
-                                <div className="flex flex-wrap gap-1">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('today'))}
-                                    >
-                                        Today
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('tomorrow'))}
-                                    >
-                                        Tomorrow
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('nextMonday'))}
-                                    >
-                                        Next Monday
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('nextMonth'))}
-                                    >
-                                        Next Month
-                                    </Button>
-                                </div>
+                                <DatePresetButtons
+                                    onSelect={(date) => taskForm.setData('dueDate', date)}
+                                />
                                 <InputError message={taskForm.errors.dueDate} />
                             </div>
                             <div className="grid gap-2">

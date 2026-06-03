@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -698,9 +699,62 @@ class WorkOrderController extends Controller
                 $workOrder->due_date,
                 $validated['reason'] ?? null,
             );
+
+            $this->cascadeDueDateToOverdueTasks(
+                $workOrder,
+                $oldDueDate,
+                $request->user(),
+                $transitionService,
+                $validated['reason'] ?? null,
+            );
         }
 
         return back();
+    }
+
+    /**
+     * When an overdue work order's due date is pushed out, move its overdue
+     * tasks to the new due date so they stay aligned with their parent.
+     *
+     * Only runs for a work order that was itself overdue (its previous due date
+     * had passed and it is not in a completed status) and that now has a concrete
+     * new due date. Each affected task's change is recorded for the audit trail.
+     */
+    private function cascadeDueDateToOverdueTasks(
+        WorkOrder $workOrder,
+        ?CarbonInterface $oldDueDate,
+        User $user,
+        WorkflowTransitionService $transitionService,
+        ?string $reason,
+    ): void {
+        $now = now();
+
+        if ($workOrder->due_date === null
+            || $oldDueDate === null
+            || $oldDueDate->greaterThanOrEqualTo($now)
+            || in_array($workOrder->status, [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled], true)) {
+            return;
+        }
+
+        $overdueTasks = $workOrder->tasks()
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', $now)
+            ->where('due_date', '<', $workOrder->due_date)
+            ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Approved, TaskStatus::Cancelled])
+            ->get();
+
+        foreach ($overdueTasks as $task) {
+            $taskOldDueDate = $task->due_date;
+            $task->update(['due_date' => $workOrder->due_date]);
+
+            $transitionService->recordDueDateChange(
+                $task,
+                $user,
+                $taskOldDueDate,
+                $task->due_date,
+                $reason,
+            );
+        }
     }
 
     public function destroy(Request $request, WorkOrder $workOrder): RedirectResponse
