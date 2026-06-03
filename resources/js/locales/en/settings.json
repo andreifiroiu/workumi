@@ -7,7 +7,19 @@
     "two_factor": "Two-Factor Auth",
     "appearance": "Appearance",
     "language": "Language",
+    "notifications": "Notifications",
     "api_tokens": "API Tokens"
+  },
+  "notifications": {
+    "title": "Notification settings",
+    "description": "Choose what you're notified about and how",
+    "hour_label": "Daily digest time",
+    "hour_help": "The hour your daily digest is sent, in your timezone. Requires the Daily Digest email below.",
+    "matrix_heading": "Notification preferences",
+    "matrix_description": "Choose which channels deliver each type of notification.",
+    "coming_soon": "Soon",
+    "save": "Save",
+    "saved": "Saved"
   },
   "profile": {
     "title": "Profile information",

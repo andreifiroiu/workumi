@@ -10,7 +10,6 @@ use App\Models\AvailableIntegration;
 use App\Models\BillingInfo;
 use App\Models\GlobalAISettings;
 use App\Models\Invoice;
-use App\Models\NotificationPreference;
 use App\Models\TeamApiKey;
 use App\Models\TeamIntegration;
 use App\Models\WorkspaceSettings;
@@ -141,9 +140,6 @@ class WorkspaceSettingsController extends Controller
                     'error' => $log->error,
                 ];
             });
-
-        // Get notification preferences
-        $prefs = NotificationPreference::forUser($team, $user);
 
         // Get audit log entries
         $auditLogEntries = AuditLog::where('team_id', $team->id)
@@ -321,43 +317,6 @@ class WorkspaceSettingsController extends Controller
             ],
             'agentTools' => $agentTools,
             'agentActivityLogs' => $agentActivityLogs,
-            'notificationPreferences' => [
-                'projectUpdates' => [
-                    'email' => $prefs->email_project_updates,
-                    'push' => $prefs->push_project_updates,
-                    'slack' => $prefs->slack_project_updates,
-                ],
-                'taskAssignments' => [
-                    'email' => $prefs->email_task_assignments,
-                    'push' => $prefs->push_task_assignments,
-                    'slack' => $prefs->slack_task_assignments,
-                ],
-                'approvalRequests' => [
-                    'email' => $prefs->email_approval_requests,
-                    'push' => $prefs->push_approval_requests,
-                    'slack' => $prefs->slack_approval_requests,
-                ],
-                'blockers' => [
-                    'email' => $prefs->email_blockers,
-                    'push' => $prefs->push_blockers,
-                    'slack' => $prefs->slack_blockers,
-                ],
-                'deadlines' => [
-                    'email' => $prefs->email_deadlines,
-                    'push' => $prefs->push_deadlines,
-                    'slack' => $prefs->slack_deadlines,
-                ],
-                'weeklyDigest' => [
-                    'email' => $prefs->email_weekly_digest,
-                    'push' => $prefs->push_weekly_digest,
-                    'slack' => $prefs->slack_weekly_digest,
-                ],
-                'agentActivity' => [
-                    'email' => $prefs->email_agent_activity,
-                    'push' => $prefs->push_agent_activity,
-                    'slack' => $prefs->slack_agent_activity,
-                ],
-            ],
             'auditLogEntries' => $auditLogEntries,
             'integrations' => $integrations,
             'billingInfo' => $billingInfo,

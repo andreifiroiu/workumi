@@ -1,0 +1,10 @@
+{
+  "setup": [
+    "composer update",
+    "npm i"
+  ],
+  "teardown": [],
+  "run": [
+    "npm run dev"
+  ]
+}

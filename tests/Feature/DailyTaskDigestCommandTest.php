@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\TaskStatus;
 use App\Models\GlobalAISettings;
+use App\Models\NotificationPreference;
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\Task;
@@ -116,6 +117,16 @@ test('excludes done cancelled and archived tasks but includes overdue', function
 
         return str_contains($body, $overdue->title);
     });
+});
+
+test('does not send when the user has disabled the daily digest email preference', function () {
+    NotificationPreference::forUser($this->team, $this->owner)->update(['email_daily_digest' => false]);
+    dueTask();
+    freezeAtNewYorkHour(8);
+
+    $this->artisan('notifications:daily-task-digest')->assertSuccessful();
+
+    Notification::assertNothingSent();
 });
 
 test('does not send when the team toggle is disabled', function () {

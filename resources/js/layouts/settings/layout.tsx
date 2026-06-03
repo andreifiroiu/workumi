@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/account/appearance';
 import { edit as editLanguage } from '@/routes/account/language';
+import { edit as editNotifications } from '@/routes/account/notifications';
 import { edit } from '@/routes/account/profile';
 import { show } from '@/routes/account/two-factor';
 import { edit as editPassword } from '@/routes/account/password';
@@ -47,6 +48,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
         {
             title: t('nav.language'),
             href: editLanguage(),
+            icon: null,
+        },
+        {
+            title: t('nav.notifications'),
+            href: editNotifications(),
             icon: null,
         },
         {

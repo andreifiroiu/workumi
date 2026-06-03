@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Enums\TaskStatus;
 use App\Models\GlobalAISettings;
+use App\Models\NotificationPreference;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\DailyTaskDigestNotification;
@@ -110,6 +111,12 @@ class SendDailyTaskDigestCommand extends Command
 
         $team = $user->currentTeam;
         if ($team === null || ! GlobalAISettings::forTeam($team)->isDailyTaskDigestEnabled()) {
+            $skipped++;
+
+            return;
+        }
+
+        if (! NotificationPreference::forUser($team, $user)->email_daily_digest) {
             $skipped++;
 
             return;

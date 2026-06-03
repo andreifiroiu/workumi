@@ -10,7 +10,7 @@ use App\Http\Controllers\Settings\AuditLogController;
 use App\Http\Controllers\Settings\IntegrationsController;
 use App\Http\Controllers\Settings\InvitationController;
 use App\Http\Controllers\Settings\LanguageController;
-use App\Http\Controllers\Settings\NotificationsController;
+use App\Http\Controllers\Settings\NotificationSettingsController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\TeamController;
@@ -43,6 +43,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/language', [LanguageController::class, 'edit'])->name('account.language.edit');
         Route::patch('/language', [LanguageController::class, 'update'])->name('account.language.update');
+
+        Route::get('/notifications', [NotificationSettingsController::class, 'edit'])->name('account.notifications.edit');
+        Route::patch('/notifications', [NotificationSettingsController::class, 'update'])->name('account.notifications.update');
 
         Route::get('/two-factor', [TwoFactorAuthenticationController::class, 'show'])
             ->name('account.two-factor.show');
@@ -112,11 +115,6 @@ Route::middleware('auth')->group(function () {
     // ========================================================================
     Route::post('/settings/api-keys', [ApiKeysController::class, 'store'])->name('settings.api-keys.store');
     Route::delete('/settings/api-keys/{apiKey}', [ApiKeysController::class, 'destroy'])->name('settings.api-keys.destroy');
-
-    // ========================================================================
-    // Notifications
-    // ========================================================================
-    Route::patch('/settings/notifications', [NotificationsController::class, 'update'])->name('settings.notifications.update');
 
     // ========================================================================
     // Audit Log
