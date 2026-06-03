@@ -833,7 +833,7 @@ export default function TaskDetail({
 
                 {/* Main Content */}
                 <div className="flex-1 overflow-auto p-6">
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
                         {/* Timer & Time Tracking */}
                         <div>
                             <h2 className="text-foreground mb-4 text-lg font-bold">Time Tracking</h2>
@@ -1060,8 +1060,8 @@ export default function TaskDetail({
                             )}
                         </div>
 
-                        {/* Transition History */}
-                        <div>
+                        {/* Transition History — full-width row beneath on smaller desktops */}
+                        <div className="lg:col-span-2 2xl:col-span-1">
                             <div className="mb-4 flex items-center gap-2">
                                 <History className="text-muted-foreground h-5 w-5" />
                                 <h2 className="text-foreground text-lg font-bold">Activity</h2>
