@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\TaskStatus;
+use App\Enums\WorkOrderStatus;
 use App\Models\GlobalAISettings;
 use App\Models\NotificationPreference;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\WorkOrder;
 use App\Notifications\DailyTaskDigestNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -16,12 +18,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Send each user a daily digest of their tasks that are due today or overdue.
+ * Send each user a daily digest of their tasks and work orders that are due
+ * today or overdue.
  *
  * Runs hourly. For every user, the email is sent only when the current time
  * in that user's own timezone matches their configured digest hour, and only
  * if their team has the daily task digest enabled. Users with no due/overdue
- * tasks are skipped.
+ * tasks or work orders are skipped.
  */
 class SendDailyTaskDigestCommand extends Command
 {
@@ -39,7 +42,7 @@ class SendDailyTaskDigestCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Send users a daily email digest of their tasks due today or overdue';
+    protected $description = 'Send users a daily email digest of their tasks and work orders due today or overdue';
 
     /**
      * Task statuses that are considered closed and excluded from the digest.
@@ -50,6 +53,17 @@ class SendDailyTaskDigestCommand extends Command
         TaskStatus::Done->value,
         TaskStatus::Cancelled->value,
         TaskStatus::Archived->value,
+    ];
+
+    /**
+     * Work order statuses that are considered closed and excluded from the digest.
+     *
+     * @var array<int, string>
+     */
+    private const EXCLUDED_WORK_ORDER_STATUSES = [
+        WorkOrderStatus::Delivered->value,
+        WorkOrderStatus::Cancelled->value,
+        WorkOrderStatus::Archived->value,
     ];
 
     /**
@@ -123,21 +137,24 @@ class SendDailyTaskDigestCommand extends Command
         }
 
         $tasks = $this->dueTasksForUser($user, (int) $team->id, $localNow);
-        if ($tasks->isEmpty()) {
+        $workOrders = $this->dueWorkOrdersForUser($user, (int) $team->id, $localNow);
+        if ($tasks->isEmpty() && $workOrders->isEmpty()) {
             return;
         }
 
+        $itemCount = $tasks->count() + $workOrders->count();
+
         if ($dryRun) {
-            $this->line("Would send {$tasks->count()} task(s) to {$user->email}");
+            $this->line("Would send {$itemCount} item(s) to {$user->email}");
             $sent++;
 
             return;
         }
 
-        $user->notify(new DailyTaskDigestNotification($tasks));
+        $user->notify(new DailyTaskDigestNotification($tasks, $workOrders));
         $user->forceFill(['last_digest_sent_on' => $localDate])->save();
 
-        $this->line("Sent {$tasks->count()} task(s) to {$user->email}");
+        $this->line("Sent {$itemCount} item(s) to {$user->email}");
         $sent++;
     }
 
@@ -158,6 +175,27 @@ class SendDailyTaskDigestCommand extends Command
             ->where('due_date', '<=', $endOfToday)
             ->whereNotIn('status', self::EXCLUDED_STATUSES)
             ->with(['workOrder:id,title', 'project:id,name'])
+            ->orderBy('due_date')
+            ->get();
+    }
+
+    /**
+     * Get a user's work orders that are due today or overdue in their timezone,
+     * scoped to the team whose digest setting authorized this send.
+     *
+     * @return Collection<int, WorkOrder>
+     */
+    private function dueWorkOrdersForUser(User $user, int $teamId, Carbon $localNow): Collection
+    {
+        $endOfToday = $localNow->copy()->endOfDay()->setTimezone('UTC');
+
+        return WorkOrder::query()
+            ->where('team_id', $teamId)
+            ->where('assigned_to_id', $user->id)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<=', $endOfToday)
+            ->whereNotIn('status', self::EXCLUDED_WORK_ORDER_STATUSES)
+            ->with(['project:id,name'])
             ->orderBy('due_date')
             ->get();
     }
