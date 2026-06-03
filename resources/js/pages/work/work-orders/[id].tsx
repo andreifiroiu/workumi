@@ -1931,26 +1931,24 @@ export default function WorkOrderDetail({
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Due Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={editForm.data.due_date}
-                                        onChange={(e) => editForm.setData('due_date', e.target.value)}
-                                    />
-                                    <DatePresetButtons
-                                        onSelect={(date) => editForm.setData('due_date', date)}
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Estimated Hours</Label>
-                                    <Input
-                                        type="number"
-                                        value={editForm.data.estimated_hours}
-                                        onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
-                                    />
-                                </div>
+                            <div className="grid gap-2">
+                                <Label>Due Date</Label>
+                                <Input
+                                    type="date"
+                                    value={editForm.data.due_date}
+                                    onChange={(e) => editForm.setData('due_date', e.target.value)}
+                                />
+                                <DatePresetButtons
+                                    onSelect={(date) => editForm.setData('due_date', date)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Estimated Hours</Label>
+                                <Input
+                                    type="number"
+                                    value={editForm.data.estimated_hours}
+                                    onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
+                                />
                             </div>
                             {dueDateChanged && (
                                 <div className="grid gap-2">
