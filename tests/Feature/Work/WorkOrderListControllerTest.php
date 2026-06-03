@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Deliverable;
 use App\Models\Party;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
@@ -317,6 +319,17 @@ test('user can convert a work order list into a new project', function () {
         'accountable_id' => $this->user->id,
     ]);
 
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrders->first()->id,
+    ]);
+    $deliverable = Deliverable::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrders->first()->id,
+    ]);
+
     $response = $this->actingAs($this->user)->post(
         "/work/work-order-lists/{$list->id}/convert-to-project",
         [
@@ -348,6 +361,16 @@ test('user can convert a work order list into a new project', function () {
             'work_order_list_id' => null,
         ]);
     }
+
+    // Tasks and deliverables denormalize project_id and must follow their work order.
+    $this->assertDatabaseHas('tasks', [
+        'id' => $task->id,
+        'project_id' => $newProject->id,
+    ]);
+    $this->assertDatabaseHas('deliverables', [
+        'id' => $deliverable->id,
+        'project_id' => $newProject->id,
+    ]);
 
     $this->assertSoftDeleted('work_order_lists', ['id' => $list->id]);
 });

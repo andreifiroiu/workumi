@@ -10,6 +10,7 @@ return [
         'login' => 'Autentificare',
         'get_started' => 'Începe acum',
         'go_to_app' => 'Mergi la aplicație',
+        'logout' => 'Deconectare',
         'copyright' => '© :year :name. Toate drepturile rezervate.',
         'language' => 'Limbă',
     ],

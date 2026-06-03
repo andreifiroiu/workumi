@@ -25,12 +25,13 @@ const statusLabels: Record<string, string> = {
 };
 
 export function TasksCard({ tasks, onViewTask }: TasksCardProps) {
-    // Sort tasks: overdue first, then by priority (high -> medium -> low)
+    // Sort tasks: overdue first, then due today, then by priority (high -> medium -> low)
     const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const dueOrder = (task: TodayTask) => (task.isOverdue ? 0 : task.isDueToday ? 1 : 2);
     const sortedTasks = [...tasks].sort((a, b) => {
-        // Overdue items first
-        if (a.isOverdue && !b.isOverdue) return -1;
-        if (!a.isOverdue && b.isOverdue) return 1;
+        // Overdue items first, then tasks due today
+        const dueDiff = dueOrder(a) - dueOrder(b);
+        if (dueDiff !== 0) return dueDiff;
         // Then by priority
         return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
@@ -72,6 +73,12 @@ export function TasksCard({ tasks, onViewTask }: TasksCardProps) {
                                             <span className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/30 dark:text-red-400">
                                                 <AlertCircle className="h-3 w-3" />
                                                 Overdue
+                                            </span>
+                                        )}
+                                        {!task.isOverdue && task.isDueToday && (
+                                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                                                <Clock className="h-3 w-3" />
+                                                Due today
                                             </span>
                                         )}
                                         <span

@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -72,7 +73,7 @@ class WorkOrderController extends Controller
             'status' => WorkOrderStatus::Draft,
             'priority' => Priority::from($validated['priority']),
             'due_date' => $validated['dueDate'] ?? null,
-            'estimated_hours' => $validated['estimatedHours'] ?? 0,
+            'estimated_hours' => $validated['estimatedHours'] ?? null,
             'acceptance_criteria' => $validated['acceptanceCriteria'] ?? [],
             'accountable_id' => $user->id, // Creator is initially accountable (RACI)
         ]);
@@ -144,7 +145,9 @@ class WorkOrderController extends Controller
                 'status' => $workOrder->status->value,
                 'priority' => $workOrder->priority->value,
                 'dueDate' => $workOrder->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $workOrder->estimated_hours,
+                'estimatedHours' => $workOrder->effective_estimated_hours,
+                'estimatedHoursManual' => $workOrder->estimated_hours !== null ? (float) $workOrder->estimated_hours : null,
+                'estimatedHoursIsManual' => $workOrder->estimated_hours !== null,
                 'actualHours' => (float) $workOrder->actual_hours,
                 'acceptanceCriteria' => $workOrder->acceptance_criteria ?? [],
                 'sopAttached' => $workOrder->sop_attached,
@@ -678,7 +681,7 @@ class WorkOrderController extends Controller
             $updateData['due_date'] = $validated['due_date'];
         }
         if (array_key_exists('estimated_hours', $validated)) {
-            $updateData['estimated_hours'] = $validated['estimated_hours'] ?? 0;
+            $updateData['estimated_hours'] = $validated['estimated_hours'] ?? null;
         }
         if (isset($validated['acceptanceCriteria'])) {
             $updateData['acceptance_criteria'] = $validated['acceptanceCriteria'];
@@ -696,9 +699,62 @@ class WorkOrderController extends Controller
                 $workOrder->due_date,
                 $validated['reason'] ?? null,
             );
+
+            $this->cascadeDueDateToOverdueTasks(
+                $workOrder,
+                $oldDueDate,
+                $request->user(),
+                $transitionService,
+                $validated['reason'] ?? null,
+            );
         }
 
         return back();
+    }
+
+    /**
+     * When an overdue work order's due date is pushed out, move its overdue
+     * tasks to the new due date so they stay aligned with their parent.
+     *
+     * Only runs for a work order that was itself overdue (its previous due date
+     * had passed and it is not in a completed status) and that now has a concrete
+     * new due date. Each affected task's change is recorded for the audit trail.
+     */
+    private function cascadeDueDateToOverdueTasks(
+        WorkOrder $workOrder,
+        ?CarbonInterface $oldDueDate,
+        User $user,
+        WorkflowTransitionService $transitionService,
+        ?string $reason,
+    ): void {
+        $now = now();
+
+        if ($workOrder->due_date === null
+            || $oldDueDate === null
+            || $oldDueDate->greaterThanOrEqualTo($now)
+            || in_array($workOrder->status, [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled], true)) {
+            return;
+        }
+
+        $overdueTasks = $workOrder->tasks()
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', $now)
+            ->where('due_date', '<', $workOrder->due_date)
+            ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Approved, TaskStatus::Cancelled])
+            ->get();
+
+        foreach ($overdueTasks as $task) {
+            $taskOldDueDate = $task->due_date;
+            $task->update(['due_date' => $workOrder->due_date]);
+
+            $transitionService->recordDueDateChange(
+                $task,
+                $user,
+                $taskOldDueDate,
+                $task->due_date,
+                $reason,
+            );
+        }
     }
 
     public function destroy(Request $request, WorkOrder $workOrder): RedirectResponse

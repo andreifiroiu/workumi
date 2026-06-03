@@ -71,6 +71,7 @@ import { taskStatusLabels } from '@/components/ui/status-badge';
 import { useState, useEffect, useCallback } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import { getCsrfToken } from '@/lib/csrf';
+import { getPresetDate } from '@/lib/date-utils';
 
 /**
  * Extended Task type with additional workflow properties
@@ -1211,6 +1212,44 @@ export default function TaskDetail({
                                     value={editForm.data.due_date}
                                     onChange={(e) => editForm.setData('due_date', e.target.value)}
                                 />
+                                <div className="flex flex-wrap gap-1">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 text-xs"
+                                        onClick={() => editForm.setData('due_date', getPresetDate('today'))}
+                                    >
+                                        Today
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 text-xs"
+                                        onClick={() => editForm.setData('due_date', getPresetDate('tomorrow'))}
+                                    >
+                                        Tomorrow
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 text-xs"
+                                        onClick={() => editForm.setData('due_date', getPresetDate('nextMonday'))}
+                                    >
+                                        Next Monday
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-6 text-xs"
+                                        onClick={() => editForm.setData('due_date', getPresetDate('nextMonth'))}
+                                    >
+                                        Next Month
+                                    </Button>
+                                </div>
                             </div>
                             {dueDateChanged && (
                                 <div className="grid gap-2">

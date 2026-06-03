@@ -10,6 +10,7 @@ return [
         'login' => 'Log in',
         'get_started' => 'Get Started',
         'go_to_app' => 'Go to App',
+        'logout' => 'Log out',
         'copyright' => '© :year :name. All rights reserved.',
         'language' => 'Language',
     ],

@@ -185,7 +185,7 @@ class WorkController extends Controller
         return WorkOrder::forTeam($team->id)
             ->whereUserHasRaciRole($user->id, excludeInformed: ! $showInformed)
             ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled])
-            ->with(['project', 'assignedTo', 'createdBy'])
+            ->with(['project', 'assignedTo', 'createdBy', 'tasks'])
             ->orderBy('due_date')
             ->get()
             ->map(fn (WorkOrder $wo) => [
@@ -199,7 +199,7 @@ class WorkController extends Controller
                 'status' => $wo->status->value,
                 'priority' => $wo->priority->value,
                 'dueDate' => $wo->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $wo->estimated_hours,
+                'estimatedHours' => $wo->effective_estimated_hours,
                 'actualHours' => (float) $wo->actual_hours,
                 'acceptanceCriteria' => $wo->acceptance_criteria ?? [],
                 'sopAttached' => $wo->sop_attached,
@@ -253,7 +253,7 @@ class WorkController extends Controller
                 'owner',
                 'workOrderLists.workOrders' => fn ($query) => $query->notArchived(),
                 'workOrderLists.workOrders.tasks',
-                'workOrderLists.workOrders.assignedTo',
+                'workOrderLists.workOrders.accountable',
             ])
             ->orderBy('updated_at', 'desc')
             ->get()
@@ -284,7 +284,7 @@ class WorkController extends Controller
                         'status' => $wo->status->value,
                         'priority' => $wo->priority->value,
                         'dueDate' => $wo->due_date?->format('Y-m-d'),
-                        'assignedToName' => $wo->assignedTo?->name ?? 'Unassigned',
+                        'assignedToName' => $wo->accountable?->name ?? 'Unassigned',
                         'tasksCount' => $wo->tasks->count(),
                         'completedTasksCount' => $wo->tasks->where('status', 'done')->count(),
                         'positionInList' => $wo->position_in_list,
@@ -292,7 +292,7 @@ class WorkController extends Controller
                 ])->all(),
                 'ungroupedWorkOrders' => $project->ungroupedWorkOrders()
                     ->notArchived()
-                    ->with(['tasks', 'assignedTo'])
+                    ->with(['tasks', 'accountable'])
                     ->get()
                     ->map(fn ($wo) => [
                         'id' => (string) $wo->id,
@@ -300,7 +300,7 @@ class WorkController extends Controller
                         'status' => $wo->status->value,
                         'priority' => $wo->priority->value,
                         'dueDate' => $wo->due_date?->format('Y-m-d'),
-                        'assignedToName' => $wo->assignedTo?->name ?? 'Unassigned',
+                        'assignedToName' => $wo->accountable?->name ?? 'Unassigned',
                         'tasksCount' => $wo->tasks->count(),
                         'completedTasksCount' => $wo->tasks->where('status', 'done')->count(),
                         'positionInList' => $wo->position_in_list,
@@ -328,7 +328,7 @@ class WorkController extends Controller
                 'status' => $wo->status->value,
                 'priority' => $wo->priority->value,
                 'dueDate' => $wo->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $wo->estimated_hours,
+                'estimatedHours' => $wo->effective_estimated_hours,
                 'actualHours' => (float) $wo->actual_hours,
                 'acceptanceCriteria' => $wo->acceptance_criteria ?? [],
                 'sopAttached' => $wo->sop_attached,
