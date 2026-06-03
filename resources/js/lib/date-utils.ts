@@ -1,5 +1,8 @@
-import { format as dateFnsFormat, formatDistance as dateFnsFormatDistance } from 'date-fns';
-import { enUS, es, fr, de, ro } from 'date-fns/locale';
+import {
+    format as dateFnsFormat,
+    formatDistance as dateFnsFormatDistance,
+} from 'date-fns';
+import { de, enUS, es, fr, ro } from 'date-fns/locale';
 
 const locales = {
     en: enUS,
@@ -18,8 +21,16 @@ export function formatDate(
     formatStr: string = 'PPP',
     locale?: string,
 ): string {
-    const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-    const currentLocale = locale || (typeof window !== 'undefined' ? localStorage.getItem('language') : null) || 'en';
+    const dateObj =
+        typeof date === 'string' || typeof date === 'number'
+            ? new Date(date)
+            : date;
+    const currentLocale =
+        locale ||
+        (typeof window !== 'undefined'
+            ? localStorage.getItem('language')
+            : null) ||
+        'en';
 
     return dateFnsFormat(dateObj, formatStr, {
         locale: getDateFnsLocale(currentLocale),
@@ -31,9 +42,20 @@ export function formatDistance(
     baseDate: Date | string | number = new Date(),
     options?: { addSuffix?: boolean; locale?: string },
 ): string {
-    const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-    const baseDateObj = typeof baseDate === 'string' || typeof baseDate === 'number' ? new Date(baseDate) : baseDate;
-    const currentLocale = options?.locale || (typeof window !== 'undefined' ? localStorage.getItem('language') : null) || 'en';
+    const dateObj =
+        typeof date === 'string' || typeof date === 'number'
+            ? new Date(date)
+            : date;
+    const baseDateObj =
+        typeof baseDate === 'string' || typeof baseDate === 'number'
+            ? new Date(baseDate)
+            : baseDate;
+    const currentLocale =
+        options?.locale ||
+        (typeof window !== 'undefined'
+            ? localStorage.getItem('language')
+            : null) ||
+        'en';
 
     return dateFnsFormatDistance(dateObj, baseDateObj, {
         addSuffix: options?.addSuffix,
@@ -41,7 +63,7 @@ export function formatDistance(
     });
 }
 
-/** Format a Date as YYYY-MM-DD using local timezone. */
+/** Format a Date as YYYY-MM-DD using the local timezone. */
 export function formatLocalDate(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -71,12 +93,10 @@ export function calculateDefaultDueDate(workOrderDueDate: string | null): string
     return formatLocalDate(oneWeekFromNow);
 }
 
-export type DueDatePreset = 'today' | 'tomorrow' | 'nextMonday' | 'nextMonth';
+export type DatePreset = 'today' | 'tomorrow' | 'nextMonday' | 'nextMonth';
 
-/**
- * Get a preset date value for quick-select buttons.
- */
-export function getPresetDate(preset: DueDatePreset): string {
+/** Get a YYYY-MM-DD value for a quick-select date preset. */
+export function getPresetDate(preset: DatePreset): string {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

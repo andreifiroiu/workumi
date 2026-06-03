@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
+use Illuminate\Support\Carbon;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -494,4 +495,80 @@ test('user cannot access work orders from another team', function () {
     $response = $this->actingAs($this->user)->get("/work/work-orders/{$otherWorkOrder->id}");
 
     $response->assertStatus(403);
+});
+
+test('changing an overdue work order due date pushes its overdue tasks to the new date', function () {
+    $newDueDate = Carbon::now()->addDays(14)->startOfDay();
+
+    $workOrder = WorkOrder::factory()->active()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->subDays(5),
+    ]);
+
+    $overdueTask = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrder->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->subDays(3),
+    ]);
+
+    $futureTask = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrder->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->addDays(20),
+    ]);
+
+    $completedOverdueTask = Task::factory()->done()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrder->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->subDays(2),
+    ]);
+
+    $response = $this->actingAs($this->user)->patch("/work/work-orders/{$workOrder->id}", [
+        'due_date' => $newDueDate->toDateString(),
+    ]);
+
+    $response->assertRedirect();
+
+    expect($overdueTask->fresh()->due_date->toDateString())->toBe($newDueDate->toDateString());
+    expect($futureTask->fresh()->due_date->toDateString())->toBe($futureTask->due_date->toDateString());
+    expect($completedOverdueTask->fresh()->due_date->toDateString())->toBe($completedOverdueTask->due_date->toDateString());
+
+    expect($overdueTask->statusTransitions()
+        ->where('action_type', 'due_date_change')
+        ->exists())->toBeTrue();
+});
+
+test('changing the due date of a non-overdue work order does not touch its tasks', function () {
+    $newDueDate = Carbon::now()->addDays(30)->startOfDay();
+
+    $workOrder = WorkOrder::factory()->active()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->addDays(10),
+    ]);
+
+    $overdueTask = Task::factory()->todo()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'work_order_id' => $workOrder->id,
+        'created_by_id' => $this->user->id,
+        'due_date' => Carbon::now()->subDays(3),
+    ]);
+
+    $response = $this->actingAs($this->user)->patch("/work/work-orders/{$workOrder->id}", [
+        'due_date' => $newDueDate->toDateString(),
+    ]);
+
+    $response->assertRedirect();
+
+    expect($overdueTask->fresh()->due_date->toDateString())->toBe($overdueTask->due_date->toDateString());
 });

@@ -66,6 +66,12 @@ export function TaskSheet({ task, onClose, onCompleteTask, onUpdateTask }: TaskS
                                         Overdue
                                     </span>
                                 )}
+                                {!task.isOverdue && task.isDueToday && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950/30 dark:text-amber-400">
+                                        <Clock className="h-3 w-3" />
+                                        Due today
+                                    </span>
+                                )}
                                 <span
                                     className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[task.status]}`}
                                 >
@@ -96,7 +102,7 @@ export function TaskSheet({ task, onClose, onCompleteTask, onUpdateTask }: TaskS
                                         <Calendar className="h-4 w-4 text-slate-400" />
                                         <span className="text-slate-600 dark:text-slate-400">Due:</span>
                                         <span
-                                            className={`font-medium ${task.isOverdue ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}
+                                            className={`font-medium ${task.isOverdue ? 'text-red-600 dark:text-red-400' : !task.isOverdue && task.isDueToday ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white'}`}
                                         >
                                             {formatDate(task.dueDate)}
                                         </span>
