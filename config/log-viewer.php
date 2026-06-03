@@ -3,6 +3,8 @@
 use Opcodes\LogViewer\Enums\SortingMethod;
 use Opcodes\LogViewer\Enums\SortingOrder;
 use Opcodes\LogViewer\Enums\Theme;
+use Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer;
+use Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return [
 
@@ -19,6 +21,21 @@ return [
     'api_only' => env('LOG_VIEWER_API_ONLY', false),
 
     'require_auth_in_production' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed emails
+    |--------------------------------------------------------------------------
+    | Email addresses allowed to access Log Viewer. Used by the
+    | `viewLogViewer` gate defined in AppServiceProvider. Provide a
+    | comma-separated list via the LOG_VIEWER_ALLOWED_EMAILS env var.
+    |
+    */
+
+    'allowed_emails' => array_filter(array_map(
+        'trim',
+        explode(',', (string) env('LOG_VIEWER_ALLOWED_EMAILS', 'andrei.firoiu@gmail.com'))
+    )),
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +114,7 @@ return [
 
     'middleware' => [
         'web',
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+        AuthorizeLogViewer::class,
     ],
 
     /*
@@ -110,8 +127,8 @@ return [
     */
 
     'api_middleware' => [
-        \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+        EnsureFrontendRequestsAreStateful::class,
+        AuthorizeLogViewer::class,
     ],
 
     'api_stateful_domains' => env('LOG_VIEWER_API_STATEFUL_DOMAINS') ? explode(',', env('LOG_VIEWER_API_STATEFUL_DOMAINS')) : null,
@@ -131,15 +148,15 @@ return [
             'name' => ucfirst(env('APP_ENV', 'local')),
         ],
 
-         'staging' => [
-             'name' => 'Staging Workumi',
-             'host' => 'https://workumi.netinteraction.biz/log-viewer',
-             'auth' => [      // Example of HTTP Basic auth
-                 'username' => 'admin',
-                 'password' => 'Andrei#44',
-             ],
-             'verify_server_certificate' => true,
-         ],
+        'staging' => [
+            'name' => 'Staging Workumi',
+            'host' => 'https://workumi.netinteraction.biz/log-viewer',
+            'auth' => [      // Example of HTTP Basic auth
+                'username' => 'admin',
+                'password' => 'Andrei#44',
+            ],
+            'verify_server_certificate' => true,
+        ],
         //
         // 'production' => [
         //     'name' => 'Production',
