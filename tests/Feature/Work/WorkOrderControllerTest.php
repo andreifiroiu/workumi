@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AIAgent;
+use App\Models\Folder;
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\Task;
@@ -80,6 +81,44 @@ test('user can view a work order', function () {
     $response->assertInertia(fn ($page) => $page->component('work/work-orders/[id]')
         ->has('workOrder')
         ->where('workOrder.id', (string) $workOrder->id)
+    );
+});
+
+test('work order view returns project folders in the FolderNode shape', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $parent = Folder::factory()->forProject($this->project->id)->create([
+        'team_id' => $this->team->id,
+        'name' => 'Parent Folder',
+        'created_by_id' => $this->user->id,
+    ]);
+    $child = Folder::factory()->forProject($this->project->id)->childOf($parent->id)->create([
+        'team_id' => $this->team->id,
+        'name' => 'Child Folder',
+        'created_by_id' => $this->user->id,
+    ]);
+
+    $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page->component('work/work-orders/[id]')
+        ->has('folders', 1)
+        ->where('folders.0.id', (string) $parent->id)
+        ->where('folders.0.projectId', (string) $this->project->id)
+        ->where('folders.0.parentId', null)
+        ->where('folders.0.depth', 1)
+        ->where('folders.0.canHaveChildren', true)
+        ->where('folders.0.documentsCount', 0)
+        ->has('folders.0.children', 1)
+        ->where('folders.0.children.0.id', (string) $child->id)
+        ->where('folders.0.children.0.parentId', (string) $parent->id)
+        ->where('folders.0.children.0.depth', 2)
+        ->where('folders.0.children.0.documentsCount', 0)
+        ->etc()
     );
 });
 

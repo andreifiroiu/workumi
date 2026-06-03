@@ -99,6 +99,7 @@ import {
     PlanExecutionPanel,
 } from '@/components/pm-copilot';
 import { DraftClientUpdateButton } from '@/components/client-comms';
+import type { FolderNode } from '@/components/documents/folder-tree';
 import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
 import {
     useTriggerPMCopilot,
@@ -226,19 +227,7 @@ interface WorkOrderDetailProps {
         folderId?: string | null;
         uploadedDate?: string;
     }>;
-    folders: Array<{
-        id: string;
-        name: string;
-        parentId: string | null;
-        documentCount: number;
-        children: Array<{
-            id: string;
-            name: string;
-            parentId: string;
-            documentCount: number;
-            children: never[];
-        }>;
-    }>;
+    folders: FolderNode[];
     communicationThread: {
         id: string;
         messageCount: number;
@@ -1579,8 +1568,8 @@ export default function WorkOrderDetail({
                     ) : (
                         /* 3-column grid layout for list view */
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                            {/* Column 1: Tasks Section */}
-                            <div>
+                            {/* Tasks: full main-area width; Deliverables drop to a new row beneath on smaller desktops */}
+                            <div className="lg:col-span-2">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-foreground text-lg font-bold">Tasks</h2>
@@ -1647,8 +1636,8 @@ export default function WorkOrderDetail({
                                 )}
                             </div>
 
-                            {/* Column 2: Deliverables Section */}
-                            <div>
+                            {/* Deliverables: wraps to a new row directly beneath the task list */}
+                            <div className="lg:col-span-2">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-foreground text-lg font-bold">Deliverables</h2>
@@ -1739,8 +1728,8 @@ export default function WorkOrderDetail({
                                 )}
                             </div>
 
-                            {/* Column 3: PM Copilot + RACI + Activity */}
-                            <div>
+                            {/* Sidebar: PM Copilot + RACI + Activity — right rail spanning both task/deliverable rows */}
+                            <div className="lg:col-start-3 lg:row-span-2 lg:row-start-1">
                                 {/* PM Copilot Section */}
                                 <div className="mb-6 space-y-4">
                                     <PMCopilotTriggerButton
