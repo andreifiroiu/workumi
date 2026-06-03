@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Enums\TaskStatus;
+use App\Enums\WorkOrderStatus;
 use App\Models\GlobalAISettings;
+use App\Models\NotificationPreference;
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\Task;
@@ -50,6 +52,22 @@ function dueTask(array $overrides = []): Task
         'work_order_id' => test()->workOrder->id,
         'project_id' => test()->project->id,
         'assigned_to_id' => test()->owner->id,
+        'due_date' => Carbon::now('America/New_York')->toDateString(),
+    ], $overrides));
+}
+
+/**
+ * Create a work order due today (in New York) assigned to the owner.
+ */
+function dueWorkOrder(array $overrides = []): WorkOrder
+{
+    return WorkOrder::factory()->create(array_merge([
+        'team_id' => test()->team->id,
+        'project_id' => test()->project->id,
+        'created_by_id' => test()->owner->id,
+        'accountable_id' => test()->owner->id,
+        'assigned_to_id' => test()->owner->id,
+        'status' => WorkOrderStatus::Active,
         'due_date' => Carbon::now('America/New_York')->toDateString(),
     ], $overrides));
 }
@@ -116,6 +134,64 @@ test('excludes done cancelled and archived tasks but includes overdue', function
 
         return str_contains($body, $overdue->title);
     });
+});
+
+test('sends digest for work orders due today or overdue', function () {
+    $workOrder = dueWorkOrder();
+    freezeAtNewYorkHour(8);
+
+    $this->artisan('notifications:daily-task-digest')->assertSuccessful();
+
+    Notification::assertSentTo($this->owner, DailyTaskDigestNotification::class, function ($notification) use ($workOrder) {
+        $body = collect($notification->toMail($this->owner)->introLines)->implode("\n");
+
+        return str_contains($body, $workOrder->title);
+    });
+});
+
+test('excludes delivered cancelled and archived work orders but includes overdue', function () {
+    $delivered = dueWorkOrder(['status' => WorkOrderStatus::Delivered]);
+    dueWorkOrder(['status' => WorkOrderStatus::Cancelled]);
+    dueWorkOrder(['status' => WorkOrderStatus::Archived]);
+    $overdue = dueWorkOrder([
+        'status' => WorkOrderStatus::Active,
+        'due_date' => Carbon::now('America/New_York')->subDays(2)->toDateString(),
+    ]);
+
+    freezeAtNewYorkHour(8);
+
+    $this->artisan('notifications:daily-task-digest')->assertSuccessful();
+
+    Notification::assertSentTo($this->owner, DailyTaskDigestNotification::class, function ($notification) use ($overdue, $delivered) {
+        $body = collect($notification->toMail($this->owner)->introLines)->implode("\n");
+
+        return str_contains($body, $overdue->title) && ! str_contains($body, $delivered->title);
+    });
+});
+
+test('digest lines link to the task and work order detail pages', function () {
+    $task = dueTask();
+    $workOrder = dueWorkOrder();
+    freezeAtNewYorkHour(8);
+
+    $this->artisan('notifications:daily-task-digest')->assertSuccessful();
+
+    Notification::assertSentTo($this->owner, DailyTaskDigestNotification::class, function ($notification) use ($task, $workOrder) {
+        $body = collect($notification->toMail($this->owner)->introLines)->implode("\n");
+
+        return str_contains($body, route('tasks.show', $task))
+            && str_contains($body, route('work-orders.show', $workOrder));
+    });
+});
+
+test('does not send when the user has disabled the daily digest email preference', function () {
+    NotificationPreference::forUser($this->team, $this->owner)->update(['email_daily_digest' => false]);
+    dueTask();
+    freezeAtNewYorkHour(8);
+
+    $this->artisan('notifications:daily-task-digest')->assertSuccessful();
+
+    Notification::assertNothingSent();
 });
 
 test('does not send when the team toggle is disabled', function () {

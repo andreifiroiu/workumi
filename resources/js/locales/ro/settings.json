@@ -7,7 +7,19 @@
     "two_factor": "Autentificare cu doi factori",
     "appearance": "Aspect",
     "language": "Limbă",
+    "notifications": "Notificări",
     "api_tokens": "Token API"
+  },
+  "notifications": {
+    "title": "Setări notificări",
+    "description": "Alege despre ce ești notificat și cum",
+    "hour_label": "Ora rezumatului zilnic",
+    "hour_help": "Ora la care este trimis rezumatul zilnic, în fusul tău orar. Necesită emailul Rezumat Zilnic de mai jos.",
+    "matrix_heading": "Preferințe notificări",
+    "matrix_description": "Alege ce canale livrează fiecare tip de notificare.",
+    "coming_soon": "În curând",
+    "save": "Salvează",
+    "saved": "Salvat"
   },
   "profile": {
     "title": "Informații profil",

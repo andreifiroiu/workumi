@@ -174,22 +174,6 @@ export interface AgentWorkflowApproval {
     urgency: 'urgent' | 'high' | 'normal';
 }
 
-export interface NotificationCategory {
-    email: boolean;
-    push: boolean;
-    slack: boolean;
-}
-
-export interface NotificationPreferences {
-    projectUpdates: NotificationCategory;
-    taskAssignments: NotificationCategory;
-    approvalRequests: NotificationCategory;
-    blockers: NotificationCategory;
-    deadlines: NotificationCategory;
-    weeklyDigest: NotificationCategory;
-    agentActivity: NotificationCategory;
-}
-
 export interface AuditLogEntry {
     id: number;
     timestamp: string;
@@ -286,7 +270,6 @@ export interface SettingsPageProps {
     agentActivityLogs: AgentActivityLog[];
     agentTemplates?: AgentTemplate[];
     agentTools?: AgentTool[];
-    notificationPreferences: NotificationPreferences;
     auditLogEntries: AuditLogEntry[];
     integrations: Integration[];
     billingInfo: BillingInfo | null;

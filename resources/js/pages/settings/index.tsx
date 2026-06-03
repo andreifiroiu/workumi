@@ -5,7 +5,6 @@ import { SettingsSidebar } from './components/settings-sidebar';
 import { WorkspaceSection } from './components/workspace-section';
 import { TeamSection } from './components/team-section';
 import { AIAgentsSection } from './components/ai-agents-section';
-import { NotificationsSection } from './components/notifications-section';
 import { AuditLogSection } from './components/audit-log-section';
 import { IntegrationsSection } from './components/integrations-section';
 import { BillingSection } from './components/billing-section';
@@ -24,7 +23,6 @@ const tabTitles: Record<string, string> = {
     'api-keys': 'API Keys',
     'integrations': 'Integrations',
     'billing': 'Billing',
-    'notifications': 'Notifications',
     'audit-log': 'Audit Log',
 };
 
@@ -40,7 +38,6 @@ export default function Settings({
     agentTemplates,
     globalAISettings,
     agentActivityLogs,
-    notificationPreferences,
     auditLogEntries,
     integrations,
     billingInfo,
@@ -99,9 +96,6 @@ export default function Settings({
                                 )}
                                 {activeTab === 'billing' && (
                                     <BillingSection billingInfo={billingInfo} invoices={invoices} />
-                                )}
-                                {activeTab === 'notifications' && (
-                                    <NotificationsSection preferences={notificationPreferences} />
                                 )}
                                 {activeTab === 'audit-log' && (
                                     <AuditLogSection entries={auditLogEntries} />

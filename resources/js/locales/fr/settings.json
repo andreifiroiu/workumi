@@ -7,7 +7,19 @@
     "two_factor": "Authentification à deux facteurs",
     "appearance": "Apparence",
     "language": "Langue",
+    "notifications": "Notifications",
     "api_tokens": "Jetons API"
+  },
+  "notifications": {
+    "title": "Paramètres de notification",
+    "description": "Choisissez de quoi vous êtes notifié et comment",
+    "hour_label": "Heure du résumé quotidien",
+    "hour_help": "L'heure d'envoi de votre résumé quotidien, dans votre fuseau horaire. Nécessite l'e-mail Résumé Quotidien ci-dessous.",
+    "matrix_heading": "Préférences de notification",
+    "matrix_description": "Choisissez quels canaux diffusent chaque type de notification.",
+    "coming_soon": "Bientôt",
+    "save": "Enregistrer",
+    "saved": "Enregistré"
   },
   "profile": {
     "title": "Informations du profil",

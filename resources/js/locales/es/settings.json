@@ -7,7 +7,19 @@
     "two_factor": "Autenticación de dos factores",
     "appearance": "Apariencia",
     "language": "Idioma",
+    "notifications": "Notificaciones",
     "api_tokens": "Tokens de API"
+  },
+  "notifications": {
+    "title": "Configuración de notificaciones",
+    "description": "Elige sobre qué quieres recibir notificaciones y cómo",
+    "hour_label": "Hora del resumen diario",
+    "hour_help": "La hora a la que se envía tu resumen diario, en tu zona horaria. Requiere el correo de Resumen Diario de abajo.",
+    "matrix_heading": "Preferencias de notificación",
+    "matrix_description": "Elige qué canales entregan cada tipo de notificación.",
+    "coming_soon": "Pronto",
+    "save": "Guardar",
+    "saved": "Guardado"
   },
   "profile": {
     "title": "Información del perfil",

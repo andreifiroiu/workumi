@@ -7,7 +7,19 @@
     "two_factor": "Zwei-Faktor-Authentifizierung",
     "appearance": "Erscheinungsbild",
     "language": "Sprache",
+    "notifications": "Benachrichtigungen",
     "api_tokens": "API-Token"
+  },
+  "notifications": {
+    "title": "Benachrichtigungseinstellungen",
+    "description": "Wählen Sie, worüber und wie Sie benachrichtigt werden",
+    "hour_label": "Zeit der täglichen Übersicht",
+    "hour_help": "Die Uhrzeit, zu der Ihre tägliche Übersicht gesendet wird, in Ihrer Zeitzone. Erfordert die E-Mail „Tägliche Übersicht“ unten.",
+    "matrix_heading": "Benachrichtigungseinstellungen",
+    "matrix_description": "Wählen Sie, welche Kanäle die einzelnen Benachrichtigungstypen zustellen.",
+    "coming_soon": "Bald",
+    "save": "Speichern",
+    "saved": "Gespeichert"
   },
   "profile": {
     "title": "Profilinformationen",
