@@ -24,6 +24,7 @@ export interface TodayTask {
     priority: 'high' | 'medium' | 'low';
     dueDate: string;
     isOverdue: boolean;
+    isDueToday: boolean;
     assignedTo: string;
     workOrderId: string;
     workOrderTitle: string;

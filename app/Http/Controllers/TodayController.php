@@ -25,7 +25,7 @@ class TodayController extends Controller
         $user = $request->user();
         $team = $user->currentTeam;
 
-        if (!$team) {
+        if (! $team) {
             return Inertia::render('today', $this->emptyResponse());
         }
 
@@ -59,13 +59,13 @@ class TodayController extends Controller
 
         $priorities = [];
         if ($overdueTasks > 0) {
-            $priorities[] = "Address {$overdueTasks} overdue " . ($overdueTasks === 1 ? 'task' : 'tasks');
+            $priorities[] = "Address {$overdueTasks} overdue ".($overdueTasks === 1 ? 'task' : 'tasks');
         }
         if ($pendingApprovals > 0) {
-            $priorities[] = "Review {$pendingApprovals} pending " . ($pendingApprovals === 1 ? 'approval' : 'approvals');
+            $priorities[] = "Review {$pendingApprovals} pending ".($pendingApprovals === 1 ? 'approval' : 'approvals');
         }
         if ($upcomingDeadlines > 0) {
-            $priorities[] = "Check {$upcomingDeadlines} upcoming " . ($upcomingDeadlines === 1 ? 'deadline' : 'deadlines');
+            $priorities[] = "Check {$upcomingDeadlines} upcoming ".($upcomingDeadlines === 1 ? 'deadline' : 'deadlines');
         }
         if (empty($priorities)) {
             $priorities[] = 'Review your task list for today';
@@ -73,8 +73,8 @@ class TodayController extends Controller
         }
 
         $summary = match (true) {
-            $overdueTasks > 0 => "You have {$overdueTasks} overdue " . ($overdueTasks === 1 ? 'task' : 'tasks') . " that need attention.",
-            $pendingApprovals > 0 => "You have {$pendingApprovals} " . ($pendingApprovals === 1 ? 'approval' : 'approvals') . " waiting for review.",
+            $overdueTasks > 0 => "You have {$overdueTasks} overdue ".($overdueTasks === 1 ? 'task' : 'tasks').' that need attention.',
+            $pendingApprovals > 0 => "You have {$pendingApprovals} ".($pendingApprovals === 1 ? 'approval' : 'approvals').' waiting for review.',
             default => "You're all caught up! Check your upcoming deadlines.",
         };
 
@@ -125,7 +125,7 @@ class TodayController extends Controller
             ->assignedTo($user->id)
             ->whereIn('status', [TaskStatus::Todo, TaskStatus::InProgress])
             ->with(['workOrder.project', 'assignedTo'])
-            ->orderByRaw("CASE WHEN due_date < ? THEN 0 ELSE 1 END", [Carbon::today()])
+            ->orderByRaw('CASE WHEN due_date < ? THEN 0 WHEN due_date = ? THEN 1 ELSE 2 END', [Carbon::today(), Carbon::today()])
             ->orderBy('due_date')
             ->limit(10)
             ->get()
@@ -137,6 +137,7 @@ class TodayController extends Controller
                 'priority' => $this->getTaskPriority($task),
                 'dueDate' => $task->due_date?->toISOString() ?? '',
                 'isOverdue' => $task->due_date ? $task->due_date->lt(Carbon::today()) : false,
+                'isDueToday' => $task->due_date ? $task->due_date->isToday() : false,
                 'assignedTo' => $task->assignedTo?->name ?? 'Unassigned',
                 'workOrderId' => (string) $task->work_order_id,
                 'workOrderTitle' => $task->workOrder?->title ?? '',
@@ -343,7 +344,7 @@ class TodayController extends Controller
             $names[] = $wo->assignedTo->name;
         }
         foreach ($wo->tasks as $task) {
-            if ($task->assignedTo && !in_array($task->assignedTo->name, $names)) {
+            if ($task->assignedTo && ! in_array($task->assignedTo->name, $names)) {
                 $names[] = $task->assignedTo->name;
             }
         }
