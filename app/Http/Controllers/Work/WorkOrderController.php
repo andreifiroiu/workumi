@@ -473,19 +473,26 @@ class WorkOrderController extends Controller
             ->orderBy('name')
             ->get();
 
-        return $folders->map(fn (Folder $folder) => [
+        return $folders->map(fn (Folder $folder) => $this->formatFolder($folder))->toArray();
+    }
+
+    /**
+     * Format a single folder with its children to match the FolderNode shape.
+     *
+     * @return array<string, mixed>
+     */
+    private function formatFolder(Folder $folder): array
+    {
+        return [
             'id' => (string) $folder->id,
             'name' => $folder->name,
+            'projectId' => $folder->project_id ? (string) $folder->project_id : null,
             'parentId' => $folder->parent_id ? (string) $folder->parent_id : null,
-            'documentCount' => $folder->documents_count,
-            'children' => $folder->children->map(fn (Folder $child) => [
-                'id' => (string) $child->id,
-                'name' => $child->name,
-                'parentId' => (string) $child->parent_id,
-                'documentCount' => $child->documents_count ?? 0,
-                'children' => [],
-            ])->toArray(),
-        ])->toArray();
+            'depth' => $folder->depth(),
+            'canHaveChildren' => $folder->canHaveChildren(),
+            'documentsCount' => $folder->documents_count ?? $folder->documents()->count(),
+            'children' => $folder->children->map(fn (Folder $child) => $this->formatFolder($child))->toArray(),
+        ];
     }
 
     public function archive(Request $request, WorkOrder $workOrder, WorkflowTransitionService $service): RedirectResponse

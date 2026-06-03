@@ -99,6 +99,7 @@ import {
     PlanExecutionPanel,
 } from '@/components/pm-copilot';
 import { DraftClientUpdateButton } from '@/components/client-comms';
+import type { FolderNode } from '@/components/documents/folder-tree';
 import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
 import {
     useTriggerPMCopilot,
@@ -226,19 +227,7 @@ interface WorkOrderDetailProps {
         folderId?: string | null;
         uploadedDate?: string;
     }>;
-    folders: Array<{
-        id: string;
-        name: string;
-        parentId: string | null;
-        documentCount: number;
-        children: Array<{
-            id: string;
-            name: string;
-            parentId: string;
-            documentCount: number;
-            children: never[];
-        }>;
-    }>;
+    folders: FolderNode[];
     communicationThread: {
         id: string;
         messageCount: number;
