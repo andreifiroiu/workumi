@@ -34,7 +34,7 @@ return [
 
     'allowed_emails' => array_filter(array_map(
         'trim',
-        explode(',', (string) env('LOG_VIEWER_ALLOWED_EMAILS', 'andrei.firoiu@gmail.com'))
+        explode(',', (string) env('LOG_VIEWER_ALLOWED_EMAILS', ''))
     )),
 
     /*
