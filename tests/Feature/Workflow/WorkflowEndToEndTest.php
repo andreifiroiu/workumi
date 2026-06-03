@@ -252,8 +252,10 @@ describe('Rejection and Revision Workflow', function () {
         // Total of 3 transitions at this point
         expect($task->statusTransitions)->toHaveCount(3);
 
-        // Check the last two transitions by ID order (most reliable)
-        $allTransitions = $task->statusTransitions()->orderBy('id', 'asc')->get();
+        // Check the last two transitions by ID order (most reliable).
+        // Use reorder() to clear the relation's default orderByDesc('created_at'),
+        // which would otherwise dominate and reverse the rows.
+        $allTransitions = $task->statusTransitions()->reorder('id', 'asc')->get();
 
         // First transition: InProgress -> InReview
         expect($allTransitions[0]->from_status)->toBe('in_progress');
