@@ -73,7 +73,8 @@ import InputError from '@/components/input-error';
 import { BudgetFieldsGroup } from '@/components/budget';
 import type { BudgetType } from '@/types/work';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatusBadge, PriorityBadge, ProgressBar } from '@/components/work';
+import { StatusBadge, PriorityBadge, ProgressBar, DatePresetButtons } from '@/components/work';
+import { formatLocalDate } from '@/lib/date-utils';
 import { TaskKanbanBoard } from '@/components/work/task-kanban';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import { HoursProgressIndicator } from '@/components/time-tracking';
@@ -439,14 +440,6 @@ function SortableTaskCard({
     );
 }
 
-/** Format a Date as YYYY-MM-DD using local timezone. */
-const formatLocalDate = (date: Date): string => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-};
-
 /**
  * Calculate smart default due date based on work order due date.
  * If work order due date is within 1 week and in the future, use it.
@@ -467,35 +460,6 @@ const calculateDefaultDueDate = (workOrderDueDate: string | null): string => {
 
     // Default to 7 days from now
     return formatLocalDate(oneWeekFromNow);
-};
-
-/**
- * Get a preset date value for quick-select buttons.
- */
-const getPresetDate = (preset: 'today' | 'tomorrow' | 'nextMonday' | 'nextMonth'): string => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    switch (preset) {
-        case 'today':
-            return formatLocalDate(today);
-        case 'tomorrow': {
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return formatLocalDate(tomorrow);
-        }
-        case 'nextMonday': {
-            const nextMonday = new Date(today);
-            const daysUntilMonday = (8 - today.getDay()) % 7 || 7;
-            nextMonday.setDate(nextMonday.getDate() + daysUntilMonday);
-            return formatLocalDate(nextMonday);
-        }
-        case 'nextMonth': {
-            const nextMonth = new Date(today);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            return formatLocalDate(nextMonth);
-        }
-    }
 };
 
 export default function WorkOrderDetail({
@@ -1975,6 +1939,9 @@ export default function WorkOrderDetail({
                                         value={editForm.data.due_date}
                                         onChange={(e) => editForm.setData('due_date', e.target.value)}
                                     />
+                                    <DatePresetButtons
+                                        onSelect={(date) => editForm.setData('due_date', date)}
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Estimated Hours</Label>
@@ -2108,44 +2075,9 @@ export default function WorkOrderDetail({
                                     value={taskForm.data.dueDate}
                                     onChange={(e) => taskForm.setData('dueDate', e.target.value)}
                                 />
-                                <div className="flex flex-wrap gap-1">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('today'))}
-                                    >
-                                        Today
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('tomorrow'))}
-                                    >
-                                        Tomorrow
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('nextMonday'))}
-                                    >
-                                        Next Monday
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() => taskForm.setData('dueDate', getPresetDate('nextMonth'))}
-                                    >
-                                        Next Month
-                                    </Button>
-                                </div>
+                                <DatePresetButtons
+                                    onSelect={(date) => taskForm.setData('dueDate', date)}
+                                />
                                 <InputError message={taskForm.errors.dueDate} />
                             </div>
                             <div className="grid gap-2">

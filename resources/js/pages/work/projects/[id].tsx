@@ -40,7 +40,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import InputError from '@/components/input-error';
-import { StatusBadge, ProgressBar, ProjectTeamSection, WorkOrderListSection } from '@/components/work';
+import { StatusBadge, ProgressBar, ProjectTeamSection, WorkOrderListSection, DatePresetButtons } from '@/components/work';
 import { CommunicationsPanel } from '@/components/communications';
 import { BudgetFieldsGroup } from '@/components/budget';
 import { ProjectInsightsPanel } from '@/components/pm-copilot';
@@ -602,6 +602,9 @@ export default function ProjectDetail({
                                     onChange={(e) =>
                                         workOrderForm.setData('dueDate', e.target.value)
                                     }
+                                />
+                                <DatePresetButtons
+                                    onSelect={(date) => workOrderForm.setData('dueDate', date)}
                                 />
                                 <InputError message={workOrderForm.errors.dueDate} />
                             </div>
