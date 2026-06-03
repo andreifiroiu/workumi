@@ -79,6 +79,7 @@ describe('Complete Task Approval Workflow', function () {
             'project_id' => $this->project->id,
             'created_by_id' => $this->worker->id,
             'assigned_to_id' => $this->worker->id,
+            'reviewer_id' => $this->reviewer->id, // Deterministic reviewer for approval validation
             'status' => TaskStatus::Todo,
         ]);
 

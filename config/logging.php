@@ -1,7 +1,6 @@
 <?php
 
-use App\Logging\OtlpLogChannel;
-use App\Logging\TraceContextProcessor;
+use MarvinLabs\DiscordLogger\Logger;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -65,7 +64,6 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
-            'processors' => [TraceContextProcessor::class],
         ],
 
         'daily' => [
@@ -74,7 +72,6 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
-            'processors' => [TraceContextProcessor::class],
         ],
 
         /*'discord' => [
@@ -89,9 +86,9 @@ return [
 
         'discord' => [
             'driver' => 'custom',
-            'via'    => MarvinLabs\DiscordLogger\Logger::class,
-            'level'  => 'error',
-            'url'    => env('LOG_DISCORD_WEBHOOK_URL'),
+            'via' => Logger::class,
+            'level' => 'error',
+            'url' => env('LOG_DISCORD_WEBHOOK_URL'),
             'ignore_exceptions' => env('LOG_DISCORD_IGNORE_EXCEPTIONS', false),
         ],
 
@@ -113,7 +110,7 @@ return [
                 'port' => env('PAPERTRAIL_PORT'),
                 'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
             ],
-            'processors' => [PsrLogMessageProcessor::class, TraceContextProcessor::class],
+            'processors' => [PsrLogMessageProcessor::class],
         ],
 
         'stderr' => [
@@ -124,7 +121,7 @@ return [
                 'stream' => 'php://stderr',
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [PsrLogMessageProcessor::class, TraceContextProcessor::class],
+            'processors' => [PsrLogMessageProcessor::class],
         ],
 
         'syslog' => [
@@ -138,23 +135,6 @@ return [
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
-        ],
-
-        /*
-        |--------------------------------------------------------------------------
-        | OpenTelemetry OTLP Log Channel
-        |--------------------------------------------------------------------------
-        |
-        | This channel exports logs via OTLP to your observability backend
-        | (Jaeger, Grafana Tempo, etc.) for correlation with traces.
-        | Add 'otlp' to LOG_STACK to enable: LOG_STACK=single,otlp
-        |
-        */
-
-        'otlp' => [
-            'driver' => 'custom',
-            'via' => OtlpLogChannel::class,
-            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'null' => [

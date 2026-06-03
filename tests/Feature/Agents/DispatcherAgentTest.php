@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Agents\BaseAgent;
 use App\Agents\DispatcherAgent;
 use App\Agents\Tools\CreateDraftWorkOrderTool;
 use App\Agents\Tools\GetPlaybooksTool;
 use App\Agents\Tools\GetTeamCapacityTool;
 use App\Agents\Tools\GetTeamSkillsTool;
+use App\Agents\Workflows\BaseAgentWorkflow;
 use App\Agents\Workflows\DispatcherWorkflow;
 use App\Contracts\Tools\ToolInterface;
 use App\Enums\AgentType;
@@ -75,8 +77,8 @@ beforeEach(function () {
         'require_approval_scope_changes' => false,
     ]);
 
-    $this->registry = new ToolRegistry();
-    $this->budgetService = new AgentBudgetService();
+    $this->registry = new ToolRegistry;
+    $this->budgetService = new AgentBudgetService;
     $this->gateway = new ToolGateway($this->registry);
 });
 
@@ -88,7 +90,7 @@ test('DispatcherAgent extends BaseAgent and returns dispatcher-specific instruct
         $this->budgetService
     );
 
-    expect($dispatcherAgent)->toBeInstanceOf(\App\Agents\BaseAgent::class);
+    expect($dispatcherAgent)->toBeInstanceOf(BaseAgent::class);
 
     $instructions = $dispatcherAgent->instructions();
     expect($instructions)->toBeString();
@@ -97,10 +99,10 @@ test('DispatcherAgent extends BaseAgent and returns dispatcher-specific instruct
 
 test('DispatcherAgent returns dispatcher-specific tools', function () {
     // Register the dispatcher tools first
-    $this->registry->register(new GetTeamSkillsTool());
-    $this->registry->register(new GetTeamCapacityTool());
-    $this->registry->register(new CreateDraftWorkOrderTool());
-    $this->registry->register(new GetPlaybooksTool());
+    $this->registry->register(new GetTeamSkillsTool);
+    $this->registry->register(new GetTeamCapacityTool);
+    $this->registry->register(new CreateDraftWorkOrderTool);
+    $this->registry->register(new GetPlaybooksTool);
 
     $dispatcherAgent = new DispatcherAgent(
         $this->agent,
@@ -112,12 +114,13 @@ test('DispatcherAgent returns dispatcher-specific tools', function () {
     $tools = $dispatcherAgent->getLaboTools();
     expect($tools)->toBeArray();
 
-    // Verify dispatcher tools are available
+    // The dispatcher is an analyzer with READ-ONLY tools only. Entity creation
+    // is performed by the caller, so write tools must not be exposed here.
     $toolNames = array_map(fn ($tool) => $tool->name(), $tools);
     expect($toolNames)->toContain('get-team-skills');
     expect($toolNames)->toContain('get-team-capacity');
-    expect($toolNames)->toContain('create-draft-work-order');
     expect($toolNames)->toContain('get-playbooks');
+    expect($toolNames)->not->toContain('create-draft-work-order');
 });
 
 test('DispatcherWorkflow extends BaseAgentWorkflow with correct identifier', function () {
@@ -126,17 +129,17 @@ test('DispatcherWorkflow extends BaseAgentWorkflow with correct identifier', fun
 
     $workflow = new DispatcherWorkflow($orchestrator, $approvalService);
 
-    expect($workflow)->toBeInstanceOf(\App\Agents\Workflows\BaseAgentWorkflow::class);
+    expect($workflow)->toBeInstanceOf(BaseAgentWorkflow::class);
     expect($workflow->getIdentifier())->toBe('dispatcher-workflow');
     expect($workflow->getDescription())->toContain('routes');
 });
 
 test('Dispatcher tools implement ToolInterface correctly', function () {
     $tools = [
-        new GetTeamSkillsTool(),
-        new GetTeamCapacityTool(),
-        new CreateDraftWorkOrderTool(),
-        new GetPlaybooksTool(),
+        new GetTeamSkillsTool,
+        new GetTeamCapacityTool,
+        new CreateDraftWorkOrderTool,
+        new GetPlaybooksTool,
     ];
 
     foreach ($tools as $tool) {
@@ -179,7 +182,7 @@ test('GetTeamSkillsTool returns team member skills with proficiency', function (
         'proficiency' => 1, // Basic
     ]);
 
-    $tool = new GetTeamSkillsTool();
+    $tool = new GetTeamSkillsTool;
     $result = $tool->execute(['team_id' => $this->team->id]);
 
     expect($result)->toBeArray();
@@ -208,7 +211,7 @@ test('GetTeamCapacityTool returns capacity information for team members', functi
     $this->team->addUser($member1, 'member');
     $this->team->addUser($member2, 'member');
 
-    $tool = new GetTeamCapacityTool();
+    $tool = new GetTeamCapacityTool;
     $result = $tool->execute(['team_id' => $this->team->id]);
 
     expect($result)->toBeArray();
