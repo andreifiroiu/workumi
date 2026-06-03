@@ -148,15 +148,15 @@ return [
             'name' => ucfirst(env('APP_ENV', 'local')),
         ],
 
-        'staging' => [
-            'name' => 'Staging Workumi',
-            'host' => 'https://workumi.netinteraction.biz/log-viewer',
-            'auth' => [      // Example of HTTP Basic auth
-                'username' => 'admin',
-                'password' => 'Andrei#44',
-            ],
-            'verify_server_certificate' => true,
-        ],
+        // 'staging' => [
+        //    'name' => 'Staging Workumi',
+        //    'host' => 'https://workumi.netinteraction.biz/log-viewer',
+        //    'auth' => [      // Example of HTTP Basic auth
+        //        'username' => 'admin',
+        //         'password' => '',
+        //    ],
+        //    'verify_server_certificate' => true,
+        //],
         //
         // 'production' => [
         //     'name' => 'Production',
