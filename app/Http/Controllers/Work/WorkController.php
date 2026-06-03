@@ -185,7 +185,7 @@ class WorkController extends Controller
         return WorkOrder::forTeam($team->id)
             ->whereUserHasRaciRole($user->id, excludeInformed: ! $showInformed)
             ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled])
-            ->with(['project', 'assignedTo', 'createdBy'])
+            ->with(['project', 'assignedTo', 'createdBy', 'tasks'])
             ->orderBy('due_date')
             ->get()
             ->map(fn (WorkOrder $wo) => [
@@ -199,7 +199,7 @@ class WorkController extends Controller
                 'status' => $wo->status->value,
                 'priority' => $wo->priority->value,
                 'dueDate' => $wo->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $wo->estimated_hours,
+                'estimatedHours' => $wo->effective_estimated_hours,
                 'actualHours' => (float) $wo->actual_hours,
                 'acceptanceCriteria' => $wo->acceptance_criteria ?? [],
                 'sopAttached' => $wo->sop_attached,
@@ -328,7 +328,7 @@ class WorkController extends Controller
                 'status' => $wo->status->value,
                 'priority' => $wo->priority->value,
                 'dueDate' => $wo->due_date?->format('Y-m-d'),
-                'estimatedHours' => (float) $wo->estimated_hours,
+                'estimatedHours' => $wo->effective_estimated_hours,
                 'actualHours' => (float) $wo->actual_hours,
                 'acceptanceCriteria' => $wo->acceptance_criteria ?? [],
                 'sopAttached' => $wo->sop_attached,

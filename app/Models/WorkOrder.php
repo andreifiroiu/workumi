@@ -314,6 +314,21 @@ class WorkOrder extends Model
         return $this->tasks()->where('status', 'done')->count();
     }
 
+    /**
+     * Effective estimated hours: the manually entered value when present,
+     * otherwise the live sum of the work order's task estimates.
+     */
+    public function getEffectiveEstimatedHoursAttribute(): float
+    {
+        if ($this->estimated_hours !== null) {
+            return (float) $this->estimated_hours;
+        }
+
+        return (float) ($this->relationLoaded('tasks')
+            ? $this->tasks->sum('estimated_hours')
+            : $this->tasks()->sum('estimated_hours'));
+    }
+
     public function recalculateActualHours(): void
     {
         $this->actual_hours = $this->tasks()->sum('actual_hours');
