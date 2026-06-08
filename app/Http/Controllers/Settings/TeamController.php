@@ -28,7 +28,7 @@ class TeamController extends Controller
             ];
         });
 
-        return Inertia::render('settings/teams/index', [
+        return Inertia::render('account/teams/index', [
             'teams' => $teams,
             'currentTeamId' => Auth::user()->current_team_id,
         ]);
@@ -49,7 +49,7 @@ class TeamController extends Controller
 
         Auth::user()->switchTeam($team);
 
-        return redirect()->route('teams.index')
+        return redirect()->route('account.teams.index')
             ->with('status', 'Team created successfully.');
     }
 
@@ -78,7 +78,7 @@ class TeamController extends Controller
 
         if (Auth::user()->allTeams()->count() <= 1) {
             return back()->withErrors([
-                'team' => 'You cannot delete your only team.'
+                'team' => 'You cannot delete your only team.',
             ]);
         }
 
@@ -94,7 +94,7 @@ class TeamController extends Controller
 
         $team->delete();
 
-        return redirect()->route('teams.index')
+        return redirect()->route('account.teams.index')
             ->with('status', 'Team deleted successfully.');
     }
 
