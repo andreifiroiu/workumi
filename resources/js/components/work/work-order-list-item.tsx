@@ -1,10 +1,13 @@
-import { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, MoreVertical, FolderMinus, Edit, Trash2, AlertTriangle, Archive, ArchiveRestore, PackageCheck, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,17 +20,28 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { workOrderStatusLabels, type WorkOrderStatus } from '@/components/ui/status-badge';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import type { WorkOrderInList } from '@/types/work';
+    workOrderStatusLabels,
+    type WorkOrderStatus,
+} from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
+import type { WorkOrderInList } from '@/types/work';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Link, router } from '@inertiajs/react';
+import {
+    AlertTriangle,
+    Archive,
+    ArchiveRestore,
+    Edit,
+    FolderMinus,
+    GripVertical,
+    MoreVertical,
+    PackageCheck,
+    RefreshCw,
+    Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface WorkOrderListItemProps {
     workOrder: WorkOrderInList;
@@ -78,10 +92,17 @@ export function WorkOrderListItem({
         !completedStatuses.includes(workOrder.status);
 
     const handleArchive = () => {
-        router.post(`/work/work-orders/${workOrder.id}/archive`, {}, {
-            preserveScroll: true,
-            onError: (errors) => setActionError(errors.tasks ?? 'Failed to archive work order.'),
-        });
+        router.post(
+            `/work/work-orders/${workOrder.id}/archive`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setActionError(
+                        errors.tasks ?? 'Failed to archive work order.',
+                    ),
+            },
+        );
     };
 
     const handleStatusChange = (status: string) => {
@@ -91,7 +112,7 @@ export function WorkOrderListItem({
         router.patch(
             `/work/work-orders/${workOrder.id}/status`,
             { status },
-            { preserveScroll: true }
+            { preserveScroll: true },
         );
     };
 
@@ -101,20 +122,28 @@ export function WorkOrderListItem({
             {},
             {
                 preserveScroll: true,
-                onError: (errors) => setActionError(errors.tasks ?? 'Failed to deliver and archive work order.'),
-            }
+                onError: (errors) =>
+                    setActionError(
+                        errors.tasks ??
+                            'Failed to deliver and archive work order.',
+                    ),
+            },
         );
     };
 
     const handleUnarchive = () => {
-        router.post(`/work/work-orders/${workOrder.id}/restore`, {}, { preserveScroll: true });
+        router.post(
+            `/work/work-orders/${workOrder.id}/restore`,
+            {},
+            { preserveScroll: true },
+        );
     };
 
     const handleRemoveFromList = () => {
         router.post(
             `/work/work-orders/${workOrder.id}/remove-from-list`,
             {},
-            { preserveScroll: true }
+            { preserveScroll: true },
         );
     };
 
@@ -141,19 +170,19 @@ export function WorkOrderListItem({
             ref={setNodeRef}
             style={style}
             className={cn(
-                'flex items-center gap-2 p-3 bg-card border rounded-lg group',
+                'group flex items-center gap-2 rounded-lg border bg-card p-3',
                 isArchived
-                    ? 'opacity-50 bg-muted/50 border-border'
+                    ? 'border-border bg-muted/50 opacity-50'
                     : isOverdue
-                        ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20'
-                        : 'border-border',
+                      ? 'border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20'
+                      : 'border-border',
                 isDragging && 'opacity-50',
-                isDragOverlay && 'shadow-lg'
+                isDragOverlay && 'shadow-lg',
             )}
         >
             {/* Drag Handle */}
             <button
-                className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
+                className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
                 {...attributes}
                 {...listeners}
             >
@@ -163,13 +192,15 @@ export function WorkOrderListItem({
             {/* Work Order Info */}
             <Link
                 href={`/work/work-orders/${workOrder.id}`}
-                className="flex-1 min-w-0 hover:text-primary transition-colors"
+                className="min-w-0 flex-1 transition-colors hover:text-primary"
             >
-                <div className="flex items-center gap-2 mb-1">
+                <div className="mb-1 flex items-center gap-2">
                     {isOverdue && (
                         <AlertTriangle className="h-4 w-4 flex-shrink-0 text-red-500 dark:text-red-400" />
                     )}
-                    <span className="font-medium truncate">{workOrder.title}</span>
+                    <span className="truncate font-medium">
+                        {workOrder.title}
+                    </span>
                     <Badge variant="outline" className="flex-shrink-0">
                         {workOrder.status}
                     </Badge>
@@ -185,14 +216,23 @@ export function WorkOrderListItem({
                         </Badge>
                     )}
                 </div>
-                <div className="text-sm text-muted-foreground truncate">
-                    {workOrder.assignedToName} •{' '}
-                    {workOrder.completedTasksCount}/{workOrder.tasksCount} tasks
+                <div className="truncate text-sm text-muted-foreground">
+                    {workOrder.assignedToName} • {workOrder.completedTasksCount}
+                    /{workOrder.tasksCount} tasks
                     {workOrder.dueDate && (
                         <>
                             {' • '}
-                            <span className={isOverdue ? 'text-red-500 dark:text-red-400 font-medium' : ''}>
-                                Due {new Date(workOrder.dueDate).toLocaleDateString()}
+                            <span
+                                className={
+                                    isOverdue
+                                        ? 'font-medium text-red-500 dark:text-red-400'
+                                        : ''
+                                }
+                            >
+                                Due{' '}
+                                {new Date(
+                                    workOrder.dueDate,
+                                ).toLocaleDateString()}
                             </span>
                         </>
                     )}
@@ -205,7 +245,7 @@ export function WorkOrderListItem({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="h-6 w-6 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     >
                         <MoreVertical className="h-4 w-4" />
                     </Button>
@@ -213,14 +253,14 @@ export function WorkOrderListItem({
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
                         <Link href={`/work/work-orders/${workOrder.id}`}>
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="mr-2 h-4 w-4" />
                             Edit Work Order
                         </Link>
                     </DropdownMenuItem>
                     {!isArchived && (
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
-                                <RefreshCw className="h-4 w-4 mr-2" />
+                                <RefreshCw className="mr-2 h-4 w-4" />
                                 Change Status
                             </DropdownMenuSubTrigger>
                             <DropdownMenuSubContent>
@@ -229,7 +269,10 @@ export function WorkOrderListItem({
                                     onValueChange={handleStatusChange}
                                 >
                                     {selectableStatuses.map((status) => (
-                                        <DropdownMenuRadioItem key={status} value={status}>
+                                        <DropdownMenuRadioItem
+                                            key={status}
+                                            value={status}
+                                        >
                                             {workOrderStatusLabels[status]}
                                         </DropdownMenuRadioItem>
                                     ))}
@@ -239,18 +282,18 @@ export function WorkOrderListItem({
                     )}
                     {!isArchived && (
                         <DropdownMenuItem onClick={handleDeliverAndArchive}>
-                            <PackageCheck className="h-4 w-4 mr-2" />
+                            <PackageCheck className="mr-2 h-4 w-4" />
                             Mark as Delivered & Archive
                         </DropdownMenuItem>
                     )}
                     {isArchived ? (
                         <DropdownMenuItem onClick={handleUnarchive}>
-                            <ArchiveRestore className="h-4 w-4 mr-2" />
+                            <ArchiveRestore className="mr-2 h-4 w-4" />
                             Unarchive
                         </DropdownMenuItem>
                     ) : (
                         <DropdownMenuItem onClick={handleArchive}>
-                            <Archive className="h-4 w-4 mr-2" />
+                            <Archive className="mr-2 h-4 w-4" />
                             Archive
                         </DropdownMenuItem>
                     )}
@@ -259,14 +302,14 @@ export function WorkOrderListItem({
                         onClick={() => setDeleteDialogOpen(true)}
                         className="text-destructive focus:text-destructive"
                     >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Delete Work Order
                     </DropdownMenuItem>
                     {listId && (
                         <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleRemoveFromList}>
-                                <FolderMinus className="h-4 w-4 mr-2" />
+                                <FolderMinus className="mr-2 h-4 w-4" />
                                 Remove from List
                             </DropdownMenuItem>
                         </>
@@ -280,24 +323,29 @@ export function WorkOrderListItem({
                     <DialogHeader>
                         <DialogTitle>Delete Work Order</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{workOrder.title}"? This action cannot be undone. All associated tasks and deliverables will also be deleted.
+                            Are you sure you want to delete "{workOrder.title}"?
+                            This action cannot be undone. All associated tasks
+                            and deliverables will also be deleted.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                        >
                             Cancel
                         </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                        >
+                        <Button variant="destructive" onClick={handleDelete}>
                             Delete
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={actionError !== null} onOpenChange={(open) => !open && setActionError(null)}>
+            <Dialog
+                open={actionError !== null}
+                onOpenChange={(open) => !open && setActionError(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Cannot complete work order</DialogTitle>

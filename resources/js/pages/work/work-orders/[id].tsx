@@ -1,52 +1,19 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { BudgetFieldsGroup } from '@/components/budget';
+import { DraftClientUpdateButton } from '@/components/client-comms';
+import { CommunicationsPanel } from '@/components/communications';
+import type { FolderNode } from '@/components/documents/folder-tree';
+import InputError from '@/components/input-error';
 import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-    useSortable,
-    arrayMove,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
-    ArrowLeft,
-    Calendar,
-    Clock,
-    User,
-    Plus,
-    MoreVertical,
-    MessageSquare,
-    FileText,
-    Edit,
-    Trash2,
-    CheckCircle2,
-    ExternalLink,
-    X,
-    History,
-    AlertTriangle,
-    Users,
-    RefreshCw,
-    ArrowUpCircle,
-    GripVertical,
-    List,
-    LayoutGrid,
-    Archive,
-    ArchiveRestore,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+    PlanAlternativesPanel,
+    PlanExecutionPanel,
+    PMCopilotSettingsToggle,
+    PMCopilotTriggerButton,
+} from '@/components/pm-copilot';
+import { HoursProgressIndicator } from '@/components/time-tracking';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -62,6 +29,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -69,52 +38,88 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
-import { BudgetFieldsGroup } from '@/components/budget';
-import type { BudgetType } from '@/types/work';
+import { workOrderStatusLabels } from '@/components/ui/status-badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatusBadge, PriorityBadge, ProgressBar, DatePresetButtons } from '@/components/work';
-import { TaskKanbanBoard } from '@/components/work/task-kanban';
-import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
-import { HoursProgressIndicator } from '@/components/time-tracking';
-import { CommunicationsPanel } from '@/components/communications';
+import { Textarea } from '@/components/ui/textarea';
 import {
+    DatePresetButtons,
+    PriorityBadge,
+    ProgressBar,
+    StatusBadge,
+} from '@/components/work';
+import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
+import { TaskKanbanBoard } from '@/components/work/task-kanban';
+import {
+    AssignmentConfirmationDialog,
+    RaciSelector,
     TransitionButton,
     TransitionDialog,
     TransitionHistory,
-    RaciSelector,
-    AssignmentConfirmationDialog,
-    type TransitionOption,
-    type StatusTransition,
-    type RaciValue,
-    type RaciUser,
-    type RaciRole,
     type AssignmentChange,
+    type RaciRole,
+    type RaciUser,
+    type RaciValue,
+    type StatusTransition,
+    type TransitionOption,
 } from '@/components/workflow';
-import { workOrderStatusLabels } from '@/components/ui/status-badge';
 import {
-    PMCopilotTriggerButton,
-    PlanAlternativesPanel,
-    PMCopilotSettingsToggle,
-    PlanExecutionPanel,
-} from '@/components/pm-copilot';
-import { DraftClientUpdateButton } from '@/components/client-comms';
-import type { FolderNode } from '@/components/documents/folder-tree';
-import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
-import {
-    useTriggerPMCopilot,
-    usePMCopilotSuggestions,
     useApproveSuggestion,
-    useRejectSuggestion,
-    useDelegatePlan,
     useConfirmAssignments,
+    useDelegatePlan,
+    usePMCopilotSuggestions,
+    useRejectSuggestion,
+    useTriggerPMCopilot,
 } from '@/hooks/use-pm-copilot';
 import { useRecentAssignees } from '@/hooks/use-recent-assignees';
-import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { BreadcrumbItem } from '@/types';
+import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { calculateDefaultDueDate } from '@/lib/date-utils';
+import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
+import type { BreadcrumbItem } from '@/types';
+import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
+import type { BudgetType } from '@/types/work';
+import {
+    closestCenter,
+    DndContext,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import {
+    AlertTriangle,
+    Archive,
+    ArchiveRestore,
+    ArrowLeft,
+    ArrowUpCircle,
+    Calendar,
+    CheckCircle2,
+    Clock,
+    Edit,
+    ExternalLink,
+    FileText,
+    GripVertical,
+    History,
+    LayoutGrid,
+    List,
+    MessageSquare,
+    MoreVertical,
+    Plus,
+    RefreshCw,
+    Trash2,
+    User,
+    Users,
+    X,
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 /**
  * Team member type
@@ -174,7 +179,12 @@ interface WorkOrderWithRaci {
     pmCopilotMode?: PMCopilotMode;
     pmCopilotSuggestions?: {
         workOrderId: string;
-        workflowState: { status: string; currentStep: string | null; progress: number; error: string | null };
+        workflowState: {
+            status: string;
+            currentStep: string | null;
+            progress: number;
+            error: string | null;
+        };
         alternatives: PlanAlternative[];
         approvedAlternativeId?: string | null;
         rejectedAlternativeIds?: string[];
@@ -258,12 +268,18 @@ interface WorkOrderDetailProps {
 interface SortableTaskCardProps {
     task: WorkOrderDetailProps['tasks'][0];
     completingTaskId: string | null;
-    onQuickComplete: (taskId: string, currentStatus: string, e: React.MouseEvent) => void;
+    onQuickComplete: (
+        taskId: string,
+        currentStatus: string,
+        e: React.MouseEvent,
+    ) => void;
     onStatusChange: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onPromote: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onDelete: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onArchive: (task: WorkOrderDetailProps['tasks'][0]) => void;
-    getStatusOptions: (currentStatus: string) => Array<{ value: string; label: string }>;
+    getStatusOptions: (
+        currentStatus: string,
+    ) => Array<{ value: string; label: string }>;
 }
 
 function SortableTaskCard({
@@ -276,7 +292,14 @@ function SortableTaskCard({
     onArchive,
     getStatusOptions,
 }: SortableTaskCardProps) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: task.id });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -290,8 +313,8 @@ function SortableTaskCard({
             style={style}
             className={`rounded-lg border p-4 transition-colors ${
                 task.status === 'archived'
-                    ? 'bg-muted/50 border-border opacity-50'
-                    : 'bg-card border-border hover:border-primary/50'
+                    ? 'border-border bg-muted/50 opacity-50'
+                    : 'border-border bg-card hover:border-primary/50'
             }`}
         >
             <div className="flex items-start gap-3">
@@ -315,12 +338,14 @@ function SortableTaskCard({
                     }
                     className={`mt-1 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
                         task.status === 'done'
-                            ? 'bg-primary border-primary'
-                            : task.status === 'cancelled' || task.status === 'in_review' || task.status === 'blocked'
-                              ? 'border-muted bg-muted cursor-not-allowed'
+                            ? 'border-primary bg-primary'
+                            : task.status === 'cancelled' ||
+                                task.status === 'in_review' ||
+                                task.status === 'blocked'
+                              ? 'cursor-not-allowed border-muted bg-muted'
                               : completingTaskId === task.id
-                                ? 'border-primary animate-pulse'
-                                : 'border-muted-foreground hover:border-primary hover:bg-primary/10 cursor-pointer'
+                                ? 'animate-pulse border-primary'
+                                : 'cursor-pointer border-muted-foreground hover:border-primary hover:bg-primary/10'
                     }`}
                     aria-label={
                         task.status === 'done'
@@ -332,29 +357,46 @@ function SortableTaskCard({
                                 : 'Mark task as done'
                     }
                 >
-                    {task.status === 'done' && <CheckCircle2 className="text-primary-foreground h-3 w-3" />}
+                    {task.status === 'done' && (
+                        <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
+                    )}
                 </button>
-                <Link href={`/work/tasks/${task.id}`} className="min-w-0 flex-1">
+                <Link
+                    href={`/work/tasks/${task.id}`}
+                    className="min-w-0 flex-1"
+                >
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                         <span
                             className={`font-medium ${
-                                task.status === 'done' ? 'text-muted-foreground line-through' : ''
+                                task.status === 'done'
+                                    ? 'text-muted-foreground line-through'
+                                    : ''
                             }`}
                         >
                             {task.title}
                         </span>
                         <StatusBadge status={task.status} type="task" />
-                        {task.isBlocked && <Badge variant="destructive">Blocked</Badge>}
+                        {task.isBlocked && (
+                            <Badge variant="destructive">Blocked</Badge>
+                        )}
                     </div>
-                    <div className="text-muted-foreground text-sm">
-                        {task.assignedAgentName ? `${task.assignedAgentName} (AI)` : task.assignedToName} - {task.checklistItems.filter((i) => i.completed).length}/
-                        {task.checklistItems.length} items - {task.actualHours}/{task.estimatedHours}h
+                    <div className="text-sm text-muted-foreground">
+                        {task.assignedAgentName
+                            ? `${task.assignedAgentName} (AI)`
+                            : task.assignedToName}{' '}
+                        -{' '}
+                        {task.checklistItems.filter((i) => i.completed).length}/
+                        {task.checklistItems.length} items - {task.actualHours}/
+                        {task.estimatedHours}h
                         {task.dueDate && (
-                            <span className={
-                                new Date(task.dueDate) < new Date() && task.status !== 'done'
-                                    ? 'text-destructive font-medium'
-                                    : ''
-                            }>
+                            <span
+                                className={
+                                    new Date(task.dueDate) < new Date() &&
+                                    task.status !== 'done'
+                                        ? 'font-medium text-destructive'
+                                        : ''
+                                }
+                            >
                                 {` - Due ${new Date(task.dueDate).toLocaleDateString()}`}
                             </span>
                         )}
@@ -450,22 +492,30 @@ export default function WorkOrderDetail({
 }: WorkOrderDetailProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
-    const [createDeliverableDialogOpen, setCreateDeliverableDialogOpen] = useState(false);
-    const [editDeliverableDialogOpen, setEditDeliverableDialogOpen] = useState(false);
-    const [deleteDeliverableDialogOpen, setDeleteDeliverableDialogOpen] = useState(false);
-    const [selectedDeliverable, setSelectedDeliverable] = useState<typeof deliverables[0] | null>(null);
+    const [createDeliverableDialogOpen, setCreateDeliverableDialogOpen] =
+        useState(false);
+    const [editDeliverableDialogOpen, setEditDeliverableDialogOpen] =
+        useState(false);
+    const [deleteDeliverableDialogOpen, setDeleteDeliverableDialogOpen] =
+        useState(false);
+    const [selectedDeliverable, setSelectedDeliverable] = useState<
+        (typeof deliverables)[0] | null
+    >(null);
     const [newCriterion, setNewCriterion] = useState('');
     const [editCriterion, setEditCriterion] = useState('');
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
 
     // Workflow state
     const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
-    const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
+    const [selectedTransition, setSelectedTransition] = useState<string | null>(
+        null,
+    );
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionError, setTransitionError] = useState<string | null>(null);
     const [localStatus, setLocalStatus] = useState(workOrder.status);
     const [localTransitions, setLocalTransitions] = useState(statusTransitions);
-    const [localAllowedTransitions, setLocalAllowedTransitions] = useState(allowedTransitions);
+    const [localAllowedTransitions, setLocalAllowedTransitions] =
+        useState(allowedTransitions);
 
     // RACI state
     const [localRaciValue, setLocalRaciValue] = useState<RaciValue>(
@@ -474,7 +524,7 @@ export default function WorkOrderDetail({
             accountable_id: workOrder.accountableId ?? null,
             consulted_ids: workOrder.consultedIds ?? [],
             informed_ids: workOrder.informedIds ?? [],
-        }
+        },
     );
     const [isUpdatingRaci, setIsUpdatingRaci] = useState(false);
     const [raciError, setRaciError] = useState<string | null>(null);
@@ -486,47 +536,69 @@ export default function WorkOrderDetail({
     } | null>(null);
 
     // Quick task completion state
-    const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+    const [completingTaskId, setCompletingTaskId] = useState<string | null>(
+        null,
+    );
 
     // Task drag-and-drop state
     const [localTasks, setLocalTasks] = useState(tasks);
-    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    );
 
     // Task context menu state
-    type TaskType = typeof tasks[0];
+    type TaskType = (typeof tasks)[0];
     const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-    const [taskTransitionDialogOpen, setTaskTransitionDialogOpen] = useState(false);
+    const [taskTransitionDialogOpen, setTaskTransitionDialogOpen] =
+        useState(false);
 
     // Task view mode state (list vs board)
     const [taskView, setTaskView] = useState<'list' | 'board'>('list');
     const [taskPromoteDialogOpen, setTaskPromoteDialogOpen] = useState(false);
     const [taskDeleteDialogOpen, setTaskDeleteDialogOpen] = useState(false);
-    const [selectedTaskTransition, setSelectedTaskTransition] = useState<string | null>(null);
+    const [selectedTaskTransition, setSelectedTaskTransition] = useState<
+        string | null
+    >(null);
     const [isTaskTransitioning, setIsTaskTransitioning] = useState(false);
-    const [taskTransitionError, setTaskTransitionError] = useState<string | null>(null);
+    const [taskTransitionError, setTaskTransitionError] = useState<
+        string | null
+    >(null);
 
     // Task archive state
     const [showArchivedTasks, setShowArchivedTasks] = useState(false);
 
     // PM Copilot state
-    const [pmCopilotMode, setPMCopilotMode] = useState<PMCopilotMode>(workOrder.pmCopilotMode ?? 'full');
-    const [approvedAlternativeId, setApprovedAlternativeId] = useState<string | null>(
-        workOrder.pmCopilotSuggestions?.approvedAlternativeId ?? null
+    const [pmCopilotMode, setPMCopilotMode] = useState<PMCopilotMode>(
+        workOrder.pmCopilotMode ?? 'full',
     );
-    const [rejectedAlternativeIds, setRejectedAlternativeIds] = useState<string[]>(
-        workOrder.pmCopilotSuggestions?.rejectedAlternativeIds ?? []
+    const [approvedAlternativeId, setApprovedAlternativeId] = useState<
+        string | null
+    >(workOrder.pmCopilotSuggestions?.approvedAlternativeId ?? null);
+    const [rejectedAlternativeIds, setRejectedAlternativeIds] = useState<
+        string[]
+    >(workOrder.pmCopilotSuggestions?.rejectedAlternativeIds ?? []);
+    const [pmCopilotFeedback, setPmCopilotFeedback] = useState<string | null>(
+        null,
     );
-    const [pmCopilotFeedback, setPmCopilotFeedback] = useState<string | null>(null);
     const [pmCopilotError, setPmCopilotError] = useState<string | null>(null);
     const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
     // PM Copilot hooks
     const { trigger: triggerPMCopilot } = useTriggerPMCopilot();
-    const { data: pmCopilotData, fetch: fetchSuggestions } = usePMCopilotSuggestions(workOrder.id);
-    const { approve: approveSuggestion, isLoading: isApproving } = useApproveSuggestion(workOrder.id);
-    const { reject: rejectSuggestion, isLoading: isRejecting } = useRejectSuggestion(workOrder.id);
-    const { delegate: delegatePlan, isLoading: isDelegating, suggestions: aiSuggestions, error: delegationError } = useDelegatePlan(workOrder.id);
-    const { confirm: confirmAssignments, isLoading: isConfirmingAssignments } = useConfirmAssignments(workOrder.id);
+    const { data: pmCopilotData, fetch: fetchSuggestions } =
+        usePMCopilotSuggestions(workOrder.id);
+    const { approve: approveSuggestion, isLoading: isApproving } =
+        useApproveSuggestion(workOrder.id);
+    const { reject: rejectSuggestion, isLoading: isRejecting } =
+        useRejectSuggestion(workOrder.id);
+    const {
+        delegate: delegatePlan,
+        isLoading: isDelegating,
+        suggestions: aiSuggestions,
+        error: delegationError,
+    } = useDelegatePlan(workOrder.id);
+    const { confirm: confirmAssignments, isLoading: isConfirmingAssignments } =
+        useConfirmAssignments(workOrder.id);
 
     // Get suggestions from either prop or fetched data
     const suggestions = workOrder.pmCopilotSuggestions ?? pmCopilotData;
@@ -540,7 +612,8 @@ export default function WorkOrderDetail({
             setApprovedAlternativeId(resolved);
         }
 
-        const rejectedFromProps = workOrder.pmCopilotSuggestions?.rejectedAlternativeIds;
+        const rejectedFromProps =
+            workOrder.pmCopilotSuggestions?.rejectedAlternativeIds;
         const rejectedFromFetch = pmCopilotData?.rejectedAlternativeIds;
         const resolvedRejected = rejectedFromProps ?? rejectedFromFetch ?? [];
         if (resolvedRejected.length > 0) {
@@ -558,7 +631,10 @@ export default function WorkOrderDetail({
         {
             title: workOrder.projectName,
             href: `/work/projects/${workOrder.projectId}`,
-            siblings: siblingProjects.map((p) => ({ title: p.name, href: `/work/projects/${p.id}` })),
+            siblings: siblingProjects.map((p) => ({
+                title: p.name,
+                href: `/work/projects/${p.id}`,
+            })),
         },
         ...(workOrder.workOrderListName
             ? [
@@ -575,7 +651,10 @@ export default function WorkOrderDetail({
         {
             title: workOrder.title,
             href: `/work/work-orders/${workOrder.id}`,
-            siblings: siblingWorkOrders.map((wo) => ({ title: wo.title, href: `/work/work-orders/${wo.id}` })),
+            siblings: siblingWorkOrders.map((wo) => ({
+                title: wo.title,
+                href: `/work/work-orders/${wo.id}`,
+            })),
         },
     ];
 
@@ -586,7 +665,9 @@ export default function WorkOrderDetail({
         priority: workOrder.priority as 'low' | 'medium' | 'high' | 'urgent',
         due_date: workOrder.dueDate || '',
         estimated_hours: workOrder.estimatedHoursManual?.toString() ?? '',
-        budget_type: (workOrder.budgetType ?? undefined) as BudgetType | undefined,
+        budget_type: (workOrder.budgetType ?? undefined) as
+            | BudgetType
+            | undefined,
         budget_cost: workOrder.budgetCost?.toString() || '',
         budget_hours: workOrder.budgetHours?.toString() || '',
         reason: '',
@@ -604,7 +685,8 @@ export default function WorkOrderDetail({
         estimatedHours: '',
     });
 
-    const { recentIds: recentAssigneeIds, recordAssignee } = useRecentAssignees();
+    const { recentIds: recentAssigneeIds, recordAssignee } =
+        useRecentAssignees();
 
     const deliverableForm = useForm({
         title: '',
@@ -640,7 +722,7 @@ export default function WorkOrderDetail({
                 id: parseInt(member.id, 10),
                 name: member.name,
             })),
-        [teamMembers]
+        [teamMembers],
     );
 
     // Sync local state with props
@@ -689,7 +771,9 @@ export default function WorkOrderDetail({
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-XSRF-TOKEN': getCsrfToken(),
                     },
-                    body: JSON.stringify({ taskIds: newOrder.map((t) => t.id) }),
+                    body: JSON.stringify({
+                        taskIds: newOrder.map((t) => t.id),
+                    }),
                 });
             } catch (error) {
                 // Revert on error
@@ -697,7 +781,7 @@ export default function WorkOrderDetail({
                 console.error('Failed to reorder tasks:', error);
             }
         },
-        [localTasks, workOrder.id, tasks]
+        [localTasks, workOrder.id, tasks],
     );
 
     const handleUpdateWorkOrder = (e: React.FormEvent) => {
@@ -753,13 +837,22 @@ export default function WorkOrderDetail({
         });
     };
 
-    const handleEditDeliverable = (deliverable: typeof deliverables[0]) => {
+    const handleEditDeliverable = (deliverable: (typeof deliverables)[0]) => {
         setSelectedDeliverable(deliverable);
         editDeliverableForm.setData({
             title: deliverable.title,
             description: deliverable.description || '',
-            type: deliverable.type as 'document' | 'design' | 'report' | 'code' | 'other',
-            status: deliverable.status as 'draft' | 'in_review' | 'approved' | 'delivered',
+            type: deliverable.type as
+                | 'document'
+                | 'design'
+                | 'report'
+                | 'code'
+                | 'other',
+            status: deliverable.status as
+                | 'draft'
+                | 'in_review'
+                | 'approved'
+                | 'delivered',
             version: deliverable.version,
             fileUrl: deliverable.fileUrl || '',
             acceptanceCriteria: deliverable.acceptanceCriteria || [],
@@ -770,14 +863,17 @@ export default function WorkOrderDetail({
     const handleUpdateDeliverable = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedDeliverable) return;
-        editDeliverableForm.patch(`/work/deliverables/${selectedDeliverable.id}`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setEditDeliverableDialogOpen(false);
-                setSelectedDeliverable(null);
-                setEditCriterion('');
+        editDeliverableForm.patch(
+            `/work/deliverables/${selectedDeliverable.id}`,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setEditDeliverableDialogOpen(false);
+                    setSelectedDeliverable(null);
+                    setEditCriterion('');
+                },
             },
-        });
+        );
     };
 
     const handleDeleteDeliverable = () => {
@@ -791,8 +887,13 @@ export default function WorkOrderDetail({
         });
     };
 
-    const handleDeliverableStatusChange = (deliverableId: string, newStatus: string) => {
-        router.patch(`/work/deliverables/${deliverableId}`, { status: newStatus });
+    const handleDeliverableStatusChange = (
+        deliverableId: string,
+        newStatus: string,
+    ) => {
+        router.patch(`/work/deliverables/${deliverableId}`, {
+            status: newStatus,
+        });
     };
 
     // Acceptance criteria helpers for create form
@@ -809,7 +910,9 @@ export default function WorkOrderDetail({
     const removeCriterion = (index: number) => {
         deliverableForm.setData(
             'acceptanceCriteria',
-            deliverableForm.data.acceptanceCriteria.filter((_, i) => i !== index)
+            deliverableForm.data.acceptanceCriteria.filter(
+                (_, i) => i !== index,
+            ),
         );
     };
 
@@ -827,12 +930,18 @@ export default function WorkOrderDetail({
     const removeEditCriterion = (index: number) => {
         editDeliverableForm.setData(
             'acceptanceCriteria',
-            editDeliverableForm.data.acceptanceCriteria.filter((_, i) => i !== index)
+            editDeliverableForm.data.acceptanceCriteria.filter(
+                (_, i) => i !== index,
+            ),
         );
     };
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
+        if (
+            confirm(
+                'Are you sure you want to delete this work order? This action cannot be undone.',
+            )
+        ) {
             router.delete(`/work/work-orders/${workOrder.id}`);
         }
     };
@@ -857,23 +966,28 @@ export default function WorkOrderDetail({
             setTransitionError(null);
 
             try {
-                const response = await fetch(`/work/work-orders/${workOrder.id}/transition`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+                const response = await fetch(
+                    `/work/work-orders/${workOrder.id}/transition`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: JSON.stringify({
+                            status: selectedTransition,
+                            comment: comment || undefined,
+                        }),
                     },
-                    body: JSON.stringify({
-                        status: selectedTransition,
-                        comment: comment || undefined,
-                    }),
-                });
+                );
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    setTransitionError(data.message || 'Failed to update status');
+                    setTransitionError(
+                        data.message || 'Failed to update status',
+                    );
                     return;
                 }
 
@@ -893,12 +1007,16 @@ export default function WorkOrderDetail({
                                 id: parseInt(t.id, 10),
                                 fromStatus: t.from_status,
                                 toStatus: t.to_status,
-                                user: { id: parseInt(t.user_id || '0', 10), name: 'User', email: '' },
+                                user: {
+                                    id: parseInt(t.user_id || '0', 10),
+                                    name: 'User',
+                                    email: '',
+                                },
                                 createdAt: t.created_at,
                                 comment: t.comment,
                                 commentCategory: null,
-                            })
-                        )
+                            }),
+                        ),
                     );
                 }
 
@@ -909,14 +1027,23 @@ export default function WorkOrderDetail({
                 setSelectedTransition(null);
 
                 // Reload page to get fresh data
-                router.reload({ only: ['workOrder', 'statusTransitions', 'allowedTransitions', 'rejectionFeedback'] });
+                router.reload({
+                    only: [
+                        'workOrder',
+                        'statusTransitions',
+                        'allowedTransitions',
+                        'rejectionFeedback',
+                    ],
+                });
             } catch {
-                setTransitionError('An error occurred while updating the status');
+                setTransitionError(
+                    'An error occurred while updating the status',
+                );
             } finally {
                 setIsTransitioning(false);
             }
         },
-        [selectedTransition, workOrder.id]
+        [selectedTransition, workOrder.id],
     );
 
     /**
@@ -971,49 +1098,60 @@ export default function WorkOrderDetail({
             setIsUpdatingRaci(true);
 
             try {
-                const response = await fetch(`/work/work-orders/${workOrder.id}/raci`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+                const response = await fetch(
+                    `/work/work-orders/${workOrder.id}/raci`,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: JSON.stringify({
+                            accountable_id: newValue.accountable_id,
+                            responsible_id: newValue.responsible_id,
+                            consulted_ids: newValue.consulted_ids,
+                            informed_ids: newValue.informed_ids,
+                            confirmed: true,
+                        }),
                     },
-                    body: JSON.stringify({
-                        accountable_id: newValue.accountable_id,
-                        responsible_id: newValue.responsible_id,
-                        consulted_ids: newValue.consulted_ids,
-                        informed_ids: newValue.informed_ids,
-                        confirmed: true,
-                    }),
-                });
+                );
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    setRaciError(data.message || 'Failed to update RACI assignments');
+                    setRaciError(
+                        data.message || 'Failed to update RACI assignments',
+                    );
                     return;
                 }
 
                 // Reload to get fresh data
                 router.reload({ only: ['workOrder', 'raciValue'] });
             } catch {
-                setRaciError('An error occurred while updating RACI assignments');
+                setRaciError(
+                    'An error occurred while updating RACI assignments',
+                );
             } finally {
                 setIsUpdatingRaci(false);
             }
         },
-        [workOrder.id]
+        [workOrder.id],
     );
 
     /**
      * Handle RACI confirmation requirement
      */
     const handleRaciConfirmationRequired = useCallback(
-        (role: RaciRole, currentUserId: number | null, newUserId: number | null) => {
+        (
+            role: RaciRole,
+            currentUserId: number | null,
+            newUserId: number | null,
+        ) => {
             setPendingAssignmentChange({ role, currentUserId, newUserId });
             setAssignmentConfirmOpen(true);
         },
-        []
+        [],
     );
 
     /**
@@ -1053,7 +1191,9 @@ export default function WorkOrderDetail({
         try {
             const result = await triggerPMCopilot(workOrder.id);
             if (!result.success) {
-                setPmCopilotError(`Failed to generate plan: ${result.error || 'Unknown error'}`);
+                setPmCopilotError(
+                    `Failed to generate plan: ${result.error || 'Unknown error'}`,
+                );
                 return;
             }
 
@@ -1064,35 +1204,62 @@ export default function WorkOrderDetail({
             const pollInterval = 2000;
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                await new Promise((resolve) => setTimeout(resolve, pollInterval));
+                await new Promise((resolve) =>
+                    setTimeout(resolve, pollInterval),
+                );
 
                 const suggestionsResult = await fetchSuggestions();
                 const status = suggestionsResult?.data?.workflowState?.status;
 
                 if (status === 'completed' || status === 'paused') {
-                    const alternatives = suggestionsResult?.data?.alternatives ?? [];
+                    const alternatives =
+                        suggestionsResult?.data?.alternatives ?? [];
                     if (alternatives.length > 0) {
-                        const totalDeliverables = alternatives.reduce((sum: number, alt: { deliverables?: unknown[] }) => sum + (alt.deliverables?.length ?? 0), 0);
-                        const totalTasks = alternatives.reduce((sum: number, alt: { tasks?: unknown[] }) => sum + (alt.tasks?.length ?? 0), 0);
-                        const parts: string[] = [`${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`];
-                        if (totalDeliverables > 0) parts.push(`${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`);
-                        if (totalTasks > 0) parts.push(`${totalTasks} task${totalTasks !== 1 ? 's' : ''}`);
-                        setPmCopilotFeedback(`Plan generated — ${parts.join(' with ')} suggested.`);
+                        const totalDeliverables = alternatives.reduce(
+                            (sum: number, alt: { deliverables?: unknown[] }) =>
+                                sum + (alt.deliverables?.length ?? 0),
+                            0,
+                        );
+                        const totalTasks = alternatives.reduce(
+                            (sum: number, alt: { tasks?: unknown[] }) =>
+                                sum + (alt.tasks?.length ?? 0),
+                            0,
+                        );
+                        const parts: string[] = [
+                            `${alternatives.length} alternative${alternatives.length !== 1 ? 's' : ''}`,
+                        ];
+                        if (totalDeliverables > 0)
+                            parts.push(
+                                `${totalDeliverables} deliverable${totalDeliverables !== 1 ? 's' : ''}`,
+                            );
+                        if (totalTasks > 0)
+                            parts.push(
+                                `${totalTasks} task${totalTasks !== 1 ? 's' : ''}`,
+                            );
+                        setPmCopilotFeedback(
+                            `Plan generated — ${parts.join(' with ')} suggested.`,
+                        );
                     } else {
-                        setPmCopilotFeedback('Plan generated — review the suggestions below.');
+                        setPmCopilotFeedback(
+                            'Plan generated — review the suggestions below.',
+                        );
                     }
                     return;
                 }
 
                 // Check for error in state data
                 if (suggestionsResult?.data?.workflowState?.error) {
-                    setPmCopilotError(`Plan generation failed: ${suggestionsResult.data.workflowState.error}`);
+                    setPmCopilotError(
+                        `Plan generation failed: ${suggestionsResult.data.workflowState.error}`,
+                    );
                     setPmCopilotFeedback(null);
                     return;
                 }
             }
 
-            setPmCopilotError('Plan generation timed out. Please check back later.');
+            setPmCopilotError(
+                'Plan generation timed out. Please check back later.',
+            );
             setPmCopilotFeedback(null);
         } finally {
             setIsGeneratingPlan(false);
@@ -1102,25 +1269,31 @@ export default function WorkOrderDetail({
     /**
      * Handle PM Copilot suggestion approval
      */
-    const handleApproveSuggestion = useCallback(async (alternativeId: string) => {
-        const result = await approveSuggestion(alternativeId);
-        if (result.success) {
-            setApprovedAlternativeId(alternativeId);
-            // Also re-fetch suggestions so approvedAlternativeId is persisted from backend
-            fetchSuggestions();
-        }
-    }, [approveSuggestion, fetchSuggestions]);
+    const handleApproveSuggestion = useCallback(
+        async (alternativeId: string) => {
+            const result = await approveSuggestion(alternativeId);
+            if (result.success) {
+                setApprovedAlternativeId(alternativeId);
+                // Also re-fetch suggestions so approvedAlternativeId is persisted from backend
+                fetchSuggestions();
+            }
+        },
+        [approveSuggestion, fetchSuggestions],
+    );
 
     /**
      * Handle PM Copilot suggestion rejection
      */
-    const handleRejectSuggestion = useCallback(async (alternativeId: string, reason?: string) => {
-        const result = await rejectSuggestion(alternativeId, reason);
-        if (result.success) {
-            setRejectedAlternativeIds((prev) => [...prev, alternativeId]);
-            fetchSuggestions();
-        }
-    }, [rejectSuggestion, fetchSuggestions]);
+    const handleRejectSuggestion = useCallback(
+        async (alternativeId: string, reason?: string) => {
+            const result = await rejectSuggestion(alternativeId, reason);
+            if (result.success) {
+                setRejectedAlternativeIds((prev) => [...prev, alternativeId]);
+                fetchSuggestions();
+            }
+        },
+        [rejectSuggestion, fetchSuggestions],
+    );
 
     /**
      * Handle PM Copilot mode change
@@ -1149,14 +1322,26 @@ export default function WorkOrderDetail({
 
     const handleTaskArchive = useCallback((task: TaskType) => {
         if (task.status === 'archived') {
-            router.post(`/work/tasks/${task.id}/restore`, {}, { preserveScroll: true });
+            router.post(
+                `/work/tasks/${task.id}/restore`,
+                {},
+                { preserveScroll: true },
+            );
         } else {
-            router.post(`/work/tasks/${task.id}/archive`, {}, { preserveScroll: true });
+            router.post(
+                `/work/tasks/${task.id}/archive`,
+                {},
+                { preserveScroll: true },
+            );
         }
     }, []);
 
     const handleBulkArchiveCompletedTasks = useCallback(() => {
-        router.post(`/work/work-orders/${workOrder.id}/tasks/bulk-archive-completed`, {}, { preserveScroll: true });
+        router.post(
+            `/work/work-orders/${workOrder.id}/tasks/bulk-archive-completed`,
+            {},
+            { preserveScroll: true },
+        );
     }, [workOrder.id]);
 
     const handleTaskTransitionConfirm = useCallback(async () => {
@@ -1166,19 +1351,24 @@ export default function WorkOrderDetail({
         setTaskTransitionError(null);
 
         try {
-            const response = await fetch(`/work/tasks/${selectedTask.id}/transition`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': getCsrfToken(),
+            const response = await fetch(
+                `/work/tasks/${selectedTask.id}/transition`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ status: selectedTaskTransition }),
                 },
-                body: JSON.stringify({ status: selectedTaskTransition }),
-            });
+            );
 
             if (!response.ok) {
                 const data = await response.json();
-                setTaskTransitionError(data.message || 'Failed to update task status');
+                setTaskTransitionError(
+                    data.message || 'Failed to update task status',
+                );
                 return;
             }
 
@@ -1191,7 +1381,9 @@ export default function WorkOrderDetail({
             // Reload to get fresh task data
             router.reload({ only: ['tasks'] });
         } catch {
-            setTaskTransitionError('An error occurred while updating the task status');
+            setTaskTransitionError(
+                'An error occurred while updating the task status',
+            );
         } finally {
             setIsTaskTransitioning(false);
         }
@@ -1210,7 +1402,10 @@ export default function WorkOrderDetail({
     }, [selectedTask]);
 
     const getTaskStatusOptions = useCallback((currentStatus: string) => {
-        const transitionMap: Record<string, Array<{ value: string; label: string }>> = {
+        const transitionMap: Record<
+            string,
+            Array<{ value: string; label: string }>
+        > = {
             todo: [
                 { value: 'in_progress', label: 'Start Work' },
                 { value: 'cancelled', label: 'Cancel' },
@@ -1246,21 +1441,32 @@ export default function WorkOrderDetail({
 
             // Only allow completing tasks that can be marked as done
             // Tasks in 'in_review', 'blocked', 'done', 'cancelled', or 'approved' cannot be quick-completed
-            const nonCompletableStatuses = ['done', 'cancelled', 'in_review', 'blocked', 'approved'];
+            const nonCompletableStatuses = [
+                'done',
+                'cancelled',
+                'in_review',
+                'blocked',
+                'approved',
+            ];
             if (nonCompletableStatuses.includes(currentStatus)) return;
 
             setCompletingTaskId(taskId);
 
-            const transitionTo = async (status: string): Promise<{ ok: boolean; message?: string }> => {
-                const response = await fetch(`/work/tasks/${taskId}/transition`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+            const transitionTo = async (
+                status: string,
+            ): Promise<{ ok: boolean; message?: string }> => {
+                const response = await fetch(
+                    `/work/tasks/${taskId}/transition`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: JSON.stringify({ status }),
                     },
-                    body: JSON.stringify({ status }),
-                });
+                );
 
                 if (!response.ok) {
                     const data = await response.json();
@@ -1275,7 +1481,10 @@ export default function WorkOrderDetail({
                 if (currentStatus === 'todo') {
                     const result = await transitionTo('in_progress');
                     if (!result.ok) {
-                        console.error('Task transition failed:', result.message);
+                        console.error(
+                            'Task transition failed:',
+                            result.message,
+                        );
                         return;
                     }
                 }
@@ -1285,10 +1494,14 @@ export default function WorkOrderDetail({
                 if (result.ok) {
                     // Reorder: move the completed task after all non-done/non-archived tasks
                     const updatedTasks = localTasks.map((t) =>
-                        t.id === taskId ? { ...t, status: 'done' } : t
+                        t.id === taskId ? { ...t, status: 'done' } : t,
                     );
-                    const notDone = updatedTasks.filter((t) => t.status !== 'done' && t.status !== 'archived');
-                    const done = updatedTasks.filter((t) => t.status === 'done' || t.status === 'archived');
+                    const notDone = updatedTasks.filter(
+                        (t) => t.status !== 'done' && t.status !== 'archived',
+                    );
+                    const done = updatedTasks.filter(
+                        (t) => t.status === 'done' || t.status === 'archived',
+                    );
                     const reordered = [...notDone, ...done];
                     setLocalTasks(reordered);
 
@@ -1300,7 +1513,9 @@ export default function WorkOrderDetail({
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-XSRF-TOKEN': getCsrfToken(),
                         },
-                        body: JSON.stringify({ taskIds: reordered.map((t) => t.id) }),
+                        body: JSON.stringify({
+                            taskIds: reordered.map((t) => t.id),
+                        }),
                     }).catch(() => {});
 
                     router.reload({ only: ['tasks'] });
@@ -1313,7 +1528,7 @@ export default function WorkOrderDetail({
                 setCompletingTaskId(null);
             }
         },
-        [localTasks, workOrder.id]
+        [localTasks, workOrder.id],
     );
 
     // Helper functions for assignment confirmation dialog
@@ -1336,20 +1551,31 @@ export default function WorkOrderDetail({
     };
 
     const nonArchivedTasks = tasks.filter((t) => t.status !== 'archived');
-    const completedTasks = nonArchivedTasks.filter((t) => t.status === 'done').length;
-    const progress = nonArchivedTasks.length > 0 ? Math.round((completedTasks / nonArchivedTasks.length) * 100) : 0;
+    const completedTasks = nonArchivedTasks.filter(
+        (t) => t.status === 'done',
+    ).length;
+    const progress =
+        nonArchivedTasks.length > 0
+            ? Math.round((completedTasks / nonArchivedTasks.length) * 100)
+            : 0;
     const hasDoneTasks = tasks.some((t) => t.status === 'done');
     const hasArchivedTasks = tasks.some((t) => t.status === 'archived');
-    const displayTasks = showArchivedTasks ? localTasks : localTasks.filter((t) => t.status !== 'archived');
+    const displayTasks = showArchivedTasks
+        ? localTasks
+        : localTasks.filter((t) => t.status !== 'archived');
 
     const dueDate = workOrder.dueDate ? new Date(workOrder.dueDate) : null;
     const now = new Date();
-    const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const daysUntilDue = dueDate
+        ? Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
     const isOverdue = dueDate ? daysUntilDue < 0 : false;
 
     // Get the label for the selected transition
     const selectedTransitionLabel = selectedTransition
-        ? workOrderStatusLabels[selectedTransition as keyof typeof workOrderStatusLabels] || selectedTransition
+        ? workOrderStatusLabels[
+              selectedTransition as keyof typeof workOrderStatusLabels
+          ] || selectedTransition
         : '';
 
     return (
@@ -1366,10 +1592,15 @@ export default function WorkOrderDetail({
                                 Revision Requested
                             </AlertTitle>
                             <AlertDescription className="text-orange-800 dark:text-orange-200">
-                                <p className="mt-1">{rejectionFeedback.comment}</p>
+                                <p className="mt-1">
+                                    {rejectionFeedback.comment}
+                                </p>
                                 <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
-                                    Requested by {rejectionFeedback.user.name} on{' '}
-                                    {new Date(rejectionFeedback.createdAt).toLocaleDateString()}
+                                    Requested by {rejectionFeedback.user.name}{' '}
+                                    on{' '}
+                                    {new Date(
+                                        rejectionFeedback.createdAt,
+                                    ).toLocaleDateString()}
                                 </p>
                             </AlertDescription>
                         </Alert>
@@ -1377,22 +1608,38 @@ export default function WorkOrderDetail({
                 )}
 
                 {/* Header */}
-                <div className="border-sidebar-border/70 dark:border-sidebar-border border-b px-6 py-6">
-                    <div className="mb-4 flex items-center gap-4">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
+                    <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
                         <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/work/projects/${workOrder.projectId}`}>
+                            <Link
+                                href={`/work/projects/${workOrder.projectId}`}
+                            >
                                 <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                        <div className="flex-1">
-                            <div className="mb-1 flex items-center gap-3">
-                                <h1 className="text-foreground text-2xl font-bold">{workOrder.title}</h1>
-                                <StatusBadge status={localStatus} type="workOrder" />
-                                <PriorityBadge priority={workOrder.priority as 'low' | 'medium' | 'high' | 'urgent'} />
+                        <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <h1 className="text-2xl font-bold text-foreground">
+                                    {workOrder.title}
+                                </h1>
+                                <StatusBadge
+                                    status={localStatus}
+                                    type="workOrder"
+                                />
+                                <PriorityBadge
+                                    priority={
+                                        workOrder.priority as
+                                            | 'low'
+                                            | 'medium'
+                                            | 'high'
+                                            | 'urgent'
+                                    }
+                                />
                             </div>
                             <p className="text-muted-foreground">
                                 {workOrder.projectName}
-                                {workOrder.description && ` - ${workOrder.description}`}
+                                {workOrder.description &&
+                                    ` - ${workOrder.description}`}
                             </p>
                         </div>
 
@@ -1406,7 +1653,7 @@ export default function WorkOrderDetail({
                             />
                         )}
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             {/* Client Comms Button */}
                             <DraftClientUpdateButton
                                 entityType="work_order"
@@ -1420,7 +1667,8 @@ export default function WorkOrderDetail({
                                 aria-label="Communications"
                             >
                                 <MessageSquare className="mr-2 h-4 w-4" />
-                                {communicationThread?.messageCount || 0} Messages
+                                {communicationThread?.messageCount || 0}{' '}
+                                Messages
                             </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -1429,23 +1677,44 @@ export default function WorkOrderDetail({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                                    <DropdownMenuItem
+                                        onClick={() => setEditDialogOpen(true)}
+                                    >
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
                                     {workOrder.status === 'archived' ? (
-                                        <DropdownMenuItem onClick={() => router.post(`/work/work-orders/${workOrder.id}/restore`, {}, { preserveScroll: true })}>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                router.post(
+                                                    `/work/work-orders/${workOrder.id}/restore`,
+                                                    {},
+                                                    { preserveScroll: true },
+                                                )
+                                            }
+                                        >
                                             <ArchiveRestore className="mr-2 h-4 w-4" />
                                             Unarchive
                                         </DropdownMenuItem>
                                     ) : (
-                                        <DropdownMenuItem onClick={() => router.post(`/work/work-orders/${workOrder.id}/archive`, {}, { preserveScroll: true })}>
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                router.post(
+                                                    `/work/work-orders/${workOrder.id}/archive`,
+                                                    {},
+                                                    { preserveScroll: true },
+                                                )
+                                            }
+                                        >
                                             <Archive className="mr-2 h-4 w-4" />
                                             Archive
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                                    <DropdownMenuItem
+                                        onClick={handleDelete}
+                                        className="text-destructive"
+                                    >
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
@@ -1456,21 +1725,30 @@ export default function WorkOrderDetail({
 
                     {/* Work Order Stats */}
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <User className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <User className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Accountable</div>
-                                <div className="font-medium">{workOrder.accountableName || 'Unassigned'}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Accountable
+                                </div>
+                                <div className="font-medium">
+                                    {workOrder.accountableName || 'Unassigned'}
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <Clock className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Hours</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Hours
+                                </div>
                                 <div className="font-medium">
-                                    {workOrder.actualHours} / {workOrder.estimatedHours}h
+                                    {workOrder.actualHours} /{' '}
+                                    {workOrder.estimatedHours}h
                                     {!workOrder.estimatedHoursIsManual && (
-                                        <span className="text-muted-foreground ml-1 text-xs font-normal">(auto)</span>
+                                        <span className="ml-1 text-xs font-normal text-muted-foreground">
+                                            (auto)
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -1484,33 +1762,46 @@ export default function WorkOrderDetail({
                                 className={`h-5 w-5 ${isOverdue ? 'text-destructive' : 'text-muted-foreground'}`}
                             />
                             <div>
-                                <div className="text-muted-foreground text-xs">Due Date</div>
-                                <div className={`font-medium ${isOverdue ? 'text-destructive' : ''}`}>
+                                <div className="text-xs text-muted-foreground">
+                                    Due Date
+                                </div>
+                                <div
+                                    className={`font-medium ${isOverdue ? 'text-destructive' : ''}`}
+                                >
                                     {dueDate ? (
                                         <>
                                             {dueDate.toLocaleDateString()}
-                                            {isOverdue && ` (${Math.abs(daysUntilDue)}d overdue)`}
+                                            {isOverdue &&
+                                                ` (${Math.abs(daysUntilDue)}d overdue)`}
                                         </>
                                     ) : (
-                                        <span className="text-muted-foreground">Not set</span>
+                                        <span className="text-muted-foreground">
+                                            Not set
+                                        </span>
                                     )}
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <CheckCircle2 className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Tasks</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Tasks
+                                </div>
                                 <div className="font-medium">
                                     {completedTasks} / {tasks.length}
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <FileText className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Deliverables</div>
-                                <div className="font-medium">{deliverables.length}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Deliverables
+                                </div>
+                                <div className="font-medium">
+                                    {deliverables.length}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1520,15 +1811,17 @@ export default function WorkOrderDetail({
                         {/* Task Progress */}
                         <div>
                             <div className="mb-2 flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Task Progress</span>
+                                <span className="text-muted-foreground">
+                                    Task Progress
+                                </span>
                                 <span className="font-medium">{progress}%</span>
                             </div>
                             <ProgressBar progress={progress} />
                         </div>
 
                         {/* Hours Progress */}
-                        <div className="bg-card border-border rounded-lg border p-4">
-                            <h3 className="text-foreground mb-2 text-sm font-medium">
+                        <div className="rounded-lg border border-border bg-card p-4">
+                            <h3 className="mb-2 text-sm font-medium text-foreground">
                                 Actual vs Estimated Hours
                             </h3>
                             <HoursProgressIndicator
@@ -1544,7 +1837,12 @@ export default function WorkOrderDetail({
                     {/* View Toggle Row (full width) */}
                     {localTasks.length > 0 && (
                         <div className="mb-4 flex justify-start">
-                            <Tabs value={taskView} onValueChange={(v) => setTaskView(v as 'list' | 'board')}>
+                            <Tabs
+                                value={taskView}
+                                onValueChange={(v) =>
+                                    setTaskView(v as 'list' | 'board')
+                                }
+                            >
                                 <TabsList>
                                     <TabsTrigger value="list">
                                         <List className="mr-2 h-4 w-4" />
@@ -1563,7 +1861,10 @@ export default function WorkOrderDetail({
                     {taskView === 'board' && displayTasks.length > 0 ? (
                         /* Full-width board view */
                         <div className="h-[calc(100vh-320px)] min-h-[400px]">
-                            <TaskKanbanBoard tasks={displayTasks} workOrderId={workOrder.id} />
+                            <TaskKanbanBoard
+                                tasks={displayTasks}
+                                workOrderId={workOrder.id}
+                            />
                         </div>
                     ) : (
                         /* 3-column grid layout for list view */
@@ -1572,14 +1873,23 @@ export default function WorkOrderDetail({
                             <div className="lg:col-span-2">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <h2 className="text-foreground text-lg font-bold">Tasks</h2>
-                                        <span className="text-muted-foreground text-sm font-normal">{completedTasks}/{nonArchivedTasks.length}</span>
+                                        <h2 className="text-lg font-bold text-foreground">
+                                            Tasks
+                                        </h2>
+                                        <span className="text-sm font-normal text-muted-foreground">
+                                            {completedTasks}/
+                                            {nonArchivedTasks.length}
+                                        </span>
                                         {hasArchivedTasks && (
-                                            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                                            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                                                 <input
                                                     type="checkbox"
                                                     checked={showArchivedTasks}
-                                                    onChange={(e) => setShowArchivedTasks(e.target.checked)}
+                                                    onChange={(e) =>
+                                                        setShowArchivedTasks(
+                                                            e.target.checked,
+                                                        )
+                                                    }
                                                     className="rounded border-muted-foreground/50"
                                                 />
                                                 Show archived
@@ -1588,20 +1898,31 @@ export default function WorkOrderDetail({
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {hasDoneTasks && (
-                                            <Button variant="outline" size="sm" onClick={handleBulkArchiveCompletedTasks}>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={
+                                                    handleBulkArchiveCompletedTasks
+                                                }
+                                            >
                                                 <Archive className="mr-2 h-4 w-4" />
                                                 Archive completed
                                             </Button>
                                         )}
-                                        <Button size="sm" onClick={openCreateTaskDialog}>
+                                        <Button
+                                            size="sm"
+                                            onClick={openCreateTaskDialog}
+                                        >
                                             <Plus className="mr-2 h-4 w-4" />
                                             Add Task
                                         </Button>
                                     </div>
                                 </div>
                                 {displayTasks.length === 0 ? (
-                                    <div className="bg-muted/50 rounded-xl py-8 text-center">
-                                        <p className="text-muted-foreground mb-4">No tasks yet</p>
+                                    <div className="rounded-xl bg-muted/50 py-8 text-center">
+                                        <p className="mb-4 text-muted-foreground">
+                                            No tasks yet
+                                        </p>
                                         <Button onClick={openCreateTaskDialog}>
                                             Create Task
                                         </Button>
@@ -1613,21 +1934,39 @@ export default function WorkOrderDetail({
                                         onDragEnd={handleTaskDragEnd}
                                     >
                                         <SortableContext
-                                            items={displayTasks.map((t) => t.id)}
-                                            strategy={verticalListSortingStrategy}
+                                            items={displayTasks.map(
+                                                (t) => t.id,
+                                            )}
+                                            strategy={
+                                                verticalListSortingStrategy
+                                            }
                                         >
                                             <div className="space-y-3">
                                                 {displayTasks.map((task) => (
                                                     <SortableTaskCard
                                                         key={task.id}
                                                         task={task}
-                                                        completingTaskId={completingTaskId}
-                                                        onQuickComplete={handleQuickTaskComplete}
-                                                        onStatusChange={handleTaskStatusChange}
-                                                        onPromote={handleTaskPromote}
-                                                        onDelete={handleTaskDelete}
-                                                        onArchive={handleTaskArchive}
-                                                        getStatusOptions={getTaskStatusOptions}
+                                                        completingTaskId={
+                                                            completingTaskId
+                                                        }
+                                                        onQuickComplete={
+                                                            handleQuickTaskComplete
+                                                        }
+                                                        onStatusChange={
+                                                            handleTaskStatusChange
+                                                        }
+                                                        onPromote={
+                                                            handleTaskPromote
+                                                        }
+                                                        onDelete={
+                                                            handleTaskDelete
+                                                        }
+                                                        onArchive={
+                                                            handleTaskArchive
+                                                        }
+                                                        getStatusOptions={
+                                                            getTaskStatusOptions
+                                                        }
                                                     />
                                                 ))}
                                             </div>
@@ -1640,26 +1979,38 @@ export default function WorkOrderDetail({
                             <div className="lg:col-span-2">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <h2 className="text-foreground text-lg font-bold">Deliverables</h2>
-                                        <span className="text-muted-foreground text-sm font-normal">{deliverables.length}</span>
+                                        <h2 className="text-lg font-bold text-foreground">
+                                            Deliverables
+                                        </h2>
+                                        <span className="text-sm font-normal text-muted-foreground">
+                                            {deliverables.length}
+                                        </span>
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={() => setCreateDeliverableDialogOpen(true)}>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setCreateDeliverableDialogOpen(true)
+                                        }
+                                    >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Add
                                     </Button>
                                 </div>
 
                                 {deliverables.length === 0 ? (
-                                    <div className="bg-muted/50 rounded-xl py-8 text-center">
-                                        <FileText className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-                                        <p className="text-muted-foreground">No deliverables yet</p>
+                                    <div className="rounded-xl bg-muted/50 py-8 text-center">
+                                        <FileText className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                                        <p className="text-muted-foreground">
+                                            No deliverables yet
+                                        </p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
                                         {deliverables.map((d) => (
                                             <div
                                                 key={d.id}
-                                                className="bg-card border-border hover:border-primary/50 rounded-lg border p-4 transition-colors"
+                                                className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/50"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <Link
@@ -1667,51 +2018,103 @@ export default function WorkOrderDetail({
                                                         className="min-w-0 flex-1"
                                                     >
                                                         <div className="mb-1 flex flex-wrap items-center gap-2">
-                                                            <span className="truncate font-medium">{d.title}</span>
-                                                            <StatusBadge status={d.status} type="deliverable" />
+                                                            <span className="truncate font-medium">
+                                                                {d.title}
+                                                            </span>
+                                                            <StatusBadge
+                                                                status={
+                                                                    d.status
+                                                                }
+                                                                type="deliverable"
+                                                            />
                                                         </div>
-                                                        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-                                                            <span className="capitalize">{d.type}</span>
+                                                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                                            <span className="capitalize">
+                                                                {d.type}
+                                                            </span>
                                                             <span>-</span>
-                                                            <span>v{d.version}</span>
+                                                            <span>
+                                                                v{d.version}
+                                                            </span>
                                                         </div>
                                                     </Link>
                                                     <div className="ml-2 flex items-center gap-1">
-                                                        {d.status === 'draft' && (
+                                                        {d.status ===
+                                                            'draft' && (
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={(e) => {
+                                                                onClick={(
+                                                                    e,
+                                                                ) => {
                                                                     e.preventDefault();
-                                                                    handleDeliverableStatusChange(d.id, 'in_review');
+                                                                    handleDeliverableStatusChange(
+                                                                        d.id,
+                                                                        'in_review',
+                                                                    );
                                                                 }}
                                                             >
                                                                 Submit
                                                             </Button>
                                                         )}
                                                         {d.fileUrl && (
-                                                            <Button variant="ghost" size="icon" asChild>
-                                                                <a href={d.fileUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                asChild
+                                                            >
+                                                                <a
+                                                                    href={
+                                                                        d.fileUrl
+                                                                    }
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) =>
+                                                                        e.stopPropagation()
+                                                                    }
+                                                                >
                                                                     <ExternalLink className="h-4 w-4" />
                                                                 </a>
                                                             </Button>
                                                         )}
                                                         <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" onClick={(e) => e.preventDefault()}>
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) =>
+                                                                        e.preventDefault()
+                                                                    }
+                                                                >
                                                                     <MoreVertical className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem onClick={() => handleEditDeliverable(d)}>
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleEditDeliverable(
+                                                                            d,
+                                                                        )
+                                                                    }
+                                                                >
                                                                     <Edit className="mr-2 h-4 w-4" />
                                                                     Edit
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
                                                                     onClick={() => {
-                                                                        setSelectedDeliverable(d);
-                                                                        setDeleteDeliverableDialogOpen(true);
+                                                                        setSelectedDeliverable(
+                                                                            d,
+                                                                        );
+                                                                        setDeleteDeliverableDialogOpen(
+                                                                            true,
+                                                                        );
                                                                     }}
                                                                     className="text-destructive"
                                                                 >
@@ -1739,7 +2142,9 @@ export default function WorkOrderDetail({
                                         disabled={isApproving || isRejecting}
                                         feedbackMessage={pmCopilotFeedback}
                                         feedbackError={pmCopilotError}
-                                        hasExistingPlan={deliverables.length > 0}
+                                        hasExistingPlan={
+                                            deliverables.length > 0
+                                        }
                                     />
 
                                     <PMCopilotSettingsToggle
@@ -1749,16 +2154,29 @@ export default function WorkOrderDetail({
                                         disabled={isGeneratingPlan}
                                     />
 
-                                    {suggestions?.alternatives && suggestions.alternatives.length > 0 && (
-                                        <PlanAlternativesPanel
-                                            alternatives={suggestions.alternatives}
-                                            onApprove={handleApproveSuggestion}
-                                            onReject={handleRejectSuggestion}
-                                            selectedAlternativeId={approvedAlternativeId}
-                                            rejectedAlternativeIds={rejectedAlternativeIds}
-                                            isLoading={isApproving || isRejecting}
-                                        />
-                                    )}
+                                    {suggestions?.alternatives &&
+                                        suggestions.alternatives.length > 0 && (
+                                            <PlanAlternativesPanel
+                                                alternatives={
+                                                    suggestions.alternatives
+                                                }
+                                                onApprove={
+                                                    handleApproveSuggestion
+                                                }
+                                                onReject={
+                                                    handleRejectSuggestion
+                                                }
+                                                selectedAlternativeId={
+                                                    approvedAlternativeId
+                                                }
+                                                rejectedAlternativeIds={
+                                                    rejectedAlternativeIds
+                                                }
+                                                isLoading={
+                                                    isApproving || isRejecting
+                                                }
+                                            />
+                                        )}
 
                                     {tasks.length > 0 && (
                                         <PlanExecutionPanel
@@ -1766,12 +2184,16 @@ export default function WorkOrderDetail({
                                             tasks={tasks}
                                             teamMembers={teamMembers}
                                             availableAgents={availableAgents}
-                                            onConfirmAssignments={(assignments) =>
+                                            onConfirmAssignments={(
+                                                assignments,
+                                            ) =>
                                                 confirmAssignments(assignments)
                                             }
                                             onDelegateAll={() => delegatePlan()}
                                             isDelegating={isDelegating}
-                                            isConfirming={isConfirmingAssignments}
+                                            isConfirming={
+                                                isConfirmingAssignments
+                                            }
                                             aiSuggestions={aiSuggestions}
                                             delegationError={delegationError}
                                         />
@@ -1780,36 +2202,47 @@ export default function WorkOrderDetail({
 
                                 {/* RACI Assignments Section */}
                                 <div className="mb-4 flex items-center gap-2">
-                                    <Users className="text-muted-foreground h-5 w-5" />
-                                    <h2 className="text-foreground text-lg font-bold">RACI Assignments</h2>
+                                    <Users className="h-5 w-5 text-muted-foreground" />
+                                    <h2 className="text-lg font-bold text-foreground">
+                                        RACI Assignments
+                                    </h2>
                                 </div>
-                                <div className="bg-card border-border rounded-xl border p-4">
+                                <div className="rounded-xl border border-border bg-card p-4">
                                     <RaciSelector
                                         value={localRaciValue}
                                         onChange={handleRaciChange}
                                         users={raciUsers}
                                         entityType="work_order"
                                         disabled={isUpdatingRaci}
-                                        onConfirmationRequired={handleRaciConfirmationRequired}
+                                        onConfirmationRequired={
+                                            handleRaciConfirmationRequired
+                                        }
                                     />
                                     {raciError && (
-                                        <p className="text-destructive mt-2 text-sm">{raciError}</p>
+                                        <p className="mt-2 text-sm text-destructive">
+                                            {raciError}
+                                        </p>
                                     )}
                                 </div>
 
                                 {/* Acceptance Criteria */}
                                 {workOrder.acceptanceCriteria.length > 0 && (
                                     <div className="mt-6">
-                                        <h3 className="text-foreground mb-3 text-sm font-bold">
+                                        <h3 className="mb-3 text-sm font-bold text-foreground">
                                             Acceptance Criteria
                                         </h3>
                                         <ul className="space-y-2">
-                                            {workOrder.acceptanceCriteria.map((criteria, i) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm">
-                                                    <Checkbox disabled />
-                                                    <span>{criteria}</span>
-                                                </li>
-                                            ))}
+                                            {workOrder.acceptanceCriteria.map(
+                                                (criteria, i) => (
+                                                    <li
+                                                        key={i}
+                                                        className="flex items-start gap-2 text-sm"
+                                                    >
+                                                        <Checkbox disabled />
+                                                        <span>{criteria}</span>
+                                                    </li>
+                                                ),
+                                            )}
                                         </ul>
                                     </div>
                                 )}
@@ -1817,11 +2250,16 @@ export default function WorkOrderDetail({
                                 {/* Activity / Transition History */}
                                 <div className="mt-6">
                                     <div className="mb-4 flex items-center gap-2">
-                                        <History className="text-muted-foreground h-5 w-5" />
-                                        <h2 className="text-foreground text-lg font-bold">Activity</h2>
+                                        <History className="h-5 w-5 text-muted-foreground" />
+                                        <h2 className="text-lg font-bold text-foreground">
+                                            Activity
+                                        </h2>
                                     </div>
-                                    <div className="bg-card border-border rounded-xl border p-4">
-                                        <TransitionHistory transitions={localTransitions} variant="work_order" />
+                                    <div className="rounded-xl border border-border bg-card p-4">
+                                        <TransitionHistory
+                                            transitions={localTransitions}
+                                            variant="work_order"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -1830,7 +2268,7 @@ export default function WorkOrderDetail({
                 </div>
 
                 {/* Documents Section */}
-                <div className="px-6 py-6">
+                <div className="px-4 py-4 sm:px-6 sm:py-6">
                     <ProjectDocumentsSection
                         projectId={workOrder.projectId}
                         documents={documents}
@@ -1861,20 +2299,22 @@ export default function WorkOrderDetail({
             />
 
             {/* Assignment Confirmation Dialog */}
-            {pendingAssignmentChange && getCurrentAssignmentForDialog() && getNewAssignmentForDialog() && (
-                <AssignmentConfirmationDialog
-                    isOpen={assignmentConfirmOpen}
-                    currentAssignment={getCurrentAssignmentForDialog()!}
-                    newAssignment={getNewAssignmentForDialog()!}
-                    onConfirm={handleAssignmentConfirm}
-                    onCancel={handleAssignmentCancel}
-                    isLoading={isUpdatingRaci}
-                />
-            )}
+            {pendingAssignmentChange &&
+                getCurrentAssignmentForDialog() &&
+                getNewAssignmentForDialog() && (
+                    <AssignmentConfirmationDialog
+                        isOpen={assignmentConfirmOpen}
+                        currentAssignment={getCurrentAssignmentForDialog()!}
+                        newAssignment={getNewAssignmentForDialog()!}
+                        onConfirm={handleAssignmentConfirm}
+                        onCancel={handleAssignmentCancel}
+                        isLoading={isUpdatingRaci}
+                    />
+                )}
 
             {/* Edit Dialog */}
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
                     <form onSubmit={handleUpdateWorkOrder}>
                         <DialogHeader>
                             <DialogTitle>Edit Work Order</DialogTitle>
@@ -1884,7 +2324,12 @@ export default function WorkOrderDetail({
                                 <Label>Title</Label>
                                 <Input
                                     value={editForm.data.title}
-                                    onChange={(e) => editForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={editForm.errors.title} />
                             </div>
@@ -1892,16 +2337,27 @@ export default function WorkOrderDetail({
                                 <Label>Priority</Label>
                                 <Select
                                     value={editForm.data.priority}
-                                    onValueChange={(v) => editForm.setData('priority', v as typeof editForm.data.priority)}
+                                    onValueChange={(v) =>
+                                        editForm.setData(
+                                            'priority',
+                                            v as typeof editForm.data.priority,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="medium">
+                                            Medium
+                                        </SelectItem>
+                                        <SelectItem value="high">
+                                            High
+                                        </SelectItem>
+                                        <SelectItem value="urgent">
+                                            Urgent
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -1911,10 +2367,17 @@ export default function WorkOrderDetail({
                                     <Input
                                         type="date"
                                         value={editForm.data.due_date}
-                                        onChange={(e) => editForm.setData('due_date', e.target.value)}
+                                        onChange={(e) =>
+                                            editForm.setData(
+                                                'due_date',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                     <DatePresetButtons
-                                        onSelect={(date) => editForm.setData('due_date', date)}
+                                        onSelect={(date) =>
+                                            editForm.setData('due_date', date)
+                                        }
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -1925,21 +2388,33 @@ export default function WorkOrderDetail({
                                         step="0.25"
                                         placeholder={`Auto: ${workOrder.estimatedHours}h from tasks`}
                                         value={editForm.data.estimated_hours}
-                                        onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
+                                        onChange={(e) =>
+                                            editForm.setData(
+                                                'estimated_hours',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
-                                    <p className="text-muted-foreground text-xs">
+                                    <p className="text-xs text-muted-foreground">
                                         Leave empty to auto-sum from tasks.
                                     </p>
                                 </div>
                             </div>
                             {dueDateChanged && (
                                 <div className="grid gap-2">
-                                    <Label htmlFor="wo-due-date-reason">Reason for due date change (optional)</Label>
+                                    <Label htmlFor="wo-due-date-reason">
+                                        Reason for due date change (optional)
+                                    </Label>
                                     <Input
                                         id="wo-due-date-reason"
                                         placeholder="e.g. waiting on client assets"
                                         value={editForm.data.reason}
-                                        onChange={(e) => editForm.setData('reason', e.target.value)}
+                                        onChange={(e) =>
+                                            editForm.setData(
+                                                'reason',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                             )}
@@ -1947,7 +2422,12 @@ export default function WorkOrderDetail({
                                 <Label>Description</Label>
                                 <Input
                                     value={editForm.data.description}
-                                    onChange={(e) => editForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -1956,10 +2436,18 @@ export default function WorkOrderDetail({
                                 budgetType={editForm.data.budget_type}
                                 budgetCost={editForm.data.budget_cost}
                                 budgetHours={editForm.data.budget_hours}
-                                onBudgetTypeChange={(value) => editForm.setData('budget_type', value)}
-                                onBudgetCostChange={(value) => editForm.setData('budget_cost', value)}
-                                onBudgetHoursChange={(value) => editForm.setData('budget_hours', value)}
-                                averageBillingRate={workOrder.averageBillingRate ?? 0}
+                                onBudgetTypeChange={(value) =>
+                                    editForm.setData('budget_type', value)
+                                }
+                                onBudgetCostChange={(value) =>
+                                    editForm.setData('budget_cost', value)
+                                }
+                                onBudgetHoursChange={(value) =>
+                                    editForm.setData('budget_hours', value)
+                                }
+                                averageBillingRate={
+                                    workOrder.averageBillingRate ?? 0
+                                }
                                 errors={{
                                     budget_type: editForm.errors.budget_type,
                                     budget_cost: editForm.errors.budget_cost,
@@ -1968,10 +2456,17 @@ export default function WorkOrderDetail({
                             />
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={editForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={editForm.processing}
+                            >
                                 Save
                             </Button>
                         </DialogFooter>
@@ -1980,7 +2475,10 @@ export default function WorkOrderDetail({
             </Dialog>
 
             {/* Create Task Dialog */}
-            <Dialog open={createTaskDialogOpen} onOpenChange={setCreateTaskDialogOpen}>
+            <Dialog
+                open={createTaskDialogOpen}
+                onOpenChange={setCreateTaskDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleCreateTask}>
                         <DialogHeader>
@@ -1991,7 +2489,12 @@ export default function WorkOrderDetail({
                                 <Label>Title</Label>
                                 <Input
                                     value={taskForm.data.title}
-                                    onChange={(e) => taskForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Task title"
                                 />
                                 <InputError message={taskForm.errors.title} />
@@ -1999,18 +2502,29 @@ export default function WorkOrderDetail({
                             <div className="grid gap-2">
                                 <Label>Assign To</Label>
                                 <Select
-                                    value={taskForm.data.assignedToId || 'unassigned'}
+                                    value={
+                                        taskForm.data.assignedToId ||
+                                        'unassigned'
+                                    }
                                     onValueChange={(value) =>
-                                        taskForm.setData('assignedToId', value === 'unassigned' ? '' : value)
+                                        taskForm.setData(
+                                            'assignedToId',
+                                            value === 'unassigned' ? '' : value,
+                                        )
                                     }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select assignee" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                                        <SelectItem value="unassigned">
+                                            Unassigned
+                                        </SelectItem>
                                         {teamMembers.map((member) => (
-                                            <SelectItem key={member.id} value={member.id}>
+                                            <SelectItem
+                                                key={member.id}
+                                                value={member.id}
+                                            >
                                                 <span className="flex items-center gap-2">
                                                     <User className="h-3 w-3" />
                                                     {member.name}
@@ -2021,9 +2535,20 @@ export default function WorkOrderDetail({
                                 </Select>
                                 {(() => {
                                     const recentMembers = recentAssigneeIds
-                                        .map((id) => teamMembers.find((member) => member.id === id))
-                                        .filter((member): member is TeamMember => Boolean(member))
-                                        .filter((member) => member.id !== taskForm.data.assignedToId);
+                                        .map((id) =>
+                                            teamMembers.find(
+                                                (member) => member.id === id,
+                                            ),
+                                        )
+                                        .filter(
+                                            (member): member is TeamMember =>
+                                                Boolean(member),
+                                        )
+                                        .filter(
+                                            (member) =>
+                                                member.id !==
+                                                taskForm.data.assignedToId,
+                                        );
 
                                     if (recentMembers.length === 0) {
                                         return null;
@@ -2038,7 +2563,12 @@ export default function WorkOrderDetail({
                                                     variant="outline"
                                                     size="sm"
                                                     className="h-6 text-xs"
-                                                    onClick={() => taskForm.setData('assignedToId', member.id)}
+                                                    onClick={() =>
+                                                        taskForm.setData(
+                                                            'assignedToId',
+                                                            member.id,
+                                                        )
+                                                    }
                                                 >
                                                     <User className="mr-1 h-3 w-3" />
                                                     {member.name}
@@ -2053,10 +2583,17 @@ export default function WorkOrderDetail({
                                 <Input
                                     type="date"
                                     value={taskForm.data.dueDate}
-                                    onChange={(e) => taskForm.setData('dueDate', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'dueDate',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <DatePresetButtons
-                                    onSelect={(date) => taskForm.setData('dueDate', date)}
+                                    onSelect={(date) =>
+                                        taskForm.setData('dueDate', date)
+                                    }
                                 />
                                 <InputError message={taskForm.errors.dueDate} />
                             </div>
@@ -2067,16 +2604,28 @@ export default function WorkOrderDetail({
                                     min="0"
                                     step="0.25"
                                     value={taskForm.data.estimatedHours}
-                                    onChange={(e) => taskForm.setData('estimatedHours', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'estimatedHours',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="0"
                                 />
-                                <InputError message={taskForm.errors.estimatedHours} />
+                                <InputError
+                                    message={taskForm.errors.estimatedHours}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Description</Label>
                                 <Input
                                     value={taskForm.data.description}
-                                    onChange={(e) => taskForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Brief description"
                                 />
                             </div>
@@ -2089,7 +2638,10 @@ export default function WorkOrderDetail({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={taskForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={taskForm.processing}
+                            >
                                 Create
                             </Button>
                         </DialogFooter>
@@ -2098,7 +2650,10 @@ export default function WorkOrderDetail({
             </Dialog>
 
             {/* Create Deliverable Dialog */}
-            <Dialog open={createDeliverableDialogOpen} onOpenChange={setCreateDeliverableDialogOpen}>
+            <Dialog
+                open={createDeliverableDialogOpen}
+                onOpenChange={setCreateDeliverableDialogOpen}
+            >
                 <DialogContent className="max-w-lg">
                     <form onSubmit={handleCreateDeliverable}>
                         <DialogHeader>
@@ -2112,28 +2667,48 @@ export default function WorkOrderDetail({
                                 <Label>Title *</Label>
                                 <Input
                                     value={deliverableForm.data.title}
-                                    onChange={(e) => deliverableForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        deliverableForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Deliverable title"
                                 />
-                                <InputError message={deliverableForm.errors.title} />
+                                <InputError
+                                    message={deliverableForm.errors.title}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Type *</Label>
                                 <Select
                                     value={deliverableForm.data.type}
                                     onValueChange={(value) =>
-                                        deliverableForm.setData('type', value as typeof deliverableForm.data.type)
+                                        deliverableForm.setData(
+                                            'type',
+                                            value as typeof deliverableForm.data.type,
+                                        )
                                     }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="document">Document</SelectItem>
-                                        <SelectItem value="design">Design</SelectItem>
-                                        <SelectItem value="report">Report</SelectItem>
-                                        <SelectItem value="code">Code</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        <SelectItem value="document">
+                                            Document
+                                        </SelectItem>
+                                        <SelectItem value="design">
+                                            Design
+                                        </SelectItem>
+                                        <SelectItem value="report">
+                                            Report
+                                        </SelectItem>
+                                        <SelectItem value="code">
+                                            Code
+                                        </SelectItem>
+                                        <SelectItem value="other">
+                                            Other
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -2142,7 +2717,10 @@ export default function WorkOrderDetail({
                                 <Textarea
                                     value={deliverableForm.data.description}
                                     onChange={(e) =>
-                                        deliverableForm.setData('description', e.target.value)
+                                        deliverableForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
                                     }
                                     placeholder="Brief description of the deliverable"
                                     rows={3}
@@ -2153,10 +2731,17 @@ export default function WorkOrderDetail({
                                 <Input
                                     type="url"
                                     value={deliverableForm.data.fileUrl}
-                                    onChange={(e) => deliverableForm.setData('fileUrl', e.target.value)}
+                                    onChange={(e) =>
+                                        deliverableForm.setData(
+                                            'fileUrl',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="https://..."
                                 />
-                                <InputError message={deliverableForm.errors.fileUrl} />
+                                <InputError
+                                    message={deliverableForm.errors.fileUrl}
+                                />
                             </div>
 
                             {/* Acceptance Criteria */}
@@ -2165,7 +2750,9 @@ export default function WorkOrderDetail({
                                 <div className="flex gap-2">
                                     <Input
                                         value={newCriterion}
-                                        onChange={(e) => setNewCriterion(e.target.value)}
+                                        onChange={(e) =>
+                                            setNewCriterion(e.target.value)
+                                        }
                                         placeholder="Add acceptance criterion"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
@@ -2174,30 +2761,43 @@ export default function WorkOrderDetail({
                                             }
                                         }}
                                     />
-                                    <Button type="button" variant="outline" onClick={addCriterion}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={addCriterion}
+                                    >
                                         <Plus className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                {deliverableForm.data.acceptanceCriteria.length > 0 && (
+                                {deliverableForm.data.acceptanceCriteria
+                                    .length > 0 && (
                                     <ul className="mt-2 space-y-2">
-                                        {deliverableForm.data.acceptanceCriteria.map((criterion, index) => (
-                                            <li
-                                                key={index}
-                                                className="bg-muted flex items-center gap-2 rounded-md p-2 text-sm"
-                                            >
-                                                <CheckCircle2 className="text-muted-foreground h-4 w-4 shrink-0" />
-                                                <span className="flex-1">{criterion}</span>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={() => removeCriterion(index)}
+                                        {deliverableForm.data.acceptanceCriteria.map(
+                                            (criterion, index) => (
+                                                <li
+                                                    key={index}
+                                                    className="flex items-center gap-2 rounded-md bg-muted p-2 text-sm"
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </li>
-                                        ))}
+                                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                                    <span className="flex-1">
+                                                        {criterion}
+                                                    </span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        onClick={() =>
+                                                            removeCriterion(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </li>
+                                            ),
+                                        )}
                                     </ul>
                                 )}
                             </div>
@@ -2214,7 +2814,10 @@ export default function WorkOrderDetail({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={deliverableForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={deliverableForm.processing}
+                            >
                                 Add
                             </Button>
                         </DialogFooter>
@@ -2223,7 +2826,10 @@ export default function WorkOrderDetail({
             </Dialog>
 
             {/* Edit Deliverable Dialog */}
-            <Dialog open={editDeliverableDialogOpen} onOpenChange={setEditDeliverableDialogOpen}>
+            <Dialog
+                open={editDeliverableDialogOpen}
+                onOpenChange={setEditDeliverableDialogOpen}
+            >
                 <DialogContent className="max-w-lg">
                     <form onSubmit={handleUpdateDeliverable}>
                         <DialogHeader>
@@ -2234,26 +2840,48 @@ export default function WorkOrderDetail({
                                 <Label>Title *</Label>
                                 <Input
                                     value={editDeliverableForm.data.title}
-                                    onChange={(e) => editDeliverableForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        editDeliverableForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
-                                <InputError message={editDeliverableForm.errors.title} />
+                                <InputError
+                                    message={editDeliverableForm.errors.title}
+                                />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label>Type</Label>
                                     <Select
                                         value={editDeliverableForm.data.type}
-                                        onValueChange={(value) => editDeliverableForm.setData('type', value as typeof editDeliverableForm.data.type)}
+                                        onValueChange={(value) =>
+                                            editDeliverableForm.setData(
+                                                'type',
+                                                value as typeof editDeliverableForm.data.type,
+                                            )
+                                        }
                                     >
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="document">Document</SelectItem>
-                                            <SelectItem value="design">Design</SelectItem>
-                                            <SelectItem value="report">Report</SelectItem>
-                                            <SelectItem value="code">Code</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="document">
+                                                Document
+                                            </SelectItem>
+                                            <SelectItem value="design">
+                                                Design
+                                            </SelectItem>
+                                            <SelectItem value="report">
+                                                Report
+                                            </SelectItem>
+                                            <SelectItem value="code">
+                                                Code
+                                            </SelectItem>
+                                            <SelectItem value="other">
+                                                Other
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -2261,7 +2889,12 @@ export default function WorkOrderDetail({
                                     <Label>Version</Label>
                                     <Input
                                         value={editDeliverableForm.data.version}
-                                        onChange={(e) => editDeliverableForm.setData('version', e.target.value)}
+                                        onChange={(e) =>
+                                            editDeliverableForm.setData(
+                                                'version',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="1.0"
                                     />
                                 </div>
@@ -2270,16 +2903,29 @@ export default function WorkOrderDetail({
                                 <Label>Status</Label>
                                 <Select
                                     value={editDeliverableForm.data.status}
-                                    onValueChange={(value) => editDeliverableForm.setData('status', value as typeof editDeliverableForm.data.status)}
+                                    onValueChange={(value) =>
+                                        editDeliverableForm.setData(
+                                            'status',
+                                            value as typeof editDeliverableForm.data.status,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="draft">Draft</SelectItem>
-                                        <SelectItem value="in_review">In Review</SelectItem>
-                                        <SelectItem value="approved">Approved</SelectItem>
-                                        <SelectItem value="delivered">Delivered</SelectItem>
+                                        <SelectItem value="draft">
+                                            Draft
+                                        </SelectItem>
+                                        <SelectItem value="in_review">
+                                            In Review
+                                        </SelectItem>
+                                        <SelectItem value="approved">
+                                            Approved
+                                        </SelectItem>
+                                        <SelectItem value="delivered">
+                                            Delivered
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -2287,7 +2933,12 @@ export default function WorkOrderDetail({
                                 <Label>Description</Label>
                                 <Textarea
                                     value={editDeliverableForm.data.description}
-                                    onChange={(e) => editDeliverableForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        editDeliverableForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                     rows={3}
                                 />
                             </div>
@@ -2296,7 +2947,12 @@ export default function WorkOrderDetail({
                                 <Input
                                     type="url"
                                     value={editDeliverableForm.data.fileUrl}
-                                    onChange={(e) => editDeliverableForm.setData('fileUrl', e.target.value)}
+                                    onChange={(e) =>
+                                        editDeliverableForm.setData(
+                                            'fileUrl',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="https://..."
                                 />
                             </div>
@@ -2307,7 +2963,9 @@ export default function WorkOrderDetail({
                                 <div className="flex gap-2">
                                     <Input
                                         value={editCriterion}
-                                        onChange={(e) => setEditCriterion(e.target.value)}
+                                        onChange={(e) =>
+                                            setEditCriterion(e.target.value)
+                                        }
                                         placeholder="Add acceptance criterion"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
@@ -2316,30 +2974,43 @@ export default function WorkOrderDetail({
                                             }
                                         }}
                                     />
-                                    <Button type="button" variant="outline" onClick={addEditCriterion}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={addEditCriterion}
+                                    >
                                         <Plus className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                {editDeliverableForm.data.acceptanceCriteria.length > 0 && (
+                                {editDeliverableForm.data.acceptanceCriteria
+                                    .length > 0 && (
                                     <ul className="mt-2 space-y-2">
-                                        {editDeliverableForm.data.acceptanceCriteria.map((criterion, index) => (
-                                            <li
-                                                key={index}
-                                                className="bg-muted flex items-center gap-2 rounded-md p-2 text-sm"
-                                            >
-                                                <CheckCircle2 className="text-muted-foreground h-4 w-4 shrink-0" />
-                                                <span className="flex-1">{criterion}</span>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={() => removeEditCriterion(index)}
+                                        {editDeliverableForm.data.acceptanceCriteria.map(
+                                            (criterion, index) => (
+                                                <li
+                                                    key={index}
+                                                    className="flex items-center gap-2 rounded-md bg-muted p-2 text-sm"
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </li>
-                                        ))}
+                                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                                    <span className="flex-1">
+                                                        {criterion}
+                                                    </span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        onClick={() =>
+                                                            removeEditCriterion(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </li>
+                                            ),
+                                        )}
                                     </ul>
                                 )}
                             </div>
@@ -2348,11 +3019,16 @@ export default function WorkOrderDetail({
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setEditDeliverableDialogOpen(false)}
+                                onClick={() =>
+                                    setEditDeliverableDialogOpen(false)
+                                }
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={editDeliverableForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={editDeliverableForm.processing}
+                            >
                                 Save
                             </Button>
                         </DialogFooter>
@@ -2361,19 +3037,32 @@ export default function WorkOrderDetail({
             </Dialog>
 
             {/* Delete Deliverable Confirmation Dialog */}
-            <Dialog open={deleteDeliverableDialogOpen} onOpenChange={setDeleteDeliverableDialogOpen}>
+            <Dialog
+                open={deleteDeliverableDialogOpen}
+                onOpenChange={setDeleteDeliverableDialogOpen}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Deliverable</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{selectedDeliverable?.title}"? This action cannot be undone.
+                            Are you sure you want to delete "
+                            {selectedDeliverable?.title}"? This action cannot be
+                            undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDeliverableDialogOpen(false)}>
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                setDeleteDeliverableDialogOpen(false)
+                            }
+                        >
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={handleDeleteDeliverable}>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteDeliverable}
+                        >
                             Delete
                         </Button>
                     </DialogFooter>
@@ -2413,17 +3102,25 @@ export default function WorkOrderDetail({
                                     <SelectValue placeholder="Select status..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {selectedTask && getTaskStatusOptions(selectedTask.status).map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
+                                    {selectedTask &&
+                                        getTaskStatusOptions(
+                                            selectedTask.status,
+                                        ).map((option) => (
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
                                 </SelectContent>
                             </Select>
                         </div>
                         {taskTransitionError && (
                             <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-                                <p className="text-sm text-red-800 dark:text-red-200">{taskTransitionError}</p>
+                                <p className="text-sm text-red-800 dark:text-red-200">
+                                    {taskTransitionError}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -2441,21 +3138,30 @@ export default function WorkOrderDetail({
                         </Button>
                         <Button
                             onClick={handleTaskTransitionConfirm}
-                            disabled={!selectedTaskTransition || isTaskTransitioning}
+                            disabled={
+                                !selectedTaskTransition || isTaskTransitioning
+                            }
                         >
-                            {isTaskTransitioning ? 'Updating...' : 'Update Status'}
+                            {isTaskTransitioning
+                                ? 'Updating...'
+                                : 'Update Status'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Task Delete Confirmation Dialog */}
-            <Dialog open={taskDeleteDialogOpen} onOpenChange={setTaskDeleteDialogOpen}>
+            <Dialog
+                open={taskDeleteDialogOpen}
+                onOpenChange={setTaskDeleteDialogOpen}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Task</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{selectedTask?.title}"? This action cannot be undone.
+                            Are you sure you want to delete "
+                            {selectedTask?.title}"? This action cannot be
+                            undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -2468,7 +3174,10 @@ export default function WorkOrderDetail({
                         >
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={handleTaskDeleteConfirm}>
+                        <Button
+                            variant="destructive"
+                            onClick={handleTaskDeleteConfirm}
+                        >
                             Delete
                         </Button>
                     </DialogFooter>
@@ -2499,7 +3208,9 @@ export default function WorkOrderDetail({
                 <div className="fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border border-red-200 bg-red-50 p-4 shadow-lg dark:border-red-800 dark:bg-red-950">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        <p className="text-sm text-red-800 dark:text-red-200">{transitionError}</p>
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                            {transitionError}
+                        </p>
                         <button
                             onClick={() => setTransitionError(null)}
                             className="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"

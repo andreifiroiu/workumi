@@ -1,22 +1,15 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    Calendar,
-    Clock,
-    User,
-    MoreVertical,
-    MessageSquare,
-    Edit,
-    Archive,
-    Trash2,
-    Lock,
-    Unlock,
-    DollarSign,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import { BudgetFieldsGroup } from '@/components/budget';
+import { DraftClientUpdateButton } from '@/components/client-comms';
+import { CommunicationsPanel } from '@/components/communications';
+import type { FolderNode } from '@/components/documents/folder-tree';
+import InputError from '@/components/input-error';
+import { ProjectInsightsPanel } from '@/components/pm-copilot';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Dialog,
     DialogContent,
@@ -32,6 +25,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -39,24 +34,35 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
-import { StatusBadge, ProgressBar, ProjectTeamSection, WorkOrderListSection, DatePresetButtons } from '@/components/work';
-import { CommunicationsPanel } from '@/components/communications';
-import { BudgetFieldsGroup } from '@/components/budget';
-import { ProjectInsightsPanel } from '@/components/pm-copilot';
-import { DraftClientUpdateButton } from '@/components/client-comms';
-import { useProjectInsights } from '@/hooks/use-pm-copilot';
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
-import { ProjectDocumentsSection } from './components/project-documents-section';
-import { useState, useEffect } from 'react';
-import type { ProjectDetailProps, BudgetType } from '@/types/work';
+    DatePresetButtons,
+    ProgressBar,
+    ProjectTeamSection,
+    StatusBadge,
+    WorkOrderListSection,
+} from '@/components/work';
+import { useProjectInsights } from '@/hooks/use-pm-copilot';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { FolderNode } from '@/components/documents/folder-tree';
+import type { BudgetType, ProjectDetailProps } from '@/types/work';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import {
+    Archive,
+    ArrowLeft,
+    Calendar,
+    ChevronDown,
+    Clock,
+    DollarSign,
+    Edit,
+    Lock,
+    MessageSquare,
+    MoreVertical,
+    Trash2,
+    Unlock,
+    User,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ProjectDocumentsSection } from './components/project-documents-section';
 
 interface ProjectDetailPageProps extends ProjectDetailProps {
     folders: FolderNode[];
@@ -88,14 +94,21 @@ export default function ProjectDetail({
     siblingProjects,
 }: ProjectDetailPageProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] = useState(false);
+    const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] =
+        useState(false);
     const [, setSelectedListId] = useState<string | undefined>(undefined);
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
-    const [bulkArchiveError, setBulkArchiveError] = useState<string | null>(null);
+    const [bulkArchiveError, setBulkArchiveError] = useState<string | null>(
+        null,
+    );
     const [insightsPanelOpen, setInsightsPanelOpen] = useState(true);
 
     // Project insights hook
-    const { insights, isLoading: isLoadingInsights, fetch: fetchInsights } = useProjectInsights(project.id);
+    const {
+        insights,
+        isLoading: isLoadingInsights,
+        fetch: fetchInsights,
+    } = useProjectInsights(project.id);
 
     // Fetch insights on mount
     useEffect(() => {
@@ -107,7 +120,10 @@ export default function ProjectDetail({
         {
             title: project.name,
             href: `/work/projects/${project.id}`,
-            siblings: siblingProjects.map((p) => ({ title: p.name, href: `/work/projects/${p.id}` })),
+            siblings: siblingProjects.map((p) => ({
+                title: p.name,
+                href: `/work/projects/${p.id}`,
+            })),
         },
     ];
 
@@ -162,22 +178,38 @@ export default function ProjectDetail({
     };
 
     const handleBulkArchiveDelivered = () => {
-        router.post(`/work/projects/${project.id}/work-orders/bulk-archive-delivered`, {}, {
-            preserveScroll: true,
-            onError: (errors) => setBulkArchiveError(errors.tasks ?? 'Failed to archive delivered work orders.'),
-        });
+        router.post(
+            `/work/projects/${project.id}/work-orders/bulk-archive-delivered`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setBulkArchiveError(
+                        errors.tasks ??
+                            'Failed to archive delivered work orders.',
+                    ),
+            },
+        );
     };
 
     const handleTogglePrivacy = () => {
-        router.patch(`/work/projects/${project.id}`, {
-            isPrivate: !project.isPrivate,
-        }, {
-            preserveScroll: true,
-        });
+        router.patch(
+            `/work/projects/${project.id}`,
+            {
+                isPrivate: !project.isPrivate,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+        if (
+            confirm(
+                'Are you sure you want to delete this project? This action cannot be undone.',
+            )
+        ) {
             router.delete(`/work/projects/${project.id}`);
         }
     };
@@ -186,8 +218,13 @@ export default function ProjectDetail({
     const getBudgetDisplayValue = () => {
         if (!project.budgetType) return null;
 
-        if (project.budgetType === 'fixed_price' || project.budgetType === 'monthly_subscription') {
-            return project.budgetCost ? formatCurrency(project.budgetCost) : 'Not set';
+        if (
+            project.budgetType === 'fixed_price' ||
+            project.budgetType === 'monthly_subscription'
+        ) {
+            return project.budgetCost
+                ? formatCurrency(project.budgetCost)
+                : 'Not set';
         }
 
         if (project.budgetType === 'time_and_materials') {
@@ -208,28 +245,35 @@ export default function ProjectDetail({
 
             <div className="flex h-full flex-1 flex-col">
                 {/* Header */}
-                <div className="px-6 py-6 border-b border-sidebar-border/70 dark:border-sidebar-border">
-                    <div className="flex items-center gap-4 mb-4">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
+                    <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
                         <Button variant="ghost" size="icon" asChild>
                             <Link href="/work">
                                 <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-2xl font-bold text-foreground">{project.name}</h1>
+                        <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <h1 className="text-2xl font-bold text-foreground">
+                                    {project.name}
+                                </h1>
                                 {project.isPrivate && (
                                     <span title="Private project">
                                         <Lock className="h-4 w-4 text-muted-foreground" />
                                     </span>
                                 )}
-                                <StatusBadge status={project.status} type="project" />
+                                <StatusBadge
+                                    status={project.status}
+                                    type="project"
+                                />
                             </div>
                             {project.description && (
-                                <p className="text-muted-foreground">{project.description}</p>
+                                <p className="text-muted-foreground">
+                                    {project.description}
+                                </p>
                             )}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <DraftClientUpdateButton
                                 entityType="project"
                                 entityId={project.id}
@@ -239,8 +283,9 @@ export default function ProjectDetail({
                                 size="sm"
                                 onClick={() => setCommsPanelOpen(true)}
                             >
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                {communicationThread?.messageCount || 0} Messages
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                {communicationThread?.messageCount || 0}{' '}
+                                Messages
                             </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -249,27 +294,31 @@ export default function ProjectDetail({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                                        <Edit className="h-4 w-4 mr-2" />
+                                    <DropdownMenuItem
+                                        onClick={() => setEditDialogOpen(true)}
+                                    >
+                                        <Edit className="mr-2 h-4 w-4" />
                                         Edit Project
                                     </DropdownMenuItem>
                                     {project.canTogglePrivacy && (
-                                        <DropdownMenuItem onClick={handleTogglePrivacy}>
+                                        <DropdownMenuItem
+                                            onClick={handleTogglePrivacy}
+                                        >
                                             {project.isPrivate ? (
                                                 <>
-                                                    <Unlock className="h-4 w-4 mr-2" />
+                                                    <Unlock className="mr-2 h-4 w-4" />
                                                     Make Public
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Lock className="h-4 w-4 mr-2" />
+                                                    <Lock className="mr-2 h-4 w-4" />
                                                     Make Private
                                                 </>
                                             )}
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem onClick={handleArchive}>
-                                        <Archive className="h-4 w-4 mr-2" />
+                                        <Archive className="mr-2 h-4 w-4" />
                                         Archive
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -277,7 +326,7 @@ export default function ProjectDetail({
                                         onClick={handleDelete}
                                         className="text-destructive"
                                     >
-                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -286,47 +335,67 @@ export default function ProjectDetail({
                     </div>
 
                     {/* Project Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             <User className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-xs text-muted-foreground">Client</div>
-                                <div className="font-medium">{project.partyName}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Client
+                                </div>
+                                <div className="font-medium">
+                                    {project.partyName}
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             <User className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-xs text-muted-foreground">Owner</div>
-                                <div className="font-medium">{project.ownerName}</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Owner
+                                </div>
+                                <div className="font-medium">
+                                    {project.ownerName}
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             <Clock className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-xs text-muted-foreground">Hours</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Hours
+                                </div>
                                 <div className="font-medium">
                                     {project.actualHours}
-                                    {project.budgetHours && ` / ${project.budgetHours}`}h
+                                    {project.budgetHours &&
+                                        ` / ${project.budgetHours}`}
+                                    h
                                 </div>
                             </div>
                         </div>
                         {budgetDisplayValue && (
-                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                            <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                                 <DollarSign className="h-5 w-5 text-muted-foreground" />
                                 <div>
-                                    <div className="text-xs text-muted-foreground">Budget</div>
-                                    <div className="font-medium">{budgetDisplayValue}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Budget
+                                    </div>
+                                    <div className="font-medium">
+                                        {budgetDisplayValue}
+                                    </div>
                                 </div>
                             </div>
                         )}
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             <Calendar className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-xs text-muted-foreground">Target Date</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Target Date
+                                </div>
                                 <div className="font-medium">
                                     {project.targetEndDate
-                                        ? new Date(project.targetEndDate).toLocaleDateString()
+                                        ? new Date(
+                                              project.targetEndDate,
+                                          ).toLocaleDateString()
                                         : 'Not set'}
                                 </div>
                             </div>
@@ -335,16 +404,23 @@ export default function ProjectDetail({
 
                     {/* Progress */}
                     <div className="mt-4">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="text-muted-foreground">Progress</span>
-                            <span className="font-medium">{project.progress}%</span>
+                        <div className="mb-2 flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">
+                                Progress
+                            </span>
+                            <span className="font-medium">
+                                {project.progress}%
+                            </span>
                         </div>
                         <ProgressBar progress={project.progress} />
                     </div>
 
                     {/* Project Insights Section */}
                     <div className="mt-6">
-                        <Collapsible open={insightsPanelOpen} onOpenChange={setInsightsPanelOpen}>
+                        <Collapsible
+                            open={insightsPanelOpen}
+                            onOpenChange={setInsightsPanelOpen}
+                        >
                             <CollapsibleTrigger asChild>
                                 <button
                                     type="button"
@@ -353,7 +429,9 @@ export default function ProjectDetail({
                                     <span>AI Insights</span>
                                     <ChevronDown
                                         className={`h-4 w-4 transition-transform ${
-                                            insightsPanelOpen ? 'rotate-180' : ''
+                                            insightsPanelOpen
+                                                ? 'rotate-180'
+                                                : ''
                                         }`}
                                     />
                                 </button>
@@ -409,7 +487,7 @@ export default function ProjectDetail({
 
             {/* Edit Dialog */}
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
                     <form onSubmit={handleUpdateProject}>
                         <DialogHeader>
                             <DialogTitle>Edit Project</DialogTitle>
@@ -422,7 +500,9 @@ export default function ProjectDetail({
                                 <Label>Name</Label>
                                 <Input
                                     value={editForm.data.name}
-                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData('name', e.target.value)
+                                    }
                                 />
                                 <InputError message={editForm.errors.name} />
                             </div>
@@ -430,15 +510,26 @@ export default function ProjectDetail({
                                 <Label>Status</Label>
                                 <Select
                                     value={editForm.data.status}
-                                    onValueChange={(value) => editForm.setData('status', value as typeof project.status)}
+                                    onValueChange={(value) =>
+                                        editForm.setData(
+                                            'status',
+                                            value as typeof project.status,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="on_hold">On Hold</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
+                                        <SelectItem value="active">
+                                            Active
+                                        </SelectItem>
+                                        <SelectItem value="on_hold">
+                                            On Hold
+                                        </SelectItem>
+                                        <SelectItem value="completed">
+                                            Completed
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -446,7 +537,9 @@ export default function ProjectDetail({
                                 <Label>Client</Label>
                                 <Select
                                     value={editForm.data.party_id}
-                                    onValueChange={(value) => editForm.setData('party_id', value)}
+                                    onValueChange={(value) =>
+                                        editForm.setData('party_id', value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -464,7 +557,12 @@ export default function ProjectDetail({
                                 <Label>Description</Label>
                                 <Input
                                     value={editForm.data.description}
-                                    onChange={(e) => editForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -473,7 +571,10 @@ export default function ProjectDetail({
                                     type="date"
                                     value={editForm.data.target_end_date}
                                     onChange={(e) =>
-                                        editForm.setData('target_end_date', e.target.value)
+                                        editForm.setData(
+                                            'target_end_date',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                             </div>
@@ -483,10 +584,18 @@ export default function ProjectDetail({
                                 budgetType={editForm.data.budget_type}
                                 budgetCost={editForm.data.budget_cost}
                                 budgetHours={editForm.data.budget_hours}
-                                onBudgetTypeChange={(value) => editForm.setData('budget_type', value)}
-                                onBudgetCostChange={(value) => editForm.setData('budget_cost', value)}
-                                onBudgetHoursChange={(value) => editForm.setData('budget_hours', value)}
-                                averageBillingRate={project.averageBillingRate ?? 0}
+                                onBudgetTypeChange={(value) =>
+                                    editForm.setData('budget_type', value)
+                                }
+                                onBudgetCostChange={(value) =>
+                                    editForm.setData('budget_cost', value)
+                                }
+                                onBudgetHoursChange={(value) =>
+                                    editForm.setData('budget_hours', value)
+                                }
+                                averageBillingRate={
+                                    project.averageBillingRate ?? 0
+                                }
                                 errors={{
                                     budget_type: editForm.errors.budget_type,
                                     budget_cost: editForm.errors.budget_cost,
@@ -502,7 +611,10 @@ export default function ProjectDetail({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={editForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={editForm.processing}
+                            >
                                 Save Changes
                             </Button>
                         </DialogFooter>
@@ -511,7 +623,10 @@ export default function ProjectDetail({
             </Dialog>
 
             {/* Create Work Order Dialog */}
-            <Dialog open={createWorkOrderDialogOpen} onOpenChange={setCreateWorkOrderDialogOpen}>
+            <Dialog
+                open={createWorkOrderDialogOpen}
+                onOpenChange={setCreateWorkOrderDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleCreateWorkOrder}>
                         <DialogHeader>
@@ -525,18 +640,34 @@ export default function ProjectDetail({
                                 <Label>Title</Label>
                                 <Input
                                     value={workOrderForm.data.title}
-                                    onChange={(e) => workOrderForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        workOrderForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Work order title"
                                 />
-                                <InputError message={workOrderForm.errors.title} />
-                                <InputError message={workOrderForm.errors.projectId} />
+                                <InputError
+                                    message={workOrderForm.errors.title}
+                                />
+                                <InputError
+                                    message={workOrderForm.errors.projectId}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Priority</Label>
                                 <Select
                                     value={workOrderForm.data.priority}
                                     onValueChange={(value) =>
-                                        workOrderForm.setData('priority', value as 'low' | 'medium' | 'high' | 'urgent')
+                                        workOrderForm.setData(
+                                            'priority',
+                                            value as
+                                                | 'low'
+                                                | 'medium'
+                                                | 'high'
+                                                | 'urgent',
+                                        )
                                     }
                                 >
                                     <SelectTrigger>
@@ -544,9 +675,15 @@ export default function ProjectDetail({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="medium">
+                                            Medium
+                                        </SelectItem>
+                                        <SelectItem value="high">
+                                            High
+                                        </SelectItem>
+                                        <SelectItem value="urgent">
+                                            Urgent
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -554,11 +691,16 @@ export default function ProjectDetail({
                                 <div className="grid gap-2">
                                     <Label>List (optional)</Label>
                                     <Select
-                                        value={workOrderForm.data.workOrderListId || 'none'}
+                                        value={
+                                            workOrderForm.data
+                                                .workOrderListId || 'none'
+                                        }
                                         onValueChange={(value) =>
                                             workOrderForm.setData(
                                                 'workOrderListId',
-                                                value === 'none' ? undefined : value
+                                                value === 'none'
+                                                    ? undefined
+                                                    : value,
                                             )
                                         }
                                     >
@@ -566,14 +708,22 @@ export default function ProjectDetail({
                                             <SelectValue placeholder="Select a list" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">Ungrouped</SelectItem>
+                                            <SelectItem value="none">
+                                                Ungrouped
+                                            </SelectItem>
                                             {workOrderLists.map((list) => (
-                                                <SelectItem key={list.id} value={list.id}>
+                                                <SelectItem
+                                                    key={list.id}
+                                                    value={list.id}
+                                                >
                                                     <div className="flex items-center gap-2">
                                                         {list.color && (
                                                             <div
-                                                                className="w-2 h-2 rounded-full"
-                                                                style={{ backgroundColor: list.color }}
+                                                                className="h-2 w-2 rounded-full"
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        list.color,
+                                                                }}
                                                             />
                                                         )}
                                                         {list.name}
@@ -589,7 +739,10 @@ export default function ProjectDetail({
                                 <Input
                                     value={workOrderForm.data.description}
                                     onChange={(e) =>
-                                        workOrderForm.setData('description', e.target.value)
+                                        workOrderForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
                                     }
                                     placeholder="Brief description"
                                 />
@@ -600,24 +753,36 @@ export default function ProjectDetail({
                                     type="date"
                                     value={workOrderForm.data.dueDate}
                                     onChange={(e) =>
-                                        workOrderForm.setData('dueDate', e.target.value)
+                                        workOrderForm.setData(
+                                            'dueDate',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                                 <DatePresetButtons
-                                    onSelect={(date) => workOrderForm.setData('dueDate', date)}
+                                    onSelect={(date) =>
+                                        workOrderForm.setData('dueDate', date)
+                                    }
                                 />
-                                <InputError message={workOrderForm.errors.dueDate} />
+                                <InputError
+                                    message={workOrderForm.errors.dueDate}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setCreateWorkOrderDialogOpen(false)}
+                                onClick={() =>
+                                    setCreateWorkOrderDialogOpen(false)
+                                }
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={workOrderForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={workOrderForm.processing}
+                            >
                                 Create
                             </Button>
                         </DialogFooter>
@@ -625,14 +790,23 @@ export default function ProjectDetail({
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={bulkArchiveError !== null} onOpenChange={(open) => !open && setBulkArchiveError(null)}>
+            <Dialog
+                open={bulkArchiveError !== null}
+                onOpenChange={(open) => !open && setBulkArchiveError(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Cannot archive delivered work orders</DialogTitle>
-                        <DialogDescription>{bulkArchiveError}</DialogDescription>
+                        <DialogTitle>
+                            Cannot archive delivered work orders
+                        </DialogTitle>
+                        <DialogDescription>
+                            {bulkArchiveError}
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button onClick={() => setBulkArchiveError(null)}>OK</Button>
+                        <Button onClick={() => setBulkArchiveError(null)}>
+                            OK
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -1,5 +1,13 @@
-import * as React from 'react';
-import { ChevronDown, X } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -7,13 +15,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { ChevronDown, X } from 'lucide-react';
+import * as React from 'react';
 
 /** Special value for "None" selection in Radix Select */
 const NONE_VALUE = '__none__';
@@ -51,7 +55,7 @@ export interface RaciSelectorProps {
     onConfirmationRequired?: (
         role: RaciRole,
         currentUserId: number | null,
-        newUserId: number | null
+        newUserId: number | null,
     ) => void;
     /** Custom class name */
     className?: string;
@@ -63,7 +67,12 @@ export type RaciRole = 'responsible' | 'accountable' | 'consulted' | 'informed';
 /** Role configuration with descriptions */
 const RACI_ROLES: Record<
     RaciRole,
-    { label: string; description: string; required: boolean; multiSelect: boolean }
+    {
+        label: string;
+        description: string;
+        required: boolean;
+        multiSelect: boolean;
+    }
 > = {
     responsible: {
         label: 'Responsible',
@@ -119,7 +128,9 @@ function UserAvatar({
     return (
         <Avatar className={sizeClass}>
             {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-            <AvatarFallback className={textClass}>{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback className={textClass}>
+                {getInitials(user.name)}
+            </AvatarFallback>
         </Avatar>
     );
 }
@@ -155,7 +166,9 @@ function SingleSelectField({
         <div className="space-y-2">
             <Label className="text-sm font-medium">
                 {config.label}
-                {config.required && <span className="text-destructive ml-1">*</span>}
+                {config.required && (
+                    <span className="ml-1 text-destructive">*</span>
+                )}
             </Label>
             <Select
                 value={value?.toString() ?? ''}
@@ -167,11 +180,15 @@ function SingleSelectField({
                     data-testid={`raci-${role}-trigger`}
                     aria-label={`Select ${config.label}`}
                 >
-                    <SelectValue placeholder={`Select ${config.label.toLowerCase()}...`}>
+                    <SelectValue
+                        placeholder={`Select ${config.label.toLowerCase()}...`}
+                    >
                         {selectedUser && (
                             <div className="flex items-center gap-2">
                                 <UserAvatar user={selectedUser} />
-                                <span className="truncate">{selectedUser.name}</span>
+                                <span className="truncate">
+                                    {selectedUser.name}
+                                </span>
                             </div>
                         )}
                     </SelectValue>
@@ -192,7 +209,9 @@ function SingleSelectField({
                     ))}
                 </SelectContent>
             </Select>
-            <p className="text-muted-foreground text-xs">{config.description}</p>
+            <p className="text-xs text-muted-foreground">
+                {config.description}
+            </p>
         </div>
     );
 }
@@ -243,7 +262,7 @@ function MultiSelectField({
                         data-testid={`raci-${role}-trigger`}
                         className={cn(
                             'w-full justify-between font-normal',
-                            !selectedUsers.length && 'text-muted-foreground'
+                            !selectedUsers.length && 'text-muted-foreground',
                         )}
                         disabled={disabled}
                     >
@@ -255,11 +274,15 @@ function MultiSelectField({
                                         variant="secondary"
                                         className="flex items-center gap-1 pr-1"
                                     >
-                                        <span className="truncate max-w-[80px]">{user.name}</span>
+                                        <span className="max-w-[80px] truncate">
+                                            {user.name}
+                                        </span>
                                         <button
                                             type="button"
-                                            onClick={(e) => handleRemove(user.id, e)}
-                                            className="hover:bg-muted-foreground/20 rounded-full p-0.5"
+                                            onClick={(e) =>
+                                                handleRemove(user.id, e)
+                                            }
+                                            className="rounded-full p-0.5 hover:bg-muted-foreground/20"
                                             aria-label={`Remove ${user.name}`}
                                         >
                                             <X className="size-3" />
@@ -267,7 +290,9 @@ function MultiSelectField({
                                     </Badge>
                                 ))}
                                 {selectedUsers.length > 2 && (
-                                    <Badge variant="secondary">+{selectedUsers.length - 2}</Badge>
+                                    <Badge variant="secondary">
+                                        +{selectedUsers.length - 2}
+                                    </Badge>
                                 )}
                             </div>
                         ) : (
@@ -276,10 +301,13 @@ function MultiSelectField({
                         <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[280px] p-0" align="start">
+                <PopoverContent
+                    className="w-[min(280px,calc(100vw-2rem))] p-0"
+                    align="start"
+                >
                     <div className="max-h-[300px] overflow-y-auto p-2">
                         {users.length === 0 ? (
-                            <p className="text-muted-foreground p-2 text-center text-sm">
+                            <p className="p-2 text-center text-sm text-muted-foreground">
                                 No users available
                             </p>
                         ) : (
@@ -291,16 +319,20 @@ function MultiSelectField({
                                             key={user.id}
                                             className={cn(
                                                 'flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 hover:bg-accent',
-                                                isChecked && 'bg-accent/50'
+                                                isChecked && 'bg-accent/50',
                                             )}
                                         >
                                             <Checkbox
                                                 checked={isChecked}
-                                                onCheckedChange={() => handleToggle(user.id)}
+                                                onCheckedChange={() =>
+                                                    handleToggle(user.id)
+                                                }
                                                 aria-label={user.name}
                                             />
                                             <UserAvatar user={user} />
-                                            <span className="text-sm">{user.name}</span>
+                                            <span className="text-sm">
+                                                {user.name}
+                                            </span>
                                         </label>
                                     );
                                 })}
@@ -309,7 +341,9 @@ function MultiSelectField({
                     </div>
                 </PopoverContent>
             </Popover>
-            <p className="text-muted-foreground text-xs">{config.description}</p>
+            <p className="text-xs text-muted-foreground">
+                {config.description}
+            </p>
         </div>
     );
 }
@@ -329,11 +363,21 @@ function RaciSelector({
     onConfirmationRequired,
     className,
 }: RaciSelectorProps) {
-    const handleSingleChange = (role: 'responsible' | 'accountable', userId: number | null) => {
-        const currentValue = role === 'responsible' ? value.responsible_id : value.accountable_id;
+    const handleSingleChange = (
+        role: 'responsible' | 'accountable',
+        userId: number | null,
+    ) => {
+        const currentValue =
+            role === 'responsible'
+                ? value.responsible_id
+                : value.accountable_id;
 
         // Check if confirmation is required (existing assignment being replaced)
-        if (currentValue !== null && userId !== currentValue && onConfirmationRequired) {
+        if (
+            currentValue !== null &&
+            userId !== currentValue &&
+            onConfirmationRequired
+        ) {
             onConfirmationRequired(role, currentValue, userId);
             return;
         }
@@ -344,7 +388,10 @@ function RaciSelector({
         });
     };
 
-    const handleMultiChange = (role: 'consulted' | 'informed', userIds: number[]) => {
+    const handleMultiChange = (
+        role: 'consulted' | 'informed',
+        userIds: number[],
+    ) => {
         onChange({
             ...value,
             [`${role}_ids`]: userIds,
@@ -389,4 +436,4 @@ function RaciSelector({
     );
 }
 
-export { RaciSelector, RACI_ROLES, getInitials };
+export { getInitials, RACI_ROLES, RaciSelector };

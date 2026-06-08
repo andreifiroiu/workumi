@@ -1,5 +1,8 @@
-import { useState, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { DocumentPreviewWithAnnotations } from '@/components/documents/document-preview-with-annotations';
+import { FolderManagement } from '@/components/documents/folder-management';
+import { FolderNode } from '@/components/documents/folder-tree';
+import { ShareLinkDialog } from '@/components/documents/share-link-dialog';
+import { ShareLinkManagement } from '@/components/documents/share-link-management';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -22,27 +25,24 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { FolderNode } from '@/components/documents/folder-tree';
-import { FolderManagement } from '@/components/documents/folder-management';
-import { DocumentPreviewWithAnnotations } from '@/components/documents/document-preview-with-annotations';
-import { ShareLinkDialog } from '@/components/documents/share-link-dialog';
-import { ShareLinkManagement } from '@/components/documents/share-link-management';
+import { router } from '@inertiajs/react';
 import {
-    Upload,
-    FileText,
-    Image,
+    ExternalLink,
+    Eye,
     File,
     FileSpreadsheet,
+    FileText,
+    FolderOpen,
+    Image,
     MoreVertical,
-    Eye,
+    Package,
+    Plus,
+    Settings,
     Share2,
     Trash2,
-    ExternalLink,
-    Plus,
-    FolderOpen,
-    Settings,
-    Package,
+    Upload,
 } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 interface DocumentItem {
     id: string;
@@ -71,13 +71,19 @@ export function ProjectDocumentsSection({
     uploadUrl,
     deleteUrlPrefix,
 }: ProjectDocumentsSectionProps) {
-    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
+        null,
+    );
     const [isUploading, setIsUploading] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<DocumentItem | null>(null);
     const [shareDoc, setShareDoc] = useState<DocumentItem | null>(null);
     const [manageFoldersOpen, setManageFoldersOpen] = useState(false);
-    const [manageLinksDoc, setManageLinksDoc] = useState<DocumentItem | null>(null);
-    const [uploadFolderId, setUploadFolderId] = useState<string | undefined>(undefined);
+    const [manageLinksDoc, setManageLinksDoc] = useState<DocumentItem | null>(
+        null,
+    );
+    const [uploadFolderId, setUploadFolderId] = useState<string | undefined>(
+        undefined,
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Filter documents by selected folder
@@ -85,7 +91,8 @@ export function ProjectDocumentsSection({
         ? documents.filter((doc) => doc.folderId === selectedFolderId)
         : documents;
 
-    const selectedFolder = folders.find((f) => f.id === selectedFolderId) || null;
+    const selectedFolder =
+        folders.find((f) => f.id === selectedFolderId) || null;
 
     // File upload handlers
     const handleFileSelect = () => {
@@ -103,49 +110,64 @@ export function ProjectDocumentsSection({
             formData.append('folder_id', uploadFolderId);
         }
 
-        router.post(uploadUrl ?? `/work/projects/${projectId}/files`, formData, {
-            forceFormData: true,
-            preserveScroll: true,
-            onFinish: () => {
-                setIsUploading(false);
-                setUploadFolderId(undefined);
-                if (fileInputRef.current) {
-                    fileInputRef.current.value = '';
-                }
+        router.post(
+            uploadUrl ?? `/work/projects/${projectId}/files`,
+            formData,
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsUploading(false);
+                    setUploadFolderId(undefined);
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
+                },
             },
-        });
+        );
     };
 
     const handleDeleteDocument = (doc: DocumentItem) => {
         if (confirm('Are you sure you want to delete this file?')) {
-            router.delete(`${deleteUrlPrefix ?? `/work/projects/${projectId}/files`}/${doc.id}`, {
-                preserveScroll: true,
-            });
+            router.delete(
+                `${deleteUrlPrefix ?? `/work/projects/${projectId}/files`}/${doc.id}`,
+                {
+                    preserveScroll: true,
+                },
+            );
         }
     };
 
     // Folder CRUD handlers for project-scoped folders
     const handleCreateFolder = async (name: string, parentId?: string) => {
         return new Promise<void>((resolve, reject) => {
-            router.post('/folders', {
-                name,
-                parent_id: parentId || null,
-                project_id: projectId,
-            }, {
-                preserveScroll: true,
-                onSuccess: () => resolve(),
-                onError: () => reject(new Error('Failed to create folder')),
-            });
+            router.post(
+                '/folders',
+                {
+                    name,
+                    parent_id: parentId || null,
+                    project_id: projectId,
+                },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => resolve(),
+                    onError: () => reject(new Error('Failed to create folder')),
+                },
+            );
         });
     };
 
     const handleRenameFolder = async (folderId: string, name: string) => {
         return new Promise<void>((resolve, reject) => {
-            router.patch(`/folders/${folderId}`, { name }, {
-                preserveScroll: true,
-                onSuccess: () => resolve(),
-                onError: () => reject(new Error('Failed to rename folder')),
-            });
+            router.patch(
+                `/folders/${folderId}`,
+                { name },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => resolve(),
+                    onError: () => reject(new Error('Failed to rename folder')),
+                },
+            );
         });
     };
 
@@ -164,15 +186,22 @@ export function ProjectDocumentsSection({
         });
     };
 
-    const handleMoveFolder = async (folderId: string, newParentId: string | null) => {
+    const handleMoveFolder = async (
+        folderId: string,
+        newParentId: string | null,
+    ) => {
         return new Promise<void>((resolve, reject) => {
-            router.patch(`/folders/${folderId}`, {
-                parent_id: newParentId,
-            }, {
-                preserveScroll: true,
-                onSuccess: () => resolve(),
-                onError: () => reject(new Error('Failed to move folder')),
-            });
+            router.patch(
+                `/folders/${folderId}`,
+                {
+                    parent_id: newParentId,
+                },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => resolve(),
+                    onError: () => reject(new Error('Failed to move folder')),
+                },
+            );
         });
     };
 
@@ -221,7 +250,7 @@ export function ProjectDocumentsSection({
 
     return (
         <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-foreground">
                     Documents ({documents.length})
                 </h2>
@@ -233,7 +262,7 @@ export function ProjectDocumentsSection({
                             onClick={() => setManageFoldersOpen(true)}
                             title="Manage folders"
                         >
-                            <Settings className="h-4 w-4 mr-2" />
+                            <Settings className="mr-2 h-4 w-4" />
                             Folders
                         </Button>
                     )}
@@ -243,7 +272,7 @@ export function ProjectDocumentsSection({
                         onClick={handleFileSelect}
                         disabled={isUploading}
                     >
-                        <Upload className="h-4 w-4 mr-2" />
+                        <Upload className="mr-2 h-4 w-4" />
                         {isUploading ? 'Uploading...' : 'Upload'}
                     </Button>
                     <input
@@ -264,16 +293,23 @@ export function ProjectDocumentsSection({
                         <Select
                             value={selectedFolderId || 'all'}
                             onValueChange={(value) =>
-                                setSelectedFolderId(value === 'all' ? null : value)
+                                setSelectedFolderId(
+                                    value === 'all' ? null : value,
+                                )
                             }
                         >
-                            <SelectTrigger className="w-[200px]">
+                            <SelectTrigger className="w-full sm:w-[200px]">
                                 <SelectValue placeholder="All documents" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All documents</SelectItem>
+                                <SelectItem value="all">
+                                    All documents
+                                </SelectItem>
                                 {folders.map((folder) => (
-                                    <SelectItem key={folder.id} value={folder.id}>
+                                    <SelectItem
+                                        key={folder.id}
+                                        value={folder.id}
+                                    >
                                         {folder.name}
                                     </SelectItem>
                                 ))}
@@ -282,7 +318,9 @@ export function ProjectDocumentsSection({
                     </div>
                     {selectedFolderId && (
                         <span className="text-sm text-muted-foreground">
-                            {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} in folder
+                            {filteredDocuments.length} document
+                            {filteredDocuments.length !== 1 ? 's' : ''} in
+                            folder
                         </span>
                     )}
                 </div>
@@ -290,16 +328,16 @@ export function ProjectDocumentsSection({
 
             {filteredDocuments.length === 0 ? (
                 <div
-                    className="text-center py-8 bg-muted/50 rounded-xl border-2 border-dashed border-border cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="cursor-pointer rounded-xl border-2 border-dashed border-border bg-muted/50 py-8 text-center transition-colors hover:bg-muted/70"
                     onClick={handleFileSelect}
                 >
-                    <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                     <p className="text-muted-foreground">
                         {selectedFolderId
                             ? 'No documents in this folder. Click to upload.'
                             : 'Click to upload files or drag and drop'}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         PDF, DOC, XLS, Images up to 10MB
                     </p>
                 </div>
@@ -308,13 +346,13 @@ export function ProjectDocumentsSection({
                     {filteredDocuments.map((doc) => (
                         <div
                             key={doc.id}
-                            className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg group"
+                            className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3"
                         >
                             {getFileIcon(doc.type, doc.name)}
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                                 <button
                                     onClick={() => setPreviewDoc(doc)}
-                                    className="font-medium text-sm truncate block hover:text-primary text-left"
+                                    className="block truncate text-left text-sm font-medium hover:text-primary"
                                 >
                                     {doc.name}
                                 </button>
@@ -323,7 +361,7 @@ export function ProjectDocumentsSection({
                                     {doc.uploadedDate}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -348,21 +386,31 @@ export function ProjectDocumentsSection({
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem asChild>
-                                            <a href={doc.fileUrl} target="_blank" rel="noreferrer">
-                                                <ExternalLink className="h-4 w-4 mr-2" />
+                                            <a
+                                                href={doc.fileUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                <ExternalLink className="mr-2 h-4 w-4" />
                                                 Open in new tab
                                             </a>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => setManageLinksDoc(doc)}>
-                                            <Share2 className="h-4 w-4 mr-2" />
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                setManageLinksDoc(doc)
+                                            }
+                                        >
+                                            <Share2 className="mr-2 h-4 w-4" />
                                             Manage share links
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                            onClick={() => handleDeleteDocument(doc)}
+                                            onClick={() =>
+                                                handleDeleteDocument(doc)
+                                            }
                                             className="text-destructive"
                                         >
-                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            <Trash2 className="mr-2 h-4 w-4" />
                                             Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -375,7 +423,7 @@ export function ProjectDocumentsSection({
                     <button
                         onClick={handleFileSelect}
                         disabled={isUploading}
-                        className="w-full p-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors flex items-center justify-center gap-2"
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border p-3 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                     >
                         <Plus className="h-4 w-4" />
                         Add more files
@@ -384,8 +432,11 @@ export function ProjectDocumentsSection({
             )}
 
             {/* Preview Dialog */}
-            <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
-                <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+            <Dialog
+                open={!!previewDoc}
+                onOpenChange={(open) => !open && setPreviewDoc(null)}
+            >
+                <DialogContent className="flex h-[80vh] max-w-4xl flex-col">
                     <DialogHeader>
                         <DialogTitle>{previewDoc?.name}</DialogTitle>
                         <DialogDescription>
@@ -397,7 +448,10 @@ export function ProjectDocumentsSection({
                             <DocumentPreviewWithAnnotations
                                 documentId={previewDoc.id}
                                 fileUrl={previewDoc.fileUrl}
-                                mimeType={previewDoc.mimeType || guessMimeType(previewDoc.name)}
+                                mimeType={
+                                    previewDoc.mimeType ||
+                                    guessMimeType(previewDoc.name)
+                                }
                                 fileName={previewDoc.name}
                                 inModal={true}
                             />
@@ -416,29 +470,39 @@ export function ProjectDocumentsSection({
             )}
 
             {/* Manage Share Links Dialog */}
-            <Dialog open={!!manageLinksDoc} onOpenChange={(open) => !open && setManageLinksDoc(null)}>
-                <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+            <Dialog
+                open={!!manageLinksDoc}
+                onOpenChange={(open) => !open && setManageLinksDoc(null)}
+            >
+                <DialogContent className="flex max-h-[85vh] max-w-4xl flex-col overflow-hidden">
                     <DialogHeader>
                         <DialogTitle>Manage Share Links</DialogTitle>
                         <DialogDescription>
-                            View and manage share links for {manageLinksDoc?.name}
+                            View and manage share links for{' '}
+                            {manageLinksDoc?.name}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto">
                         {manageLinksDoc && (
-                            <ShareLinkManagement documentId={manageLinksDoc.id} />
+                            <ShareLinkManagement
+                                documentId={manageLinksDoc.id}
+                            />
                         )}
                     </div>
                 </DialogContent>
             </Dialog>
 
             {/* Manage Folders Dialog */}
-            <Dialog open={manageFoldersOpen} onOpenChange={setManageFoldersOpen}>
+            <Dialog
+                open={manageFoldersOpen}
+                onOpenChange={setManageFoldersOpen}
+            >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Manage Folders</DialogTitle>
                         <DialogDescription>
-                            Create, rename, and organize project document folders
+                            Create, rename, and organize project document
+                            folders
                         </DialogDescription>
                     </DialogHeader>
                     <FolderManagement

@@ -1,34 +1,37 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     Collapsible,
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Textarea } from '@/components/ui/textarea';
+import { getCsrfToken } from '@/lib/csrf';
+import { cn } from '@/lib/utils';
+import type {
+    CommunicationMessage,
+    CommunicationThread,
+} from '@/types/communications.d';
+import type { DocumentCommentsProps } from '@/types/documents.d';
 import {
     ChevronDown,
     ChevronRight,
+    Edit,
     Loader2,
     MessageSquare,
     MoreVertical,
-    Edit,
-    Trash2,
-    Send,
     RefreshCw,
+    Send,
+    Trash2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { DocumentCommentsProps } from '@/types/documents.d';
-import type { CommunicationMessage, CommunicationThread } from '@/types/communications.d';
-import { getCsrfToken } from '@/lib/csrf';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ApiResponse {
     thread: CommunicationThread | null;
@@ -90,7 +93,12 @@ interface CommentItemProps {
 /**
  * Individual comment item component.
  */
-function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemProps) {
+function CommentItem({
+    message,
+    currentUserId,
+    onEdit,
+    onDelete,
+}: CommentItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message.content);
 
@@ -110,17 +118,19 @@ function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemPr
     };
 
     return (
-        <div className="group flex gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+        <div className="group flex gap-3 rounded-lg p-3 transition-colors hover:bg-muted/50">
             <Avatar className="h-8 w-8 shrink-0">
                 <AvatarFallback className="text-xs">
                     {getInitials(message.authorName)}
                 </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{message.authorName}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium">
+                            {message.authorName}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                             {formatTimestamp(message.timestamp)}
                         </span>
@@ -137,7 +147,7 @@ function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemPr
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="h-7 w-7 p-0 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                                     aria-label="Comment actions"
                                 >
                                     <MoreVertical className="h-4 w-4" />
@@ -145,8 +155,10 @@ function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemPr
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 {message.canEdit && (
-                                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                                        <Edit className="h-4 w-4 mr-2" />
+                                    <DropdownMenuItem
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
                                 )}
@@ -155,7 +167,7 @@ function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemPr
                                         onClick={() => onDelete(message.id)}
                                         className="text-destructive"
                                     >
-                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
                                 )}
@@ -169,20 +181,24 @@ function CommentItem({ message, currentUserId, onEdit, onDelete }: CommentItemPr
                         <Textarea
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
-                            className="min-h-[60px] text-sm resize-none"
+                            className="min-h-[60px] resize-none text-sm"
                             autoFocus
                         />
                         <div className="flex gap-2">
                             <Button size="sm" onClick={handleSaveEdit}>
                                 Save
                             </Button>
-                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleCancelEdit}
+                            >
                                 Cancel
                             </Button>
                         </div>
                     </div>
                 ) : (
-                    <p className="mt-1 text-sm whitespace-pre-wrap break-words">
+                    <p className="mt-1 text-sm break-words whitespace-pre-wrap">
                         {message.content}
                     </p>
                 )}
@@ -226,13 +242,16 @@ export function DocumentComments({
             setError(null);
 
             try {
-                const response = await fetch(`/documents/${documentId}/comments`, {
-                    credentials: 'same-origin',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
+                const response = await fetch(
+                    `/documents/${documentId}/comments`,
+                    {
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
                     },
-                });
+                );
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch comments');
@@ -244,19 +263,23 @@ export function DocumentComments({
 
                 // Determine current user ID from editable messages
                 if (data.messages.length > 0) {
-                    const ownMessage = data.messages.find((m) => m.canEdit || m.canDelete);
+                    const ownMessage = data.messages.find(
+                        (m) => m.canEdit || m.canDelete,
+                    );
                     if (ownMessage) {
                         setCurrentUserId(ownMessage.authorId);
                     }
                 }
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'An error occurred');
+                setError(
+                    err instanceof Error ? err.message : 'An error occurred',
+                );
             } finally {
                 setIsLoading(false);
                 setIsRefreshing(false);
             }
         },
-        [documentId]
+        [documentId],
     );
 
     // Handle adding a new comment
@@ -286,7 +309,9 @@ export function DocumentComments({
             setNewComment('');
             fetchComments(false);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add comment');
+            setError(
+                err instanceof Error ? err.message : 'Failed to add comment',
+            );
         } finally {
             setIsSending(false);
         }
@@ -296,17 +321,20 @@ export function DocumentComments({
     const handleEdit = useCallback(
         async (messageId: string, content: string) => {
             try {
-                const response = await fetch(`/documents/${documentId}/comments/${messageId}`, {
-                    method: 'PATCH',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+                const response = await fetch(
+                    `/documents/${documentId}/comments/${messageId}`,
+                    {
+                        method: 'PATCH',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: JSON.stringify({ content }),
                     },
-                    body: JSON.stringify({ content }),
-                });
+                );
 
                 if (!response.ok) {
                     throw new Error('Failed to edit comment');
@@ -314,10 +342,14 @@ export function DocumentComments({
 
                 fetchComments(false);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to edit comment');
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to edit comment',
+                );
             }
         },
-        [documentId, fetchComments]
+        [documentId, fetchComments],
     );
 
     // Handle deleting a comment
@@ -328,15 +360,18 @@ export function DocumentComments({
             }
 
             try {
-                const response = await fetch(`/documents/${documentId}/comments/${messageId}`, {
-                    method: 'DELETE',
-                    credentials: 'same-origin',
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+                const response = await fetch(
+                    `/documents/${documentId}/comments/${messageId}`,
+                    {
+                        method: 'DELETE',
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
                     },
-                });
+                );
 
                 if (!response.ok) {
                     throw new Error('Failed to delete comment');
@@ -344,10 +379,14 @@ export function DocumentComments({
 
                 fetchComments(false);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to delete comment');
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'Failed to delete comment',
+                );
             }
         },
-        [documentId, fetchComments]
+        [documentId, fetchComments],
     );
 
     // Scroll to bottom of messages
@@ -363,7 +402,7 @@ export function DocumentComments({
                 handleAddComment();
             }
         },
-        [handleAddComment]
+        [handleAddComment],
     );
 
     // Set up polling when panel is open
@@ -395,13 +434,13 @@ export function DocumentComments({
         <Collapsible
             open={isOpen}
             onOpenChange={onOpenChange}
-            className="border rounded-lg bg-card"
+            className="rounded-lg border bg-card"
             data-testid="document-comments"
         >
             <CollapsibleTrigger asChild>
                 <Button
                     variant="ghost"
-                    className="w-full justify-between p-4 h-auto hover:bg-muted/50"
+                    className="h-auto w-full justify-between p-4 hover:bg-muted/50"
                 >
                     <div className="flex items-center gap-2">
                         <MessageSquare className="h-5 w-5" aria-hidden="true" />
@@ -421,7 +460,7 @@ export function DocumentComments({
             </CollapsibleTrigger>
 
             <CollapsibleContent>
-                <div className="border-t p-4 space-y-4">
+                <div className="space-y-4 border-t p-4">
                     {/* Refresh button */}
                     <div className="flex justify-end">
                         <Button
@@ -432,20 +471,25 @@ export function DocumentComments({
                             aria-label="Refresh comments"
                         >
                             <RefreshCw
-                                className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
+                                className={cn(
+                                    'h-4 w-4',
+                                    isRefreshing && 'animate-spin',
+                                )}
                             />
                         </Button>
                     </div>
 
                     {/* Comments list */}
-                    <div className="max-h-80 overflow-y-auto space-y-1">
+                    <div className="max-h-80 space-y-1 overflow-y-auto">
                         {isLoading ? (
                             <div className="flex items-center justify-center py-8">
                                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                             </div>
                         ) : error ? (
-                            <div className="flex flex-col items-center justify-center py-8 gap-2">
-                                <p className="text-sm text-destructive">{error}</p>
+                            <div className="flex flex-col items-center justify-center gap-2 py-8">
+                                <p className="text-sm text-destructive">
+                                    {error}
+                                </p>
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -456,7 +500,7 @@ export function DocumentComments({
                             </div>
                         ) : messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <MessageSquare className="h-10 w-10 text-muted-foreground/50 mb-2" />
+                                <MessageSquare className="mb-2 h-10 w-10 text-muted-foreground/50" />
                                 <p className="text-sm text-muted-foreground">
                                     No comments yet
                                 </p>
@@ -482,9 +526,9 @@ export function DocumentComments({
                     </div>
 
                     {/* New comment input */}
-                    <div className="border-t pt-4 space-y-2">
+                    <div className="space-y-2 border-t pt-4">
                         {error && (
-                            <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+                            <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                                 {error}
                             </div>
                         )}
@@ -509,9 +553,12 @@ export function DocumentComments({
                                 size="sm"
                             >
                                 {isSending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <Send className="h-4 w-4 mr-2" aria-hidden="true" />
+                                    <Send
+                                        className="mr-2 h-4 w-4"
+                                        aria-hidden="true"
+                                    />
                                 )}
                                 Send
                             </Button>

@@ -1,33 +1,10 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    Calendar,
-    Clock,
-    User,
-    Bot,
-    MoreVertical,
-    Edit,
-    Trash2,
-    Play,
-    Pause,
-    Plus,
-    CheckCircle2,
-    Circle,
-    AlertTriangle,
-    History,
-    MessageSquare,
-    ArrowUpCircle,
-    Pencil,
-    X,
-    Check,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { CommunicationsPanel } from '@/components/communications';
+import InputError from '@/components/input-error';
+import { HoursProgressIndicator } from '@/components/time-tracking';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -36,7 +13,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,6 +20,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -53,25 +31,47 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
-import { StatusBadge, ProgressBar } from '@/components/work';
-import { HoursProgressIndicator } from '@/components/time-tracking';
+import { taskStatusLabels } from '@/components/ui/status-badge';
+import { ProgressBar, StatusBadge } from '@/components/work';
+import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import {
+    TimerConfirmationDialog,
     TransitionButton,
     TransitionDialog,
     TransitionHistory,
-    TimerConfirmationDialog,
-    type TransitionOption,
     type StatusTransition,
+    type TransitionOption,
 } from '@/components/workflow';
-import { CommunicationsPanel } from '@/components/communications';
-import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import { useRecentAssignees } from '@/hooks/use-recent-assignees';
-import { taskStatusLabels } from '@/components/ui/status-badge';
-import { useState, useEffect, useCallback } from 'react';
-import type { BreadcrumbItem } from '@/types';
+import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { getPresetDate } from '@/lib/date-utils';
+import type { BreadcrumbItem } from '@/types';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import {
+    AlertTriangle,
+    ArrowLeft,
+    ArrowUpCircle,
+    Bot,
+    Calendar,
+    Check,
+    CheckCircle2,
+    Circle,
+    Clock,
+    Edit,
+    History,
+    MessageSquare,
+    MoreVertical,
+    Pause,
+    Pencil,
+    Play,
+    Plus,
+    Trash2,
+    User,
+    X,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Extended Task type with additional workflow properties
@@ -163,14 +163,17 @@ export default function TaskDetail({
     const [logTimeDialogOpen, setLogTimeDialogOpen] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
-    const [selectedTransition, setSelectedTransition] = useState<string | null>(null);
+    const [selectedTransition, setSelectedTransition] = useState<string | null>(
+        null,
+    );
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [transitionError, setTransitionError] = useState<string | null>(null);
     const [timerConfirmDialogOpen, setTimerConfirmDialogOpen] = useState(false);
     const [isStartingTimer, setIsStartingTimer] = useState(false);
     const [localStatus, setLocalStatus] = useState(task.status);
     const [localTransitions, setLocalTransitions] = useState(statusTransitions);
-    const [localAllowedTransitions, setLocalAllowedTransitions] = useState(allowedTransitions);
+    const [localAllowedTransitions, setLocalAllowedTransitions] =
+        useState(allowedTransitions);
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
     const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
 
@@ -186,12 +189,18 @@ export default function TaskDetail({
         {
             title: task.workOrderTitle,
             href: `/work/work-orders/${task.workOrderId}`,
-            siblings: siblingWorkOrders.map((wo) => ({ title: wo.title, href: `/work/work-orders/${wo.id}` })),
+            siblings: siblingWorkOrders.map((wo) => ({
+                title: wo.title,
+                href: `/work/work-orders/${wo.id}`,
+            })),
         },
         {
             title: task.title,
             href: `/work/tasks/${task.id}`,
-            siblings: siblingTasks.map((t) => ({ title: t.title, href: `/work/tasks/${t.id}` })),
+            siblings: siblingTasks.map((t) => ({
+                title: t.title,
+                href: `/work/tasks/${t.id}`,
+            })),
         },
     ];
 
@@ -215,7 +224,8 @@ export default function TaskDetail({
 
     // The reason field is only relevant once the user actually edits the due date.
     const dueDateChanged = editForm.data.due_date !== (task.dueDate || '');
-    const { recentIds: recentAssigneeIds, recordAssignee } = useRecentAssignees();
+    const { recentIds: recentAssigneeIds, recordAssignee } =
+        useRecentAssignees();
 
     const timeForm = useForm({
         hours: '',
@@ -279,22 +289,26 @@ export default function TaskDetail({
         // 'unassigned' value means both should be null (already set above)
 
         // Manually construct the data to send
-        router.patch(`/work/tasks/${task.id}`, {
-            title: editForm.data.title,
-            description: editForm.data.description,
-            assignedToId,
-            assignedAgentId,
-            dueDate: editForm.data.due_date,
-            estimatedHours: editForm.data.estimated_hours,
-            reason: dueDateChanged ? editForm.data.reason || null : null,
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                editForm.setData('reason', '');
-                recordAssignee(assignedToId);
-                setEditDialogOpen(false);
+        router.patch(
+            `/work/tasks/${task.id}`,
+            {
+                title: editForm.data.title,
+                description: editForm.data.description,
+                assignedToId,
+                assignedAgentId,
+                dueDate: editForm.data.due_date,
+                estimatedHours: editForm.data.estimated_hours,
+                reason: dueDateChanged ? editForm.data.reason || null : null,
             },
-        });
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    editForm.setData('reason', '');
+                    recordAssignee(assignedToId);
+                    setEditDialogOpen(false);
+                },
+            },
+        );
     };
 
     /**
@@ -310,10 +324,14 @@ export default function TaskDetail({
             assignedAgentId = value.replace('agent:', '');
         }
 
-        router.patch(`/work/tasks/${task.id}`, {
-            assignedToId,
-            assignedAgentId,
-        }, { preserveScroll: true });
+        router.patch(
+            `/work/tasks/${task.id}`,
+            {
+                assignedToId,
+                assignedAgentId,
+            },
+            { preserveScroll: true },
+        );
     };
 
     const handleToggleChecklist = (itemId: string, completed: boolean) => {
@@ -328,24 +346,31 @@ export default function TaskDetail({
     const handleAddChecklistItem = useCallback(() => {
         if (!newChecklistText.trim()) return;
 
-        router.post(`/work/tasks/${task.id}/checklist`, {
-            text: newChecklistText.trim(),
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setNewChecklistText('');
-                setIsAddingChecklist(false);
+        router.post(
+            `/work/tasks/${task.id}/checklist`,
+            {
+                text: newChecklistText.trim(),
             },
-        });
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setNewChecklistText('');
+                    setIsAddingChecklist(false);
+                },
+            },
+        );
     }, [task.id, newChecklistText]);
 
     /**
      * Start editing a checklist item
      */
-    const handleStartEditItem = useCallback((itemId: string, currentText: string) => {
-        setEditingItemId(itemId);
-        setEditingItemText(currentText);
-    }, []);
+    const handleStartEditItem = useCallback(
+        (itemId: string, currentText: string) => {
+            setEditingItemId(itemId);
+            setEditingItemText(currentText);
+        },
+        [],
+    );
 
     /**
      * Save the edited checklist item
@@ -353,15 +378,19 @@ export default function TaskDetail({
     const handleSaveEditItem = useCallback(() => {
         if (!editingItemId || !editingItemText.trim()) return;
 
-        router.patch(`/work/tasks/${task.id}/checklist/${editingItemId}/text`, {
-            text: editingItemText.trim(),
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setEditingItemId(null);
-                setEditingItemText('');
+        router.patch(
+            `/work/tasks/${task.id}/checklist/${editingItemId}/text`,
+            {
+                text: editingItemText.trim(),
             },
-        });
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setEditingItemId(null);
+                    setEditingItemText('');
+                },
+            },
+        );
     }, [task.id, editingItemId, editingItemText]);
 
     /**
@@ -375,32 +404,38 @@ export default function TaskDetail({
     /**
      * Delete a checklist item
      */
-    const handleDeleteChecklistItem = useCallback((itemId: string) => {
-        router.delete(`/work/tasks/${task.id}/checklist/${itemId}`, {
-            preserveScroll: true,
-        });
-    }, [task.id]);
+    const handleDeleteChecklistItem = useCallback(
+        (itemId: string) => {
+            router.delete(`/work/tasks/${task.id}/checklist/${itemId}`, {
+                preserveScroll: true,
+            });
+        },
+        [task.id],
+    );
 
     /**
      * Handle keyboard events for checklist input
      */
-    const handleChecklistKeyDown = useCallback((e: React.KeyboardEvent, action: 'add' | 'edit') => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (action === 'add') {
-                handleAddChecklistItem();
-            } else {
-                handleSaveEditItem();
+    const handleChecklistKeyDown = useCallback(
+        (e: React.KeyboardEvent, action: 'add' | 'edit') => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (action === 'add') {
+                    handleAddChecklistItem();
+                } else {
+                    handleSaveEditItem();
+                }
+            } else if (e.key === 'Escape') {
+                if (action === 'add') {
+                    setIsAddingChecklist(false);
+                    setNewChecklistText('');
+                } else {
+                    handleCancelEditItem();
+                }
             }
-        } else if (e.key === 'Escape') {
-            if (action === 'add') {
-                setIsAddingChecklist(false);
-                setNewChecklistText('');
-            } else {
-                handleCancelEditItem();
-            }
-        }
-    }, [handleAddChecklistItem, handleSaveEditItem, handleCancelEditItem]);
+        },
+        [handleAddChecklistItem, handleSaveEditItem, handleCancelEditItem],
+    );
 
     /**
      * Handle transition button click - open dialog for transitions that need confirmation
@@ -422,23 +457,28 @@ export default function TaskDetail({
             setTransitionError(null);
 
             try {
-                const response = await fetch(`/work/tasks/${task.id}/transition`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-XSRF-TOKEN': getCsrfToken(),
+                const response = await fetch(
+                    `/work/tasks/${task.id}/transition`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-XSRF-TOKEN': getCsrfToken(),
+                        },
+                        body: JSON.stringify({
+                            status: selectedTransition,
+                            comment: comment || undefined,
+                        }),
                     },
-                    body: JSON.stringify({
-                        status: selectedTransition,
-                        comment: comment || undefined,
-                    }),
-                });
+                );
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    setTransitionError(data.message || 'Failed to update status');
+                    setTransitionError(
+                        data.message || 'Failed to update status',
+                    );
                     return;
                 }
 
@@ -458,12 +498,16 @@ export default function TaskDetail({
                                 id: parseInt(t.id, 10),
                                 fromStatus: t.from_status,
                                 toStatus: t.to_status,
-                                user: { id: parseInt(t.user_id || '0', 10), name: 'User', email: '' },
+                                user: {
+                                    id: parseInt(t.user_id || '0', 10),
+                                    name: 'User',
+                                    email: '',
+                                },
                                 createdAt: t.created_at,
                                 comment: t.comment,
                                 commentCategory: null,
-                            })
-                        )
+                            }),
+                        ),
                     );
                 }
 
@@ -474,14 +518,23 @@ export default function TaskDetail({
                 setSelectedTransition(null);
 
                 // Reload page to get fresh data
-                router.reload({ only: ['task', 'statusTransitions', 'allowedTransitions', 'rejectionFeedback'] });
+                router.reload({
+                    only: [
+                        'task',
+                        'statusTransitions',
+                        'allowedTransitions',
+                        'rejectionFeedback',
+                    ],
+                });
             } catch {
-                setTransitionError('An error occurred while updating the status');
+                setTransitionError(
+                    'An error occurred while updating the status',
+                );
             } finally {
                 setIsTransitioning(false);
             }
         },
-        [selectedTransition, task.id]
+        [selectedTransition, task.id],
     );
 
     /**
@@ -567,14 +620,17 @@ export default function TaskDetail({
         setIsStartingTimer(true);
 
         try {
-            const response = await fetch(`/work/tasks/${task.id}/timer/start?confirmed=true`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-XSRF-TOKEN': getCsrfToken(),
+            const response = await fetch(
+                `/work/tasks/${task.id}/timer/start?confirmed=true`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': getCsrfToken(),
+                    },
                 },
-            });
+            );
 
             const data = await response.json();
 
@@ -616,15 +672,23 @@ export default function TaskDetail({
         }
     };
 
-    const completedItems = task.checklistItems.filter((item) => item.completed).length;
+    const completedItems = task.checklistItems.filter(
+        (item) => item.completed,
+    ).length;
     const totalItems = task.checklistItems.length;
-    const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    const progress =
+        totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-    const totalTimeLogged = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+    const totalTimeLogged = timeEntries.reduce(
+        (sum, entry) => sum + entry.hours,
+        0,
+    );
 
     // Get the label for the selected transition
     const selectedTransitionLabel = selectedTransition
-        ? taskStatusLabels[selectedTransition as keyof typeof taskStatusLabels] || selectedTransition
+        ? taskStatusLabels[
+              selectedTransition as keyof typeof taskStatusLabels
+          ] || selectedTransition
         : '';
 
     return (
@@ -641,10 +705,15 @@ export default function TaskDetail({
                                 Revision Requested
                             </AlertTitle>
                             <AlertDescription className="text-orange-800 dark:text-orange-200">
-                                <p className="mt-1">{rejectionFeedback.comment}</p>
+                                <p className="mt-1">
+                                    {rejectionFeedback.comment}
+                                </p>
                                 <p className="mt-2 text-sm text-orange-600 dark:text-orange-400">
-                                    Requested by {rejectionFeedback.user.name} on{' '}
-                                    {new Date(rejectionFeedback.createdAt).toLocaleDateString()}
+                                    Requested by {rejectionFeedback.user.name}{' '}
+                                    on{' '}
+                                    {new Date(
+                                        rejectionFeedback.createdAt,
+                                    ).toLocaleDateString()}
                                 </p>
                             </AlertDescription>
                         </Alert>
@@ -652,18 +721,24 @@ export default function TaskDetail({
                 )}
 
                 {/* Header */}
-                <div className="border-sidebar-border/70 dark:border-sidebar-border border-b px-6 py-6">
-                    <div className="mb-4 flex items-center gap-4">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
+                    <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
                         <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/work/work-orders/${task.workOrderId}`}>
+                            <Link
+                                href={`/work/work-orders/${task.workOrderId}`}
+                            >
                                 <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                        <div className="flex-1">
-                            <div className="mb-1 flex items-center gap-3">
-                                <h1 className="text-foreground text-2xl font-bold">{task.title}</h1>
+                        <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex flex-wrap items-center gap-2 sm:gap-3">
+                                <h1 className="text-2xl font-bold text-foreground">
+                                    {task.title}
+                                </h1>
                                 <StatusBadge status={localStatus} type="task" />
-                                {task.isBlocked && <Badge variant="destructive">Blocked</Badge>}
+                                {task.isBlocked && (
+                                    <Badge variant="destructive">Blocked</Badge>
+                                )}
                             </div>
                             <p className="text-muted-foreground">
                                 {task.workOrderTitle}
@@ -683,11 +758,16 @@ export default function TaskDetail({
 
                         {/* Assignment Selector */}
                         <Select
-                            value={task.assignedAgentId ? `agent:${task.assignedAgentId}` :
-                                   task.assignedToId ? `user:${task.assignedToId}` : 'unassigned'}
+                            value={
+                                task.assignedAgentId
+                                    ? `agent:${task.assignedAgentId}`
+                                    : task.assignedToId
+                                      ? `user:${task.assignedToId}`
+                                      : 'unassigned'
+                            }
                             onValueChange={handleAssignmentChange}
                         >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue>
                                     {task.assignedAgentId ? (
                                         <span className="flex items-center gap-2">
@@ -700,16 +780,23 @@ export default function TaskDetail({
                                             {task.assignedToName}
                                         </span>
                                     ) : (
-                                        <span className="text-muted-foreground">Unassigned</span>
+                                        <span className="text-muted-foreground">
+                                            Unassigned
+                                        </span>
                                     )}
                                 </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="unassigned">Unassigned</SelectItem>
+                                <SelectItem value="unassigned">
+                                    Unassigned
+                                </SelectItem>
                                 <SelectGroup>
                                     <SelectLabel>Team Members</SelectLabel>
                                     {teamMembers.map((m) => (
-                                        <SelectItem key={`user:${m.id}`} value={`user:${m.id}`}>
+                                        <SelectItem
+                                            key={`user:${m.id}`}
+                                            value={`user:${m.id}`}
+                                        >
                                             <span className="flex items-center gap-2">
                                                 <User className="h-3 w-3" />
                                                 {m.name}
@@ -721,7 +808,10 @@ export default function TaskDetail({
                                     <SelectGroup>
                                         <SelectLabel>AI Agents</SelectLabel>
                                         {availableAgents.map((agent) => (
-                                            <SelectItem key={`agent:${agent.id}`} value={`agent:${agent.id}`}>
+                                            <SelectItem
+                                                key={`agent:${agent.id}`}
+                                                value={`agent:${agent.id}`}
+                                            >
                                                 <span className="flex items-center gap-2">
                                                     <Bot className="h-3 w-3" />
                                                     {agent.name}
@@ -751,16 +841,23 @@ export default function TaskDetail({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                                <DropdownMenuItem
+                                    onClick={() => setEditDialogOpen(true)}
+                                >
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setPromoteDialogOpen(true)}>
+                                <DropdownMenuItem
+                                    onClick={() => setPromoteDialogOpen(true)}
+                                >
                                     <ArrowUpCircle className="mr-2 h-4 w-4" />
                                     Promote to Work Order
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                                <DropdownMenuItem
+                                    onClick={handleDelete}
+                                    className="text-destructive"
+                                >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete
                                 </DropdownMenuItem>
@@ -770,58 +867,88 @@ export default function TaskDetail({
 
                     {/* Task Stats */}
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             {task.assignedAgentId ? (
-                                <Bot className="text-muted-foreground h-5 w-5" />
+                                <Bot className="h-5 w-5 text-muted-foreground" />
                             ) : (
-                                <User className="text-muted-foreground h-5 w-5" />
+                                <User className="h-5 w-5 text-muted-foreground" />
                             )}
                             <div>
-                                <div className="text-muted-foreground text-xs">Assigned To</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Assigned To
+                                </div>
                                 <div className="font-medium">
-                                    {task.assignedAgentName || task.assignedToName || 'Unassigned'}
+                                    {task.assignedAgentName ||
+                                        task.assignedToName ||
+                                        'Unassigned'}
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <Clock className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Estimated</div>
-                                <div className="font-medium">{task.estimatedHours}h</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Estimated
+                                </div>
+                                <div className="font-medium">
+                                    {task.estimatedHours}h
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <Clock className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Logged</div>
-                                <div className="font-medium">{totalTimeLogged.toFixed(1)}h</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Logged
+                                </div>
+                                <div className="font-medium">
+                                    {totalTimeLogged.toFixed(1)}h
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-                            <CheckCircle2 className="text-muted-foreground h-5 w-5" />
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
+                            <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <div className="text-muted-foreground text-xs">Checklist</div>
+                                <div className="text-xs text-muted-foreground">
+                                    Checklist
+                                </div>
                                 <div className="font-medium">
                                     {completedItems}/{totalItems}
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
+                        <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                             {(() => {
-                                const taskDueDate = task.dueDate ? new Date(task.dueDate) : null;
-                                const taskIsOverdue = taskDueDate ? taskDueDate < new Date() && task.status !== 'done' : false;
+                                const taskDueDate = task.dueDate
+                                    ? new Date(task.dueDate)
+                                    : null;
+                                const taskIsOverdue = taskDueDate
+                                    ? taskDueDate < new Date() &&
+                                      task.status !== 'done'
+                                    : false;
                                 return (
                                     <>
-                                        <Calendar className={`h-5 w-5 ${taskIsOverdue ? 'text-destructive' : 'text-muted-foreground'}`} />
+                                        <Calendar
+                                            className={`h-5 w-5 ${taskIsOverdue ? 'text-destructive' : 'text-muted-foreground'}`}
+                                        />
                                         <div>
-                                            <div className="text-muted-foreground text-xs">Due Date</div>
-                                            <div className={`font-medium ${taskIsOverdue ? 'text-destructive' : ''}`}>
+                                            <div className="text-xs text-muted-foreground">
+                                                Due Date
+                                            </div>
+                                            <div
+                                                className={`font-medium ${taskIsOverdue ? 'text-destructive' : ''}`}
+                                            >
                                                 {task.dueDate ? (
                                                     <>
-                                                        {new Date(task.dueDate).toLocaleDateString()}
-                                                        {taskIsOverdue && ' (overdue)'}
+                                                        {new Date(
+                                                            task.dueDate,
+                                                        ).toLocaleDateString()}
+                                                        {taskIsOverdue &&
+                                                            ' (overdue)'}
                                                     </>
-                                                ) : 'Not set'}
+                                                ) : (
+                                                    'Not set'
+                                                )}
                                             </div>
                                         </div>
                                     </>
@@ -836,11 +963,15 @@ export default function TaskDetail({
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 2xl:grid-cols-3">
                         {/* Timer & Time Tracking */}
                         <div>
-                            <h2 className="text-foreground mb-4 text-lg font-bold">Time Tracking</h2>
+                            <h2 className="mb-4 text-lg font-bold text-foreground">
+                                Time Tracking
+                            </h2>
 
                             {/* Hours Progress Indicator */}
-                            <div className="bg-card border-border mb-4 rounded-xl border p-4">
-                                <h3 className="text-foreground mb-3 text-sm font-medium">Actual vs Estimated</h3>
+                            <div className="mb-4 rounded-xl border border-border bg-card p-4">
+                                <h3 className="mb-3 text-sm font-medium text-foreground">
+                                    Actual vs Estimated
+                                </h3>
                                 <HoursProgressIndicator
                                     actualHours={task.actualHours}
                                     estimatedHours={task.estimatedHours}
@@ -848,28 +979,43 @@ export default function TaskDetail({
                             </div>
 
                             {/* Timer Widget */}
-                            <div className="bg-card border-border mb-4 rounded-xl border p-6">
+                            <div className="mb-4 rounded-xl border border-border bg-card p-6">
                                 <div className="mb-4 text-center">
-                                    <div className="text-foreground mb-2 font-mono text-4xl font-bold">
+                                    <div className="mb-2 font-mono text-4xl font-bold text-foreground">
                                         {formatTime(elapsedTime)}
                                     </div>
-                                    <p className="text-muted-foreground text-sm">
-                                        {activeTimer ? 'Timer running...' : 'Timer stopped'}
+                                    <p className="text-sm text-muted-foreground">
+                                        {activeTimer
+                                            ? 'Timer running...'
+                                            : 'Timer stopped'}
                                     </p>
                                 </div>
                                 <div className="flex justify-center gap-2">
                                     {activeTimer ? (
-                                        <Button onClick={handleStopTimer} variant="destructive">
+                                        <Button
+                                            onClick={handleStopTimer}
+                                            variant="destructive"
+                                        >
                                             <Pause className="mr-2 h-4 w-4" />
                                             Stop Timer
                                         </Button>
                                     ) : (
-                                        <Button onClick={handleStartTimer} disabled={isStartingTimer}>
+                                        <Button
+                                            onClick={handleStartTimer}
+                                            disabled={isStartingTimer}
+                                        >
                                             <Play className="mr-2 h-4 w-4" />
-                                            {isStartingTimer ? 'Starting...' : 'Start Timer'}
+                                            {isStartingTimer
+                                                ? 'Starting...'
+                                                : 'Start Timer'}
                                         </Button>
                                     )}
-                                    <Button variant="outline" onClick={() => setLogTimeDialogOpen(true)}>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            setLogTimeDialogOpen(true)
+                                        }
+                                    >
                                         <Plus className="mr-2 h-4 w-4" />
                                         Log Time
                                     </Button>
@@ -878,24 +1024,35 @@ export default function TaskDetail({
 
                             {/* Time Entries */}
                             <div className="space-y-2">
-                                <h3 className="text-foreground text-sm font-medium">Time Entries</h3>
+                                <h3 className="text-sm font-medium text-foreground">
+                                    Time Entries
+                                </h3>
                                 {timeEntries.length === 0 ? (
-                                    <p className="text-muted-foreground py-4 text-center text-sm">No time logged yet</p>
+                                    <p className="py-4 text-center text-sm text-muted-foreground">
+                                        No time logged yet
+                                    </p>
                                 ) : (
                                     timeEntries.map((entry) => (
                                         <div
                                             key={entry.id}
-                                            className="bg-muted flex items-center justify-between rounded-lg p-3"
+                                            className="flex items-center justify-between rounded-lg bg-muted p-3"
                                         >
                                             <div>
-                                                <div className="font-medium">{entry.hours}h</div>
-                                                <div className="text-muted-foreground text-xs">
-                                                    {entry.userName} - {new Date(entry.date).toLocaleDateString()} -{' '}
-                                                    {entry.mode}
+                                                <div className="font-medium">
+                                                    {entry.hours}h
+                                                </div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    {entry.userName} -{' '}
+                                                    {new Date(
+                                                        entry.date,
+                                                    ).toLocaleDateString()}{' '}
+                                                    - {entry.mode}
                                                 </div>
                                             </div>
                                             {entry.note && (
-                                                <p className="text-muted-foreground text-sm">{entry.note}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {entry.note}
+                                                </p>
                                             )}
                                         </div>
                                     ))
@@ -906,12 +1063,16 @@ export default function TaskDetail({
                         {/* Checklist */}
                         <div>
                             <div className="mb-4 flex items-center justify-between">
-                                <h2 className="text-foreground text-lg font-bold">Checklist</h2>
+                                <h2 className="text-lg font-bold text-foreground">
+                                    Checklist
+                                </h2>
                                 {!isAddingChecklist && (
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setIsAddingChecklist(true)}
+                                        onClick={() =>
+                                            setIsAddingChecklist(true)
+                                        }
                                     >
                                         <Plus className="mr-1 h-3 w-3" />
                                         Add Item
@@ -922,8 +1083,12 @@ export default function TaskDetail({
                             {totalItems > 0 && (
                                 <div className="mb-4">
                                     <div className="mb-2 flex items-center justify-between text-sm">
-                                        <span className="text-muted-foreground">Progress</span>
-                                        <span className="font-medium">{progress}%</span>
+                                        <span className="text-muted-foreground">
+                                            Progress
+                                        </span>
+                                        <span className="font-medium">
+                                            {progress}%
+                                        </span>
                                     </div>
                                     <ProgressBar progress={progress} />
                                 </div>
@@ -931,12 +1096,16 @@ export default function TaskDetail({
 
                             {/* Add new item form */}
                             {isAddingChecklist && (
-                                <div className="bg-card border-border mb-3 flex items-center gap-2 rounded-lg border p-3">
+                                <div className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-card p-3">
                                     <Input
                                         autoFocus
                                         value={newChecklistText}
-                                        onChange={(e) => setNewChecklistText(e.target.value)}
-                                        onKeyDown={(e) => handleChecklistKeyDown(e, 'add')}
+                                        onChange={(e) =>
+                                            setNewChecklistText(e.target.value)
+                                        }
+                                        onKeyDown={(e) =>
+                                            handleChecklistKeyDown(e, 'add')
+                                        }
                                         placeholder="Enter checklist item..."
                                         className="flex-1"
                                     />
@@ -962,12 +1131,16 @@ export default function TaskDetail({
                             )}
 
                             {totalItems === 0 && !isAddingChecklist ? (
-                                <div className="bg-muted/50 rounded-xl py-8 text-center">
-                                    <p className="text-muted-foreground mb-3">No checklist items</p>
+                                <div className="rounded-xl bg-muted/50 py-8 text-center">
+                                    <p className="mb-3 text-muted-foreground">
+                                        No checklist items
+                                    </p>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setIsAddingChecklist(true)}
+                                        onClick={() =>
+                                            setIsAddingChecklist(true)
+                                        }
                                     >
                                         <Plus className="mr-1 h-3 w-3" />
                                         Add your first item
@@ -978,29 +1151,44 @@ export default function TaskDetail({
                                     {task.checklistItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="bg-card border-border group flex items-center gap-3 rounded-lg border p-3"
+                                            className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3"
                                         >
                                             {editingItemId === item.id ? (
                                                 <>
                                                     <Input
                                                         autoFocus
                                                         value={editingItemText}
-                                                        onChange={(e) => setEditingItemText(e.target.value)}
-                                                        onKeyDown={(e) => handleChecklistKeyDown(e, 'edit')}
+                                                        onChange={(e) =>
+                                                            setEditingItemText(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        onKeyDown={(e) =>
+                                                            handleChecklistKeyDown(
+                                                                e,
+                                                                'edit',
+                                                            )
+                                                        }
                                                         className="flex-1"
                                                     />
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={handleSaveEditItem}
-                                                        disabled={!editingItemText.trim()}
+                                                        onClick={
+                                                            handleSaveEditItem
+                                                        }
+                                                        disabled={
+                                                            !editingItemText.trim()
+                                                        }
                                                     >
                                                         <Check className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={handleCancelEditItem}
+                                                        onClick={
+                                                            handleCancelEditItem
+                                                        }
                                                     >
                                                         <X className="h-4 w-4" />
                                                     </Button>
@@ -1009,7 +1197,12 @@ export default function TaskDetail({
                                                 <>
                                                     <Checkbox
                                                         checked={item.completed}
-                                                        onCheckedChange={() => handleToggleChecklist(item.id, item.completed)}
+                                                        onCheckedChange={() =>
+                                                            handleToggleChecklist(
+                                                                item.id,
+                                                                item.completed,
+                                                            )
+                                                        }
                                                     />
                                                     <span
                                                         className={`flex-1 ${item.completed ? 'text-muted-foreground line-through' : ''}`}
@@ -1021,15 +1214,24 @@ export default function TaskDetail({
                                                             size="icon"
                                                             variant="ghost"
                                                             className="h-7 w-7"
-                                                            onClick={() => handleStartEditItem(item.id, item.text)}
+                                                            onClick={() =>
+                                                                handleStartEditItem(
+                                                                    item.id,
+                                                                    item.text,
+                                                                )
+                                                            }
                                                         >
                                                             <Pencil className="h-3 w-3" />
                                                         </Button>
                                                         <Button
                                                             size="icon"
                                                             variant="ghost"
-                                                            className="text-destructive h-7 w-7"
-                                                            onClick={() => handleDeleteChecklistItem(item.id)}
+                                                            className="h-7 w-7 text-destructive"
+                                                            onClick={() =>
+                                                                handleDeleteChecklistItem(
+                                                                    item.id,
+                                                                )
+                                                            }
                                                         >
                                                             <Trash2 className="h-3 w-3" />
                                                         </Button>
@@ -1044,14 +1246,16 @@ export default function TaskDetail({
                             {/* Dependencies */}
                             {task.dependencies.length > 0 && (
                                 <div className="mt-6">
-                                    <h3 className="text-foreground mb-3 text-sm font-medium">Dependencies</h3>
+                                    <h3 className="mb-3 text-sm font-medium text-foreground">
+                                        Dependencies
+                                    </h3>
                                     <div className="space-y-2">
                                         {task.dependencies.map((dep, i) => (
                                             <div
                                                 key={i}
-                                                className="bg-muted flex items-center gap-2 rounded-lg p-3 text-sm"
+                                                className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm"
                                             >
-                                                <Circle className="text-muted-foreground h-4 w-4" />
+                                                <Circle className="h-4 w-4 text-muted-foreground" />
                                                 <span>{dep}</span>
                                             </div>
                                         ))}
@@ -1063,11 +1267,16 @@ export default function TaskDetail({
                         {/* Transition History — full-width row beneath on smaller desktops */}
                         <div className="lg:col-span-2 2xl:col-span-1">
                             <div className="mb-4 flex items-center gap-2">
-                                <History className="text-muted-foreground h-5 w-5" />
-                                <h2 className="text-foreground text-lg font-bold">Activity</h2>
+                                <History className="h-5 w-5 text-muted-foreground" />
+                                <h2 className="text-lg font-bold text-foreground">
+                                    Activity
+                                </h2>
                             </div>
-                            <div className="bg-card border-border rounded-xl border p-4">
-                                <TransitionHistory transitions={localTransitions} variant="task" />
+                            <div className="rounded-xl border border-border bg-card p-4">
+                                <TransitionHistory
+                                    transitions={localTransitions}
+                                    variant="task"
+                                />
                             </div>
                         </div>
                     </div>
@@ -1109,7 +1318,10 @@ export default function TaskDetail({
                         <DialogHeader>
                             <DialogTitle>Edit Task</DialogTitle>
                             <VisuallyHidden>
-                                <DialogDescription>Update task details including title, assignment, and due date</DialogDescription>
+                                <DialogDescription>
+                                    Update task details including title,
+                                    assignment, and due date
+                                </DialogDescription>
                             </VisuallyHidden>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -1117,7 +1329,12 @@ export default function TaskDetail({
                                 <Label>Title</Label>
                                 <Input
                                     value={editForm.data.title}
-                                    onChange={(e) => editForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={editForm.errors.title} />
                             </div>
@@ -1126,14 +1343,18 @@ export default function TaskDetail({
                                     <Label>Assigned To</Label>
                                     <Select
                                         value={editForm.data.assignment}
-                                        onValueChange={(v) => editForm.setData('assignment', v)}
+                                        onValueChange={(v) =>
+                                            editForm.setData('assignment', v)
+                                        }
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Unassigned" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="unassigned">
-                                                <span className="text-muted-foreground">Unassigned</span>
+                                                <span className="text-muted-foreground">
+                                                    Unassigned
+                                                </span>
                                             </SelectItem>
                                             <SelectGroup>
                                                 <SelectLabel className="flex items-center gap-2">
@@ -1141,7 +1362,10 @@ export default function TaskDetail({
                                                     Team Members
                                                 </SelectLabel>
                                                 {teamMembers.map((m) => (
-                                                    <SelectItem key={`user:${m.id}`} value={`user:${m.id}`}>
+                                                    <SelectItem
+                                                        key={`user:${m.id}`}
+                                                        value={`user:${m.id}`}
+                                                    >
                                                         <span className="flex items-center gap-2">
                                                             <User className="h-3 w-3" />
                                                             {m.name}
@@ -1155,23 +1379,44 @@ export default function TaskDetail({
                                                         <Bot className="h-3 w-3" />
                                                         AI Agents
                                                     </SelectLabel>
-                                                    {availableAgents.map((agent) => (
-                                                        <SelectItem key={`agent:${agent.id}`} value={`agent:${agent.id}`}>
-                                                            <span className="flex items-center gap-2">
-                                                                <Bot className="h-3 w-3" />
-                                                                {agent.name}
-                                                            </span>
-                                                        </SelectItem>
-                                                    ))}
+                                                    {availableAgents.map(
+                                                        (agent) => (
+                                                            <SelectItem
+                                                                key={`agent:${agent.id}`}
+                                                                value={`agent:${agent.id}`}
+                                                            >
+                                                                <span className="flex items-center gap-2">
+                                                                    <Bot className="h-3 w-3" />
+                                                                    {agent.name}
+                                                                </span>
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             )}
                                         </SelectContent>
                                     </Select>
                                     {(() => {
                                         const recentMembers = recentAssigneeIds
-                                            .map((id) => teamMembers.find((member) => member.id === id))
-                                            .filter((member): member is { id: string; name: string } => Boolean(member))
-                                            .filter((member) => `user:${member.id}` !== editForm.data.assignment);
+                                            .map((id) =>
+                                                teamMembers.find(
+                                                    (member) =>
+                                                        member.id === id,
+                                                ),
+                                            )
+                                            .filter(
+                                                (
+                                                    member,
+                                                ): member is {
+                                                    id: string;
+                                                    name: string;
+                                                } => Boolean(member),
+                                            )
+                                            .filter(
+                                                (member) =>
+                                                    `user:${member.id}` !==
+                                                    editForm.data.assignment,
+                                            );
 
                                         if (recentMembers.length === 0) {
                                             return null;
@@ -1186,7 +1431,12 @@ export default function TaskDetail({
                                                         variant="outline"
                                                         size="sm"
                                                         className="h-6 text-xs"
-                                                        onClick={() => editForm.setData('assignment', `user:${member.id}`)}
+                                                        onClick={() =>
+                                                            editForm.setData(
+                                                                'assignment',
+                                                                `user:${member.id}`,
+                                                            )
+                                                        }
                                                     >
                                                         <User className="mr-1 h-3 w-3" />
                                                         {member.name}
@@ -1201,7 +1451,12 @@ export default function TaskDetail({
                                     <Input
                                         type="number"
                                         value={editForm.data.estimated_hours}
-                                        onChange={(e) => editForm.setData('estimated_hours', e.target.value)}
+                                        onChange={(e) =>
+                                            editForm.setData(
+                                                'estimated_hours',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                             </div>
@@ -1210,7 +1465,12 @@ export default function TaskDetail({
                                 <Input
                                     type="date"
                                     value={editForm.data.due_date}
-                                    onChange={(e) => editForm.setData('due_date', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'due_date',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <div className="flex flex-wrap gap-1">
                                     <Button
@@ -1218,7 +1478,12 @@ export default function TaskDetail({
                                         variant="outline"
                                         size="sm"
                                         className="h-6 text-xs"
-                                        onClick={() => editForm.setData('due_date', getPresetDate('today'))}
+                                        onClick={() =>
+                                            editForm.setData(
+                                                'due_date',
+                                                getPresetDate('today'),
+                                            )
+                                        }
                                     >
                                         Today
                                     </Button>
@@ -1227,7 +1492,12 @@ export default function TaskDetail({
                                         variant="outline"
                                         size="sm"
                                         className="h-6 text-xs"
-                                        onClick={() => editForm.setData('due_date', getPresetDate('tomorrow'))}
+                                        onClick={() =>
+                                            editForm.setData(
+                                                'due_date',
+                                                getPresetDate('tomorrow'),
+                                            )
+                                        }
                                     >
                                         Tomorrow
                                     </Button>
@@ -1236,7 +1506,12 @@ export default function TaskDetail({
                                         variant="outline"
                                         size="sm"
                                         className="h-6 text-xs"
-                                        onClick={() => editForm.setData('due_date', getPresetDate('nextMonday'))}
+                                        onClick={() =>
+                                            editForm.setData(
+                                                'due_date',
+                                                getPresetDate('nextMonday'),
+                                            )
+                                        }
                                     >
                                         Next Monday
                                     </Button>
@@ -1245,7 +1520,12 @@ export default function TaskDetail({
                                         variant="outline"
                                         size="sm"
                                         className="h-6 text-xs"
-                                        onClick={() => editForm.setData('due_date', getPresetDate('nextMonth'))}
+                                        onClick={() =>
+                                            editForm.setData(
+                                                'due_date',
+                                                getPresetDate('nextMonth'),
+                                            )
+                                        }
                                     >
                                         Next Month
                                     </Button>
@@ -1253,12 +1533,19 @@ export default function TaskDetail({
                             </div>
                             {dueDateChanged && (
                                 <div className="grid gap-2">
-                                    <Label htmlFor="due-date-reason">Reason for due date change (optional)</Label>
+                                    <Label htmlFor="due-date-reason">
+                                        Reason for due date change (optional)
+                                    </Label>
                                     <Input
                                         id="due-date-reason"
                                         placeholder="e.g. waiting on client assets"
                                         value={editForm.data.reason}
-                                        onChange={(e) => editForm.setData('reason', e.target.value)}
+                                        onChange={(e) =>
+                                            editForm.setData(
+                                                'reason',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                             )}
@@ -1266,15 +1553,27 @@ export default function TaskDetail({
                                 <Label>Description</Label>
                                 <Input
                                     value={editForm.data.description}
-                                    onChange={(e) => editForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setEditDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={editForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={editForm.processing}
+                            >
                                 Save
                             </Button>
                         </DialogFooter>
@@ -1283,12 +1582,17 @@ export default function TaskDetail({
             </Dialog>
 
             {/* Log Time Dialog */}
-            <Dialog open={logTimeDialogOpen} onOpenChange={setLogTimeDialogOpen}>
+            <Dialog
+                open={logTimeDialogOpen}
+                onOpenChange={setLogTimeDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleLogTime}>
                         <DialogHeader>
                             <DialogTitle>Log Time</DialogTitle>
-                            <DialogDescription>Manually log time spent on this task</DialogDescription>
+                            <DialogDescription>
+                                Manually log time spent on this task
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -1298,17 +1602,29 @@ export default function TaskDetail({
                                         type="number"
                                         step="0.25"
                                         value={timeForm.data.hours}
-                                        onChange={(e) => timeForm.setData('hours', e.target.value)}
+                                        onChange={(e) =>
+                                            timeForm.setData(
+                                                'hours',
+                                                e.target.value,
+                                            )
+                                        }
                                         placeholder="0.0"
                                     />
-                                    <InputError message={timeForm.errors.hours} />
+                                    <InputError
+                                        message={timeForm.errors.hours}
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Date</Label>
                                     <Input
                                         type="date"
                                         value={timeForm.data.date}
-                                        onChange={(e) => timeForm.setData('date', e.target.value)}
+                                        onChange={(e) =>
+                                            timeForm.setData(
+                                                'date',
+                                                e.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                             </div>
@@ -1316,16 +1632,25 @@ export default function TaskDetail({
                                 <Label>Note (optional)</Label>
                                 <Input
                                     value={timeForm.data.note}
-                                    onChange={(e) => timeForm.setData('note', e.target.value)}
+                                    onChange={(e) =>
+                                        timeForm.setData('note', e.target.value)
+                                    }
                                     placeholder="What did you work on?"
                                 />
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setLogTimeDialogOpen(false)}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setLogTimeDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={timeForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={timeForm.processing}
+                            >
                                 Log Time
                             </Button>
                         </DialogFooter>
@@ -1338,7 +1663,9 @@ export default function TaskDetail({
                 <div className="fixed right-4 bottom-4 z-50 max-w-sm rounded-lg border border-red-200 bg-red-50 p-4 shadow-lg dark:border-red-800 dark:bg-red-950">
                     <div className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        <p className="text-sm text-red-800 dark:text-red-200">{transitionError}</p>
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                            {transitionError}
+                        </p>
                         <button
                             onClick={() => setTransitionError(null)}
                             className="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"

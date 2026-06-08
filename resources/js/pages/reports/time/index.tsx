@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Head, router } from '@inertiajs/react';
-import {
-    Users,
-    FolderTree,
-    Scale,
-    Download,
-    ChevronRight,
-    ChevronDown,
-    Calendar,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Table,
     TableBody,
@@ -27,9 +27,20 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import {
+    Calendar,
+    ChevronDown,
+    ChevronRight,
+    Download,
+    FolderTree,
+    Scale,
+    Users,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Reports', href: '/reports' },
@@ -137,7 +148,12 @@ function ExportButton() {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" disabled className="opacity-50">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="opacity-50"
+                >
                     <Download className="mr-2 size-4" />
                     Export
                 </Button>
@@ -175,13 +191,20 @@ function ByUserTab({
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="sticky left-0 bg-background">User</TableHead>
+                        <TableHead className="sticky left-0 bg-background">
+                            User
+                        </TableHead>
                         {dates.map((date) => (
-                            <TableHead key={date} className="min-w-[100px] text-center">
+                            <TableHead
+                                key={date}
+                                className="min-w-[100px] text-center"
+                            >
                                 {formatDateHeader(date)}
                             </TableHead>
                         ))}
-                        <TableHead className="text-right font-bold">Total</TableHead>
+                        <TableHead className="text-right font-bold">
+                            Total
+                        </TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -191,7 +214,10 @@ function ByUserTab({
                                 {user.user_name}
                             </TableCell>
                             {dates.map((date) => (
-                                <TableCell key={date} className="text-center font-mono text-sm">
+                                <TableCell
+                                    key={date}
+                                    className="text-center font-mono text-sm"
+                                >
                                     {user.daily_hours[date]
                                         ? user.daily_hours[date].toFixed(1)
                                         : '-'}
@@ -224,14 +250,18 @@ function ProjectTreeItem({
                 <div
                     className={cn(
                         'flex items-center justify-between border-b px-4 py-3 hover:bg-muted/50',
-                        level === 0 && 'bg-muted/30 font-medium'
+                        level === 0 && 'bg-muted/30 font-medium',
                     )}
                     style={{ paddingLeft: `${level * 24 + 16}px` }}
                 >
                     <div className="flex items-center gap-2">
                         {hasChildren ? (
                             <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="size-6 p-0">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="size-6 p-0"
+                                >
                                     {isOpen ? (
                                         <ChevronDown className="size-4" />
                                     ) : (
@@ -244,7 +274,9 @@ function ProjectTreeItem({
                         )}
                         <span>{project.name}</span>
                     </div>
-                    <span className="font-mono text-sm">{formatHours(project.hours)}</span>
+                    <span className="font-mono text-sm">
+                        {formatHours(project.hours)}
+                    </span>
                 </div>
                 <CollapsibleContent>
                     {project.work_orders.map((workOrder) => (
@@ -280,7 +312,11 @@ function WorkOrderTreeItem({
                     <div className="flex items-center gap-2">
                         {hasChildren ? (
                             <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="size-6 p-0">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="size-6 p-0"
+                                >
                                     {isOpen ? (
                                         <ChevronDown className="size-4" />
                                     ) : (
@@ -291,7 +327,9 @@ function WorkOrderTreeItem({
                         ) : (
                             <span className="size-6" />
                         )}
-                        <span className="text-muted-foreground">{workOrder.name}</span>
+                        <span className="text-muted-foreground">
+                            {workOrder.name}
+                        </span>
                     </div>
                     <span className="font-mono text-sm text-muted-foreground">
                         {formatHours(workOrder.hours)}
@@ -302,11 +340,15 @@ function WorkOrderTreeItem({
                         <div
                             key={task.id}
                             className="flex items-center justify-between border-b px-4 py-2 hover:bg-muted/50"
-                            style={{ paddingLeft: `${(level + 1) * 24 + 16}px` }}
+                            style={{
+                                paddingLeft: `${(level + 1) * 24 + 16}px`,
+                            }}
                         >
                             <div className="flex items-center gap-2">
                                 <span className="size-6" />
-                                <span className="text-sm text-muted-foreground">{task.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                    {task.name}
+                                </span>
                             </div>
                             <span className="font-mono text-sm text-muted-foreground">
                                 {formatHours(task.hours)}
@@ -326,7 +368,9 @@ function ByProjectTab({ data }: { data: ProjectNode[] }) {
                 <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
                     <FolderTree className="size-8 text-muted-foreground" />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">No projects found</h3>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">
+                    No projects found
+                </h3>
                 <p className="text-sm text-muted-foreground">
                     No time has been logged against any projects
                 </p>
@@ -350,7 +394,9 @@ function ActualVsEstimatedTab({ data }: { data: VarianceItem[] }) {
                 <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
                     <Scale className="size-8 text-muted-foreground" />
                 </div>
-                <h3 className="mb-2 text-lg font-semibold text-foreground">No data available</h3>
+                <h3 className="mb-2 text-lg font-semibold text-foreground">
+                    No data available
+                </h3>
                 <p className="text-sm text-muted-foreground">
                     No tasks or work orders have estimated hours set
                 </p>
@@ -374,8 +420,10 @@ function ActualVsEstimatedTab({ data }: { data: VarianceItem[] }) {
                 <TableBody>
                     {data.map((item) => (
                         <TableRow key={`${item.type}-${item.id}`}>
-                            <TableCell className="font-medium">{item.name}</TableCell>
-                            <TableCell className="capitalize text-muted-foreground">
+                            <TableCell className="font-medium">
+                                {item.name}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground capitalize">
                                 {item.type.replace('_', ' ')}
                             </TableCell>
                             <TableCell className="text-right font-mono">
@@ -387,7 +435,7 @@ function ActualVsEstimatedTab({ data }: { data: VarianceItem[] }) {
                             <TableCell
                                 className={cn(
                                     'text-right font-mono',
-                                    getVarianceColor(item.variance_percent)
+                                    getVarianceColor(item.variance_percent),
                                 )}
                             >
                                 {item.variance > 0 ? '+' : ''}
@@ -397,8 +445,10 @@ function ActualVsEstimatedTab({ data }: { data: VarianceItem[] }) {
                                 <span
                                     className={cn(
                                         'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                                        getVarianceBgColor(item.variance_percent),
-                                        getVarianceColor(item.variance_percent)
+                                        getVarianceBgColor(
+                                            item.variance_percent,
+                                        ),
+                                        getVarianceColor(item.variance_percent),
                                     )}
                                 >
                                     {item.variance_percent > 0 ? '+' : ''}
@@ -413,7 +463,10 @@ function ActualVsEstimatedTab({ data }: { data: VarianceItem[] }) {
     );
 }
 
-export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPageProps) {
+export default function TimeReportsIndex({
+    byUserData,
+    filters,
+}: TimeReportsPageProps) {
     const [activeTab, setActiveTab] = useState('by-user');
     const [projectData, setProjectData] = useState<ProjectNode[]>([]);
     const [varianceData, setVarianceData] = useState<VarianceItem[]>([]);
@@ -431,10 +484,14 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
         setIsLoadingProjects(true);
         try {
             const params = new URLSearchParams();
-            if (localFilters.date_from) params.set('date_from', localFilters.date_from);
-            if (localFilters.date_to) params.set('date_to', localFilters.date_to);
+            if (localFilters.date_from)
+                params.set('date_from', localFilters.date_from);
+            if (localFilters.date_to)
+                params.set('date_to', localFilters.date_to);
 
-            const response = await fetch(`/reports/time/by-project?${params.toString()}`);
+            const response = await fetch(
+                `/reports/time/by-project?${params.toString()}`,
+            );
             const json = await response.json();
             setProjectData(json.data);
         } catch {
@@ -460,17 +517,31 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
     useEffect(() => {
         if (activeTab === 'by-project' && projectData.length === 0) {
             fetchProjectData();
-        } else if (activeTab === 'actual-vs-estimated' && varianceData.length === 0) {
+        } else if (
+            activeTab === 'actual-vs-estimated' &&
+            varianceData.length === 0
+        ) {
             fetchVarianceData();
         }
-    }, [activeTab, projectData.length, varianceData.length, fetchProjectData, fetchVarianceData]);
+    }, [
+        activeTab,
+        projectData.length,
+        varianceData.length,
+        fetchProjectData,
+        fetchVarianceData,
+    ]);
 
     const applyFilters = useCallback(() => {
         const params = new URLSearchParams();
-        if (localFilters.date_from) params.set('date_from', localFilters.date_from);
+        if (localFilters.date_from)
+            params.set('date_from', localFilters.date_from);
         if (localFilters.date_to) params.set('date_to', localFilters.date_to);
 
-        router.get(`/reports/time?${params.toString()}`, {}, { preserveState: false });
+        router.get(
+            `/reports/time?${params.toString()}`,
+            {},
+            { preserveState: false },
+        );
     }, [localFilters]);
 
     return (
@@ -479,10 +550,12 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
 
             <div className="flex h-full flex-1 flex-col">
                 {/* Header */}
-                <div className="border-b border-sidebar-border/70 px-6 py-6 dark:border-sidebar-border">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="mb-2 text-2xl font-bold text-foreground">Time Reports</h1>
+                            <h1 className="mb-2 text-2xl font-bold text-foreground">
+                                Time Reports
+                            </h1>
                             <p className="text-muted-foreground">
                                 Analyze time tracking data across your team
                             </p>
@@ -491,10 +564,13 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
                 </div>
 
                 {/* Date Range Filter */}
-                <div className="border-b border-sidebar-border/70 bg-muted/30 px-6 py-4 dark:border-sidebar-border">
-                    <div className="flex flex-wrap items-end gap-4">
+                <div className="border-b border-sidebar-border/70 bg-muted/30 px-4 py-4 sm:px-6 dark:border-sidebar-border">
+                    <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-end">
                         <div className="grid gap-2">
-                            <Label htmlFor="date_from" className="flex items-center gap-2">
+                            <Label
+                                htmlFor="date_from"
+                                className="flex items-center gap-2"
+                            >
                                 <Calendar className="size-4" />
                                 From Date
                             </Label>
@@ -529,19 +605,50 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-auto p-6">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <TabsList>
+                <div className="flex-1 overflow-auto p-4 sm:p-6">
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="space-y-6"
+                    >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Mobile: dropdown */}
+                            <Select
+                                value={activeTab}
+                                onValueChange={setActiveTab}
+                            >
+                                <SelectTrigger className="w-full sm:hidden">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="by-user">
+                                        By User
+                                    </SelectItem>
+                                    <SelectItem value="by-project">
+                                        By Project
+                                    </SelectItem>
+                                    <SelectItem value="actual-vs-estimated">
+                                        Actual vs Estimated
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {/* Desktop: tabs */}
+                            <TabsList className="hidden sm:inline-flex">
                                 <TabsTrigger value="by-user" className="gap-2">
                                     <Users className="size-4" />
                                     By User
                                 </TabsTrigger>
-                                <TabsTrigger value="by-project" className="gap-2">
+                                <TabsTrigger
+                                    value="by-project"
+                                    className="gap-2"
+                                >
                                     <FolderTree className="size-4" />
                                     By Project
                                 </TabsTrigger>
-                                <TabsTrigger value="actual-vs-estimated" className="gap-2">
+                                <TabsTrigger
+                                    value="actual-vs-estimated"
+                                    className="gap-2"
+                                >
                                     <Scale className="size-4" />
                                     Actual vs Estimated
                                 </TabsTrigger>
@@ -567,7 +674,10 @@ export default function TimeReportsIndex({ byUserData, filters }: TimeReportsPag
                             )}
                         </TabsContent>
 
-                        <TabsContent value="actual-vs-estimated" className="mt-6">
+                        <TabsContent
+                            value="actual-vs-estimated"
+                            className="mt-6"
+                        >
                             {isLoadingVariance ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="animate-pulse text-muted-foreground">

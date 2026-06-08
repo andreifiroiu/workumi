@@ -1,8 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,17 +7,27 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-    Loader2,
-    MoreVertical,
-    Edit,
-    Trash2,
-    Send,
-    X,
-    MapPin,
-} from 'lucide-react';
-import type { AnnotationPopoverProps, DocumentAnnotation } from '@/types/documents.d';
-import type { CommunicationMessage } from '@/types/communications.d';
+    Popover,
+    PopoverAnchor,
+    PopoverContent,
+} from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { getCsrfToken } from '@/lib/csrf';
+import type { CommunicationMessage } from '@/types/communications.d';
+import type {
+    AnnotationPopoverProps,
+    DocumentAnnotation,
+} from '@/types/documents.d';
+import {
+    Edit,
+    Loader2,
+    MapPin,
+    MoreVertical,
+    Send,
+    Trash2,
+    X,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Format timestamp to relative time.
@@ -86,16 +93,18 @@ function AnnotationThreadMessage({
     };
 
     return (
-        <div className="group flex gap-2 p-2 rounded hover:bg-muted/50">
+        <div className="group flex gap-2 rounded p-2 hover:bg-muted/50">
             <Avatar className="h-6 w-6 shrink-0">
                 <AvatarFallback className="text-[10px]">
                     {getInitials(message.authorName)}
                 </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium">{message.authorName}</span>
+                    <span className="text-xs font-medium">
+                        {message.authorName}
+                    </span>
                     <span className="text-[10px] text-muted-foreground">
                         {formatTimestamp(message.timestamp)}
                     </span>
@@ -111,7 +120,7 @@ function AnnotationThreadMessage({
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100"
+                                    className="h-5 w-5 p-0 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                                     aria-label="Message actions"
                                 >
                                     <MoreVertical className="h-3 w-3" />
@@ -119,8 +128,10 @@ function AnnotationThreadMessage({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 {message.canEdit && (
-                                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                                        <Edit className="h-3 w-3 mr-2" />
+                                    <DropdownMenuItem
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Edit className="mr-2 h-3 w-3" />
                                         Edit
                                     </DropdownMenuItem>
                                 )}
@@ -129,7 +140,7 @@ function AnnotationThreadMessage({
                                         onClick={() => onDelete(message.id)}
                                         className="text-destructive"
                                     >
-                                        <Trash2 className="h-3 w-3 mr-2" />
+                                        <Trash2 className="mr-2 h-3 w-3" />
                                         Delete
                                     </DropdownMenuItem>
                                 )}
@@ -143,11 +154,15 @@ function AnnotationThreadMessage({
                         <Textarea
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
-                            className="min-h-[40px] text-xs resize-none"
+                            className="min-h-[40px] resize-none text-xs"
                             autoFocus
                         />
                         <div className="flex gap-1">
-                            <Button size="sm" className="h-6 text-xs" onClick={handleSaveEdit}>
+                            <Button
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={handleSaveEdit}
+                            >
                                 Save
                             </Button>
                             <Button
@@ -164,7 +179,7 @@ function AnnotationThreadMessage({
                         </div>
                     </div>
                 ) : (
-                    <p className="text-xs whitespace-pre-wrap break-words mt-0.5">
+                    <p className="mt-0.5 text-xs break-words whitespace-pre-wrap">
                         {message.content}
                     </p>
                 )}
@@ -222,7 +237,7 @@ export function AnnotationPopover({
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
-                }
+                },
             );
 
             if (!response.ok) {
@@ -233,9 +248,12 @@ export function AnnotationPopover({
             setMessages(data.annotation.messages || []);
 
             // Determine current user ID
-            if (data.annotation.messages && data.annotation.messages.length > 0) {
+            if (
+                data.annotation.messages &&
+                data.annotation.messages.length > 0
+            ) {
                 const ownMessage = data.annotation.messages.find(
-                    (m) => m.canEdit || m.canDelete
+                    (m) => m.canEdit || m.canDelete,
                 );
                 if (ownMessage) {
                     setCurrentUserId(ownMessage.authorId);
@@ -268,7 +286,7 @@ export function AnnotationPopover({
                         'X-XSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({ content: replyContent.trim() }),
-                }
+                },
             );
 
             if (!response.ok) {
@@ -279,11 +297,19 @@ export function AnnotationPopover({
             fetchAnnotationDetails();
             onReplyAdded?.();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to add reply');
+            setError(
+                err instanceof Error ? err.message : 'Failed to add reply',
+            );
         } finally {
             setIsSending(false);
         }
-    }, [annotation, documentId, replyContent, fetchAnnotationDetails, onReplyAdded]);
+    }, [
+        annotation,
+        documentId,
+        replyContent,
+        fetchAnnotationDetails,
+        onReplyAdded,
+    ]);
 
     // Handle keyboard shortcuts
     const handleKeyDown = useCallback(
@@ -293,7 +319,7 @@ export function AnnotationPopover({
                 handleAddReply();
             }
         },
-        [handleAddReply]
+        [handleAddReply],
     );
 
     // Scroll to bottom when messages change
@@ -340,9 +366,12 @@ export function AnnotationPopover({
                 data-testid="annotation-popover"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-3 border-b">
+                <div className="flex items-center justify-between border-b p-3">
                     <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <MapPin
+                            className="h-4 w-4 text-primary"
+                            aria-hidden="true"
+                        />
                         <span className="text-sm font-medium">Annotation</span>
                         {annotation?.isForPdf && annotation.page && (
                             <span className="text-xs text-muted-foreground">
@@ -368,7 +397,7 @@ export function AnnotationPopover({
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                         </div>
                     ) : error ? (
-                        <div className="flex flex-col items-center justify-center py-6 px-3 gap-2">
+                        <div className="flex flex-col items-center justify-center gap-2 px-3 py-6">
                             <p className="text-xs text-destructive">{error}</p>
                             <Button
                                 variant="outline"
@@ -386,7 +415,7 @@ export function AnnotationPopover({
                             </p>
                         </div>
                     ) : (
-                        <div className="p-2 space-y-1">
+                        <div className="space-y-1 p-2">
                             {messages.map((message) => (
                                 <AnnotationThreadMessage
                                     key={message.id}
@@ -400,9 +429,9 @@ export function AnnotationPopover({
                 </div>
 
                 {/* Reply input */}
-                <div className="p-3 border-t space-y-2">
+                <div className="space-y-2 border-t p-3">
                     {error && (
-                        <div className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">
+                        <div className="rounded bg-destructive/10 px-2 py-1 text-xs text-destructive">
                             {error}
                         </div>
                     )}
@@ -412,7 +441,7 @@ export function AnnotationPopover({
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                             placeholder="Add a reply..."
-                            className="min-h-[50px] text-xs resize-none"
+                            className="min-h-[50px] resize-none text-xs"
                             disabled={isSending}
                         />
                     </div>
@@ -428,9 +457,12 @@ export function AnnotationPopover({
                             className="h-7"
                         >
                             {isSending ? (
-                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                             ) : (
-                                <Send className="h-3 w-3 mr-1" aria-hidden="true" />
+                                <Send
+                                    className="mr-1 h-3 w-3"
+                                    aria-hidden="true"
+                                />
                             )}
                             Reply
                         </Button>
