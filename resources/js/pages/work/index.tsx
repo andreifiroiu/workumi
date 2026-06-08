@@ -1,8 +1,4 @@
-import { useState } from 'react';
-import { Head, router, useForm } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import { Input } from '@/components/ui/input';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,8 +8,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import {
     Select,
     SelectContent,
@@ -21,18 +17,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
+import { Switch } from '@/components/ui/switch';
 import {
-    ViewTabs,
-    QuickAddBar,
-    ProjectTreeItem,
-    MyWorkView,
-    KanbanView,
-    CalendarView,
     ArchiveView,
+    CalendarView,
+    KanbanView,
+    MyWorkView,
+    ProjectTreeItem,
+    QuickAddBar,
+    ViewTabs,
 } from '@/components/work';
-import type { WorkPageProps, WorkView, QuickAddData } from '@/types/work';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import type { QuickAddData, WorkPageProps, WorkView } from '@/types/work';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Work', href: '/work' }];
 
@@ -50,8 +50,10 @@ export default function Work({
 }: WorkPageProps) {
     const [view, setView] = useState<WorkView>(currentView);
     const [searchQuery, setSearchQuery] = useState('');
-    const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
-    const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] = useState(false);
+    const [createProjectDialogOpen, setCreateProjectDialogOpen] =
+        useState(false);
+    const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] =
+        useState(false);
     const [, setSelectedProjectId] = useState<string | null>(null);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
     const [, setSelectedWorkOrderId] = useState<string | null>(null);
@@ -70,19 +72,27 @@ export default function Work({
         workOrderListId: '',
         description: '',
         priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0], // 1 week from now
     });
 
     const taskForm = useForm({
         title: '',
         workOrderId: '',
         description: '',
-        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0], // 1 week from now
     });
 
     const handleViewChange = (newView: WorkView) => {
         setView(newView);
-        router.patch('/work/preferences', { key: 'work_view', value: newView }, { preserveState: true });
+        router.patch(
+            '/work/preferences',
+            { key: 'work_view', value: newView },
+            { preserveState: true },
+        );
     };
 
     const handleQuickAdd = (data: QuickAddData) => {
@@ -147,8 +157,12 @@ export default function Work({
 
     // Filter projects based on search across projects, lists, work orders, and tasks
     const normalizedQuery = searchQuery.trim().toLowerCase();
-    const matchesQuery = (...values: Array<string | null | undefined>): boolean =>
-        values.some((value) => value?.toLowerCase().includes(normalizedQuery) ?? false);
+    const matchesQuery = (
+        ...values: Array<string | null | undefined>
+    ): boolean =>
+        values.some(
+            (value) => value?.toLowerCase().includes(normalizedQuery) ?? false,
+        );
 
     const filteredProjects = normalizedQuery
         ? projects.filter((p) => {
@@ -159,7 +173,7 @@ export default function Work({
               const listMatches = p.workOrderLists.some(
                   (list) =>
                       matchesQuery(list.name, list.description) ||
-                      list.workOrders.some((wo) => matchesQuery(wo.title))
+                      list.workOrders.some((wo) => matchesQuery(wo.title)),
               );
               if (listMatches) {
                   return true;
@@ -170,17 +184,25 @@ export default function Work({
               }
 
               const workOrderMatches = workOrders.some(
-                  (wo) => wo.projectId === p.id && matchesQuery(wo.title, wo.description)
+                  (wo) =>
+                      wo.projectId === p.id &&
+                      matchesQuery(wo.title, wo.description),
               );
               if (workOrderMatches) {
                   return true;
               }
 
-              return tasks.some((task) => task.projectId === p.id && matchesQuery(task.title, task.description));
+              return tasks.some(
+                  (task) =>
+                      task.projectId === p.id &&
+                      matchesQuery(task.title, task.description),
+              );
           })
         : projects;
 
-    const activeProjects = filteredProjects.filter((p) => p.status === 'active' || p.status === 'on_hold');
+    const activeProjects = filteredProjects.filter(
+        (p) => p.status === 'active' || p.status === 'on_hold',
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -188,8 +210,10 @@ export default function Work({
 
             <div className="flex h-full flex-1 flex-col">
                 {/* Header */}
-                <div className="px-6 py-6 border-b border-sidebar-border/70 dark:border-sidebar-border">
-                    <h1 className="text-2xl font-bold text-foreground mb-2">Work</h1>
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
+                    <h1 className="mb-2 text-2xl font-bold text-foreground">
+                        Work
+                    </h1>
                     <p className="text-muted-foreground">
                         Manage projects, work orders, tasks, and deliverables
                     </p>
@@ -204,12 +228,14 @@ export default function Work({
                     {view === 'all_projects' && (
                         <div className="p-6 pb-0">
                             <div className="mb-6 flex items-center gap-4">
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <div className="relative flex-1">
+                                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                                     <Input
                                         type="text"
                                         value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearchQuery(e.target.value)
+                                        }
                                         placeholder="Search projects, work orders, tasks..."
                                         className="pl-10"
                                     />
@@ -221,25 +247,33 @@ export default function Work({
                     {/* All Projects View */}
                     {view === 'all_projects' && (
                         <div className="px-6 pb-6">
-                            <div className="bg-card border border-border rounded-xl overflow-hidden">
+                            <div className="overflow-hidden rounded-xl border border-border bg-card">
                                 <QuickAddBar onQuickAdd={handleQuickAdd} />
 
                                 <div className="divide-y divide-border">
                                     {activeProjects.length === 0 ? (
                                         <div className="p-12 text-center">
-                                            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                                                <Search className="w-8 h-8 text-muted-foreground" />
+                                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                                <Search className="h-8 w-8 text-muted-foreground" />
                                             </div>
-                                            <h3 className="text-lg font-semibold text-foreground mb-2">
-                                                {searchQuery ? 'No projects found' : 'No active projects'}
+                                            <h3 className="mb-2 text-lg font-semibold text-foreground">
+                                                {searchQuery
+                                                    ? 'No projects found'
+                                                    : 'No active projects'}
                                             </h3>
-                                            <p className="text-sm text-muted-foreground mb-6">
+                                            <p className="mb-6 text-sm text-muted-foreground">
                                                 {searchQuery
                                                     ? 'Try adjusting your search query'
                                                     : 'Get started by creating your first project'}
                                             </p>
                                             {!searchQuery && (
-                                                <Button onClick={() => setCreateProjectDialogOpen(true)}>
+                                                <Button
+                                                    onClick={() =>
+                                                        setCreateProjectDialogOpen(
+                                                            true,
+                                                        )
+                                                    }
+                                                >
                                                     Create First Project
                                                 </Button>
                                             )}
@@ -251,7 +285,9 @@ export default function Work({
                                                 project={project}
                                                 workOrders={workOrders}
                                                 tasks={tasks}
-                                                onCreateWorkOrder={handleCreateWorkOrder}
+                                                onCreateWorkOrder={
+                                                    handleCreateWorkOrder
+                                                }
                                                 onCreateTask={handleCreateTask}
                                             />
                                         ))
@@ -280,7 +316,9 @@ export default function Work({
                             <KanbanView
                                 workOrders={workOrders}
                                 tasks={tasks}
-                                onCreateWorkOrder={handleCreateWorkOrderFromKanban}
+                                onCreateWorkOrder={
+                                    handleCreateWorkOrderFromKanban
+                                }
                             />
                         </div>
                     )}
@@ -288,90 +326,143 @@ export default function Work({
                     {/* Calendar View */}
                     {view === 'calendar' && (
                         <div className="p-6">
-                            <CalendarView projects={projects} workOrders={workOrders} />
+                            <CalendarView
+                                projects={projects}
+                                workOrders={workOrders}
+                            />
                         </div>
                     )}
 
                     {/* Archive View */}
                     {view === 'archive' && (
                         <div className="p-6">
-                            <ArchiveView projects={projects} workOrders={workOrders} tasks={tasks} />
+                            <ArchiveView
+                                projects={projects}
+                                workOrders={workOrders}
+                                tasks={tasks}
+                            />
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Create Project Dialog */}
-            <Dialog open={createProjectDialogOpen} onOpenChange={setCreateProjectDialogOpen}>
+            <Dialog
+                open={createProjectDialogOpen}
+                onOpenChange={setCreateProjectDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleCreateProject}>
                         <DialogHeader>
                             <DialogTitle>Create New Project</DialogTitle>
                             <DialogDescription>
-                                Create a new project to organize your work orders and tasks.
+                                Create a new project to organize your work
+                                orders and tasks.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="project-name">Project Name</Label>
+                                <Label htmlFor="project-name">
+                                    Project Name
+                                </Label>
                                 <Input
                                     id="project-name"
                                     value={projectForm.data.name}
-                                    onChange={(e) => projectForm.setData('name', e.target.value)}
+                                    onChange={(e) =>
+                                        projectForm.setData(
+                                            'name',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="My Project"
                                 />
                                 <InputError message={projectForm.errors.name} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="project-party">Client / Party</Label>
+                                <Label htmlFor="project-party">
+                                    Client / Party
+                                </Label>
                                 <Select
                                     value={projectForm.data.partyId}
-                                    onValueChange={(value) => projectForm.setData('partyId', value)}
+                                    onValueChange={(value) =>
+                                        projectForm.setData('partyId', value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a party" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {parties.map((party) => (
-                                            <SelectItem key={party.id} value={party.id}>
+                                            <SelectItem
+                                                key={party.id}
+                                                value={party.id}
+                                            >
                                                 {party.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={projectForm.errors.partyId} />
+                                <InputError
+                                    message={projectForm.errors.partyId}
+                                />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="project-start-date">Start Date</Label>
+                                <Label htmlFor="project-start-date">
+                                    Start Date
+                                </Label>
                                 <Input
                                     id="project-start-date"
                                     type="date"
                                     value={projectForm.data.startDate}
-                                    onChange={(e) => projectForm.setData('startDate', e.target.value)}
+                                    onChange={(e) =>
+                                        projectForm.setData(
+                                            'startDate',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
-                                <InputError message={projectForm.errors.startDate} />
+                                <InputError
+                                    message={projectForm.errors.startDate}
+                                />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="project-description">Description (optional)</Label>
+                                <Label htmlFor="project-description">
+                                    Description (optional)
+                                </Label>
                                 <Input
                                     id="project-description"
                                     value={projectForm.data.description}
-                                    onChange={(e) => projectForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        projectForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Brief description of the project"
                                 />
-                                <InputError message={projectForm.errors.description} />
+                                <InputError
+                                    message={projectForm.errors.description}
+                                />
                             </div>
                             <div className="flex items-center justify-between">
                                 <div className="space-y-0.5">
-                                    <Label htmlFor="project-private">Private Project</Label>
+                                    <Label htmlFor="project-private">
+                                        Private Project
+                                    </Label>
                                     <p className="text-sm text-muted-foreground">
-                                        Only you and assigned team members can see this project
+                                        Only you and assigned team members can
+                                        see this project
                                     </p>
                                 </div>
                                 <Switch
                                     id="project-private"
                                     checked={projectForm.data.isPrivate}
-                                    onCheckedChange={(checked) => projectForm.setData('isPrivate', checked)}
+                                    onCheckedChange={(checked) =>
+                                        projectForm.setData(
+                                            'isPrivate',
+                                            checked,
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
@@ -379,11 +470,16 @@ export default function Work({
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setCreateProjectDialogOpen(false)}
+                                onClick={() =>
+                                    setCreateProjectDialogOpen(false)
+                                }
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={projectForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={projectForm.processing}
+                            >
                                 Create Project
                             </Button>
                         </DialogFooter>
@@ -392,13 +488,17 @@ export default function Work({
             </Dialog>
 
             {/* Create Work Order Dialog */}
-            <Dialog open={createWorkOrderDialogOpen} onOpenChange={setCreateWorkOrderDialogOpen}>
+            <Dialog
+                open={createWorkOrderDialogOpen}
+                onOpenChange={setCreateWorkOrderDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleSubmitWorkOrder}>
                         <DialogHeader>
                             <DialogTitle>Create Work Order</DialogTitle>
                             <DialogDescription>
-                                Create a new work order to track specific deliverables.
+                                Create a new work order to track specific
+                                deliverables.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -407,38 +507,66 @@ export default function Work({
                                 <Input
                                     id="wo-title"
                                     value={workOrderForm.data.title}
-                                    onChange={(e) => workOrderForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        workOrderForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Work order title"
                                 />
-                                <InputError message={workOrderForm.errors.title} />
+                                <InputError
+                                    message={workOrderForm.errors.title}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="wo-project">Project</Label>
                                 <Select
                                     value={workOrderForm.data.projectId}
-                                    onValueChange={(value) => workOrderForm.setData('projectId', value)}
+                                    onValueChange={(value) =>
+                                        workOrderForm.setData(
+                                            'projectId',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a project" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {projects
-                                            .filter((p) => p.status === 'active' || p.status === 'on_hold')
+                                            .filter(
+                                                (p) =>
+                                                    p.status === 'active' ||
+                                                    p.status === 'on_hold',
+                                            )
                                             .map((project) => (
-                                                <SelectItem key={project.id} value={project.id}>
+                                                <SelectItem
+                                                    key={project.id}
+                                                    value={project.id}
+                                                >
                                                     {project.name}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={workOrderForm.errors.projectId} />
+                                <InputError
+                                    message={workOrderForm.errors.projectId}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="wo-priority">Priority</Label>
                                 <Select
                                     value={workOrderForm.data.priority}
                                     onValueChange={(value) =>
-                                        workOrderForm.setData('priority', value as 'low' | 'medium' | 'high' | 'urgent')
+                                        workOrderForm.setData(
+                                            'priority',
+                                            value as
+                                                | 'low'
+                                                | 'medium'
+                                                | 'high'
+                                                | 'urgent',
+                                        )
                                     }
                                 >
                                     <SelectTrigger>
@@ -446,12 +574,20 @@ export default function Work({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                        <SelectItem value="medium">
+                                            Medium
+                                        </SelectItem>
+                                        <SelectItem value="high">
+                                            High
+                                        </SelectItem>
+                                        <SelectItem value="urgent">
+                                            Urgent
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <InputError message={workOrderForm.errors.priority} />
+                                <InputError
+                                    message={workOrderForm.errors.priority}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="wo-due-date">Due Date</Label>
@@ -459,30 +595,51 @@ export default function Work({
                                     id="wo-due-date"
                                     type="date"
                                     value={workOrderForm.data.dueDate}
-                                    onChange={(e) => workOrderForm.setData('dueDate', e.target.value)}
+                                    onChange={(e) =>
+                                        workOrderForm.setData(
+                                            'dueDate',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
-                                <InputError message={workOrderForm.errors.dueDate} />
+                                <InputError
+                                    message={workOrderForm.errors.dueDate}
+                                />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="wo-description">Description (optional)</Label>
+                                <Label htmlFor="wo-description">
+                                    Description (optional)
+                                </Label>
                                 <Input
                                     id="wo-description"
                                     value={workOrderForm.data.description}
-                                    onChange={(e) => workOrderForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        workOrderForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Brief description"
                                 />
-                                <InputError message={workOrderForm.errors.description} />
+                                <InputError
+                                    message={workOrderForm.errors.description}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => setCreateWorkOrderDialogOpen(false)}
+                                onClick={() =>
+                                    setCreateWorkOrderDialogOpen(false)
+                                }
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={workOrderForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={workOrderForm.processing}
+                            >
                                 Create Work Order
                             </Button>
                         </DialogFooter>
@@ -491,13 +648,17 @@ export default function Work({
             </Dialog>
 
             {/* Create Task Dialog */}
-            <Dialog open={createTaskDialogOpen} onOpenChange={setCreateTaskDialogOpen}>
+            <Dialog
+                open={createTaskDialogOpen}
+                onOpenChange={setCreateTaskDialogOpen}
+            >
                 <DialogContent>
                     <form onSubmit={handleSubmitTask}>
                         <DialogHeader>
                             <DialogTitle>Create Task</DialogTitle>
                             <DialogDescription>
-                                Create a new task for tracking individual action items.
+                                Create a new task for tracking individual action
+                                items.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -506,7 +667,12 @@ export default function Work({
                                 <Input
                                     id="task-title"
                                     value={taskForm.data.title}
-                                    onChange={(e) => taskForm.setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'title',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Task title"
                                 />
                                 <InputError message={taskForm.errors.title} />
@@ -515,22 +681,32 @@ export default function Work({
                                 <Label htmlFor="task-wo">Work Order</Label>
                                 <Select
                                     value={taskForm.data.workOrderId}
-                                    onValueChange={(value) => taskForm.setData('workOrderId', value)}
+                                    onValueChange={(value) =>
+                                        taskForm.setData('workOrderId', value)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a work order" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {workOrders
-                                            .filter((wo) => wo.status !== 'delivered')
+                                            .filter(
+                                                (wo) =>
+                                                    wo.status !== 'delivered',
+                                            )
                                             .map((wo) => (
-                                                <SelectItem key={wo.id} value={wo.id}>
+                                                <SelectItem
+                                                    key={wo.id}
+                                                    value={wo.id}
+                                                >
                                                     {wo.title}
                                                 </SelectItem>
                                             ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={taskForm.errors.workOrderId} />
+                                <InputError
+                                    message={taskForm.errors.workOrderId}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="task-due-date">Due Date</Label>
@@ -538,19 +714,33 @@ export default function Work({
                                     id="task-due-date"
                                     type="date"
                                     value={taskForm.data.dueDate}
-                                    onChange={(e) => taskForm.setData('dueDate', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'dueDate',
+                                            e.target.value,
+                                        )
+                                    }
                                 />
                                 <InputError message={taskForm.errors.dueDate} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="task-description">Description (optional)</Label>
+                                <Label htmlFor="task-description">
+                                    Description (optional)
+                                </Label>
                                 <Input
                                     id="task-description"
                                     value={taskForm.data.description}
-                                    onChange={(e) => taskForm.setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        taskForm.setData(
+                                            'description',
+                                            e.target.value,
+                                        )
+                                    }
                                     placeholder="Brief description"
                                 />
-                                <InputError message={taskForm.errors.description} />
+                                <InputError
+                                    message={taskForm.errors.description}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
@@ -561,7 +751,10 @@ export default function Work({
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={taskForm.processing}>
+                            <Button
+                                type="submit"
+                                disabled={taskForm.processing}
+                            >
                                 Create Task
                             </Button>
                         </DialogFooter>

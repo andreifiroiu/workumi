@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,22 +6,29 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Edit, Trash2, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { MessageReactions } from './message-reactions';
-import { MessageAttachments } from './message-attachments';
-import { ReactionPicker } from './reaction-picker';
 import type { MessageItemProps, MessageType } from '@/types/communications';
+import { Bot, Edit, MoreVertical, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { MessageAttachments } from './message-attachments';
+import { MessageReactions } from './message-reactions';
+import { ReactionPicker } from './reaction-picker';
 
 // Message type badge colors matching backend MessageType enum
 const messageTypeColors: Record<MessageType, string> = {
     note: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700',
-    suggestion: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900',
-    decision: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
-    question: 'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200 dark:border-amber-900',
-    status_update: 'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 border-blue-200 dark:border-blue-900',
-    approval_request: 'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400 border-purple-200 dark:border-purple-900',
-    message: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700',
+    suggestion:
+        'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900',
+    decision:
+        'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
+    question:
+        'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200 dark:border-amber-900',
+    status_update:
+        'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-400 border-blue-200 dark:border-blue-900',
+    approval_request:
+        'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400 border-purple-200 dark:border-purple-900',
+    message:
+        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700',
 };
 
 const messageTypeLabels: Record<MessageType, string> = {
@@ -102,24 +108,26 @@ export function MessageItem({
     return (
         <div
             className={cn(
-                'group relative p-3 rounded-lg',
+                'group relative rounded-lg p-3',
                 isAiMessage
-                    ? 'bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-purple-950/20 dark:to-indigo-950/20 border border-purple-200/50 dark:border-purple-800/30'
-                    : 'bg-muted/50 hover:bg-muted'
+                    ? 'border border-purple-200/50 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:border-purple-800/30 dark:from-purple-950/20 dark:to-indigo-950/20'
+                    : 'bg-muted/50 hover:bg-muted',
             )}
         >
             {/* Header */}
-            <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-sm">{message.authorName}</span>
+            <div className="mb-1 flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">
+                        {message.authorName}
+                    </span>
 
                     {/* AI Badge */}
                     {isAiMessage && (
                         <Badge
                             variant="outline"
-                            className="text-xs h-5 px-1.5 bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800"
+                            className="h-5 border-purple-200 bg-purple-100 px-1.5 text-xs text-purple-700 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
                         >
-                            <Bot className="h-3 w-3 mr-1" />
+                            <Bot className="mr-1 h-3 w-3" />
                             AI Suggestion
                         </Badge>
                     )}
@@ -128,8 +136,9 @@ export function MessageItem({
                     <Badge
                         variant="outline"
                         className={cn(
-                            'text-xs h-5 px-1.5 capitalize',
-                            messageTypeColors[message.type] || messageTypeColors.note
+                            'h-5 px-1.5 text-xs capitalize',
+                            messageTypeColors[message.type] ||
+                                messageTypeColors.note,
                         )}
                     >
                         {messageTypeLabels[message.type] || message.type}
@@ -149,7 +158,7 @@ export function MessageItem({
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                     <ReactionPicker
                         messageId={message.id}
                         onReactionAdd={handleReactionAdd}
@@ -169,8 +178,10 @@ export function MessageItem({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 {message.canEdit && (
-                                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                                        <Edit className="h-4 w-4 mr-2" />
+                                    <DropdownMenuItem
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
                                 )}
@@ -179,7 +190,7 @@ export function MessageItem({
                                         onClick={() => onDelete(message.id)}
                                         className="text-destructive"
                                     >
-                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        <Trash2 className="mr-2 h-4 w-4" />
                                         Delete
                                     </DropdownMenuItem>
                                 )}
@@ -195,20 +206,24 @@ export function MessageItem({
                     <textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
-                        className="w-full min-h-[60px] p-2 text-sm border border-input rounded-md bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="min-h-[60px] w-full resize-none rounded-md border border-input bg-background p-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                         autoFocus
                     />
-                    <div className="flex gap-2 mt-2">
+                    <div className="mt-2 flex gap-2">
                         <Button size="sm" onClick={handleSaveEdit}>
                             Save
                         </Button>
-                        <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                        >
                             Cancel
                         </Button>
                     </div>
                 </div>
             ) : (
-                <p className="text-sm whitespace-pre-wrap break-words">
+                <p className="text-sm break-words whitespace-pre-wrap">
                     {message.content}
                 </p>
             )}

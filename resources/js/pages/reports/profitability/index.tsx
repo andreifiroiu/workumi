@@ -1,26 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Head, router } from '@inertiajs/react';
 import {
-    FolderTree,
-    Briefcase,
-    Users,
-    Building2,
-    Calendar,
-    Download,
-} from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+    ProfitabilitySummaryCards,
+    type ProfitabilitySummary,
+} from '@/components/reports/profitability-summary-cards';
+import {
+    ProfitabilityTable,
+    type ProfitabilityRow,
+} from '@/components/reports/profitability-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { ProfitabilitySummaryCards, type ProfitabilitySummary } from '@/components/reports/profitability-summary-cards';
-import { ProfitabilityTable, type ProfitabilityRow } from '@/components/reports/profitability-table';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
+import {
+    Briefcase,
+    Building2,
+    Calendar,
+    Download,
+    FolderTree,
+    Users,
+} from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Reports', href: '/reports' },
@@ -51,7 +64,12 @@ function ExportButton() {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" disabled className="opacity-50">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="opacity-50"
+                >
                     <Download className="mr-2 size-4" />
                     Export
                 </Button>
@@ -71,19 +89,22 @@ function EmptyState({ icon: Icon, title, description }: EmptyStateProps) {
     return (
         <div className="flex flex-col items-center justify-center py-12">
             <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
-                <Icon className="size-8 text-muted-foreground" aria-hidden="true" />
+                <Icon
+                    className="size-8 text-muted-foreground"
+                    aria-hidden="true"
+                />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-foreground">
                 {title}
             </h3>
-            <p className="text-sm text-muted-foreground">
-                {description}
-            </p>
+            <p className="text-sm text-muted-foreground">{description}</p>
         </div>
     );
 }
 
-function calculateSummaryFromData(data: ProfitabilityRow[]): ProfitabilitySummary {
+function calculateSummaryFromData(
+    data: ProfitabilityRow[],
+): ProfitabilitySummary {
     if (data.length === 0) {
         return {
             totalBudget: 0,
@@ -95,10 +116,14 @@ function calculateSummaryFromData(data: ProfitabilityRow[]): ProfitabilitySummar
     }
 
     const totalBudget = data.reduce((sum, item) => sum + item.budget, 0);
-    const totalActualCost = data.reduce((sum, item) => sum + item.actualCost, 0);
+    const totalActualCost = data.reduce(
+        (sum, item) => sum + item.actualCost,
+        0,
+    );
     const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
     const totalMargin = totalRevenue - totalActualCost;
-    const avgMarginPercent = totalRevenue > 0 ? (totalMargin / totalRevenue) * 100 : 0;
+    const avgMarginPercent =
+        totalRevenue > 0 ? (totalMargin / totalRevenue) * 100 : 0;
 
     return {
         totalBudget,
@@ -164,7 +189,9 @@ function TabContent({
     );
 }
 
-function transformApiResponse(apiData: ApiProfitabilityItem[]): ProfitabilityRow[] {
+function transformApiResponse(
+    apiData: ApiProfitabilityItem[],
+): ProfitabilityRow[] {
     return (apiData || []).map((item) => ({
         id: item.id,
         name: item.name,
@@ -173,15 +200,22 @@ function transformApiResponse(apiData: ApiProfitabilityItem[]): ProfitabilityRow
         revenue: Number(item.revenue) || 0,
         margin: Number(item.margin) || 0,
         marginPercent: Number(item.margin_percent) || 0,
-        utilization: item.utilization !== undefined ? Number(item.utilization) : undefined,
+        utilization:
+            item.utilization !== undefined
+                ? Number(item.utilization)
+                : undefined,
     }));
 }
 
-export default function ProfitabilityReportsIndex({ filters }: ProfitabilityReportsPageProps) {
+export default function ProfitabilityReportsIndex({
+    filters,
+}: ProfitabilityReportsPageProps) {
     const [activeTab, setActiveTab] = useState('by-project');
     const [projectData, setProjectData] = useState<ProfitabilityRow[]>([]);
     const [workOrderData, setWorkOrderData] = useState<ProfitabilityRow[]>([]);
-    const [teamMemberData, setTeamMemberData] = useState<ProfitabilityRow[]>([]);
+    const [teamMemberData, setTeamMemberData] = useState<ProfitabilityRow[]>(
+        [],
+    );
     const [clientData, setClientData] = useState<ProfitabilityRow[]>([]);
 
     const [isLoadingProject, setIsLoadingProject] = useState(false);
@@ -196,7 +230,8 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
 
     const buildQueryString = useCallback(() => {
         const params = new URLSearchParams();
-        if (localFilters.date_from) params.set('date_from', localFilters.date_from);
+        if (localFilters.date_from)
+            params.set('date_from', localFilters.date_from);
         if (localFilters.date_to) params.set('date_to', localFilters.date_to);
         return params.toString();
     }, [localFilters]);
@@ -204,7 +239,9 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
     const fetchProjectData = useCallback(async () => {
         setIsLoadingProject(true);
         try {
-            const response = await fetch(`/reports/profitability/by-project?${buildQueryString()}`);
+            const response = await fetch(
+                `/reports/profitability/by-project?${buildQueryString()}`,
+            );
             const json = await response.json();
             setProjectData(transformApiResponse(json.data));
         } catch {
@@ -217,7 +254,9 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
     const fetchWorkOrderData = useCallback(async () => {
         setIsLoadingWorkOrder(true);
         try {
-            const response = await fetch(`/reports/profitability/by-work-order?${buildQueryString()}`);
+            const response = await fetch(
+                `/reports/profitability/by-work-order?${buildQueryString()}`,
+            );
             const json = await response.json();
             setWorkOrderData(transformApiResponse(json.data));
         } catch {
@@ -230,7 +269,9 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
     const fetchTeamMemberData = useCallback(async () => {
         setIsLoadingTeamMember(true);
         try {
-            const response = await fetch(`/reports/profitability/by-team-member?${buildQueryString()}`);
+            const response = await fetch(
+                `/reports/profitability/by-team-member?${buildQueryString()}`,
+            );
             const json = await response.json();
             setTeamMemberData(transformApiResponse(json.data));
         } catch {
@@ -243,7 +284,9 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
     const fetchClientData = useCallback(async () => {
         setIsLoadingClient(true);
         try {
-            const response = await fetch(`/reports/profitability/by-client?${buildQueryString()}`);
+            const response = await fetch(
+                `/reports/profitability/by-client?${buildQueryString()}`,
+            );
             const json = await response.json();
             setClientData(transformApiResponse(json.data));
         } catch {
@@ -254,13 +297,29 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
     }, [buildQueryString]);
 
     useEffect(() => {
-        if (activeTab === 'by-project' && projectData.length === 0 && !isLoadingProject) {
+        if (
+            activeTab === 'by-project' &&
+            projectData.length === 0 &&
+            !isLoadingProject
+        ) {
             fetchProjectData();
-        } else if (activeTab === 'by-work-order' && workOrderData.length === 0 && !isLoadingWorkOrder) {
+        } else if (
+            activeTab === 'by-work-order' &&
+            workOrderData.length === 0 &&
+            !isLoadingWorkOrder
+        ) {
             fetchWorkOrderData();
-        } else if (activeTab === 'by-team-member' && teamMemberData.length === 0 && !isLoadingTeamMember) {
+        } else if (
+            activeTab === 'by-team-member' &&
+            teamMemberData.length === 0 &&
+            !isLoadingTeamMember
+        ) {
             fetchTeamMemberData();
-        } else if (activeTab === 'by-client' && clientData.length === 0 && !isLoadingClient) {
+        } else if (
+            activeTab === 'by-client' &&
+            clientData.length === 0 &&
+            !isLoadingClient
+        ) {
             fetchClientData();
         }
     }, [
@@ -281,7 +340,8 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
 
     const applyFilters = useCallback(() => {
         const params = new URLSearchParams();
-        if (localFilters.date_from) params.set('date_from', localFilters.date_from);
+        if (localFilters.date_from)
+            params.set('date_from', localFilters.date_from);
         if (localFilters.date_to) params.set('date_to', localFilters.date_to);
 
         // Clear cached data to force refetch with new filters
@@ -290,7 +350,11 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
         setTeamMemberData([]);
         setClientData([]);
 
-        router.get(`/reports/profitability?${params.toString()}`, {}, { preserveState: false });
+        router.get(
+            `/reports/profitability?${params.toString()}`,
+            {},
+            { preserveState: false },
+        );
     }, [localFilters]);
 
     return (
@@ -299,25 +363,32 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
 
             <div className="flex h-full flex-1 flex-col">
                 {/* Header */}
-                <div className="border-b border-sidebar-border/70 px-6 py-6 dark:border-sidebar-border">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="mb-2 text-2xl font-bold text-foreground">
                                 Profitability Reports
                             </h1>
                             <p className="text-muted-foreground">
-                                Analyze profitability across projects, work orders, team members, and clients
+                                Analyze profitability across projects, work
+                                orders, team members, and clients
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Date Range Filter */}
-                <div className="border-b border-sidebar-border/70 bg-muted/30 px-6 py-4 dark:border-sidebar-border">
-                    <div className="flex flex-wrap items-end gap-4">
+                <div className="border-b border-sidebar-border/70 bg-muted/30 px-4 py-4 sm:px-6 dark:border-sidebar-border">
+                    <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-end">
                         <div className="grid gap-2">
-                            <Label htmlFor="date_from" className="flex items-center gap-2">
-                                <Calendar className="size-4" aria-hidden="true" />
+                            <Label
+                                htmlFor="date_from"
+                                className="flex items-center gap-2"
+                            >
+                                <Calendar
+                                    className="size-4"
+                                    aria-hidden="true"
+                                />
                                 From Date
                             </Label>
                             <Input
@@ -351,24 +422,76 @@ export default function ProfitabilityReportsIndex({ filters }: ProfitabilityRepo
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-auto p-6">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <TabsList>
-                                <TabsTrigger value="by-project" className="gap-2">
-                                    <FolderTree className="size-4" aria-hidden="true" />
+                <div className="flex-1 overflow-auto p-4 sm:p-6">
+                    <Tabs
+                        value={activeTab}
+                        onValueChange={setActiveTab}
+                        className="space-y-6"
+                    >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Mobile: dropdown */}
+                            <Select
+                                value={activeTab}
+                                onValueChange={setActiveTab}
+                            >
+                                <SelectTrigger className="w-full sm:hidden">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="by-project">
+                                        By Project
+                                    </SelectItem>
+                                    <SelectItem value="by-work-order">
+                                        By Work Order
+                                    </SelectItem>
+                                    <SelectItem value="by-team-member">
+                                        By Team Member
+                                    </SelectItem>
+                                    <SelectItem value="by-client">
+                                        By Client
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {/* Desktop: tabs */}
+                            <TabsList className="hidden sm:inline-flex">
+                                <TabsTrigger
+                                    value="by-project"
+                                    className="gap-2"
+                                >
+                                    <FolderTree
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
                                     By Project
                                 </TabsTrigger>
-                                <TabsTrigger value="by-work-order" className="gap-2">
-                                    <Briefcase className="size-4" aria-hidden="true" />
+                                <TabsTrigger
+                                    value="by-work-order"
+                                    className="gap-2"
+                                >
+                                    <Briefcase
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
                                     By Work Order
                                 </TabsTrigger>
-                                <TabsTrigger value="by-team-member" className="gap-2">
-                                    <Users className="size-4" aria-hidden="true" />
+                                <TabsTrigger
+                                    value="by-team-member"
+                                    className="gap-2"
+                                >
+                                    <Users
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
                                     By Team Member
                                 </TabsTrigger>
-                                <TabsTrigger value="by-client" className="gap-2">
-                                    <Building2 className="size-4" aria-hidden="true" />
+                                <TabsTrigger
+                                    value="by-client"
+                                    className="gap-2"
+                                >
+                                    <Building2
+                                        className="size-4"
+                                        aria-hidden="true"
+                                    />
                                     By Client
                                 </TabsTrigger>
                             </TabsList>

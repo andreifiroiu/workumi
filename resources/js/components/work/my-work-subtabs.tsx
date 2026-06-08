@@ -1,6 +1,6 @@
-import { CheckSquare, Briefcase, FolderKanban, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MyWorkSubtab } from '@/types/work';
+import { Briefcase, CheckSquare, FolderKanban, Layers } from 'lucide-react';
 
 interface MyWorkSubtabsProps {
     activeTab: MyWorkSubtab;
@@ -19,10 +19,18 @@ const subtabs: Array<{
     { value: 'all', label: 'All', icon: Layers },
 ];
 
-export function MyWorkSubtabs({ activeTab, onTabChange, className }: MyWorkSubtabsProps) {
+export function MyWorkSubtabs({
+    activeTab,
+    onTabChange,
+    className,
+}: MyWorkSubtabsProps) {
     return (
         <div className={cn('border-b border-border', className)}>
-            <div className="flex gap-1 px-4" role="tablist" aria-label="My Work subtabs">
+            <div
+                className="flex flex-wrap gap-1 px-4"
+                role="tablist"
+                aria-label="My Work subtabs"
+            >
                 {subtabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.value;
@@ -35,10 +43,10 @@ export function MyWorkSubtabs({ activeTab, onTabChange, className }: MyWorkSubta
                             data-state={isActive ? 'active' : 'inactive'}
                             onClick={() => onTabChange(tab.value)}
                             className={cn(
-                                'flex items-center gap-2 px-3 py-2 text-sm font-medium border-b-2 transition-colors',
+                                'flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
                                 isActive
                                     ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted'
+                                    : 'border-transparent text-muted-foreground hover:border-muted hover:text-foreground',
                             )}
                         >
                             <Icon className="h-4 w-4" />

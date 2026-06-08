@@ -1,14 +1,17 @@
+import { cn } from '@/lib/utils';
+import type {
+    MessageAttachment,
+    MessageAttachmentsProps,
+} from '@/types/communications';
 import {
-    FileText,
-    Image as ImageIcon,
-    FileSpreadsheet,
-    FileArchive,
-    File,
     Download,
     ExternalLink,
+    File,
+    FileArchive,
+    FileSpreadsheet,
+    FileText,
+    Image as ImageIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { MessageAttachmentsProps, MessageAttachment } from '@/types/communications';
 
 function formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 B';
@@ -79,20 +82,20 @@ function AttachmentItem({ attachment }: AttachmentItemProps) {
                 href={attachment.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block group"
+                className="group block"
             >
-                <div className="relative rounded-md overflow-hidden border border-border max-w-[200px]">
+                <div className="relative max-w-[200px] overflow-hidden rounded-md border border-border">
                     <img
                         src={attachment.fileUrl}
                         alt={attachment.name}
-                        className="w-full h-auto object-cover max-h-[150px]"
+                        className="h-auto max-h-[150px] w-full object-cover"
                         loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <ExternalLink className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+                        <ExternalLink className="h-5 w-5 text-white opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100" />
                     </div>
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground truncate max-w-[200px]">
+                <div className="mt-1 max-w-[200px] truncate text-xs text-muted-foreground">
                     {attachment.name}
                 </div>
             </a>
@@ -106,19 +109,21 @@ function AttachmentItem({ attachment }: AttachmentItemProps) {
             rel="noopener noreferrer"
             download={attachment.name}
             className={cn(
-                'flex items-center gap-2 p-2 rounded-md border border-border',
-                'bg-muted/30 hover:bg-muted/50 transition-colors',
-                'max-w-[280px]'
+                'flex items-center gap-2 rounded-md border border-border p-2',
+                'bg-muted/30 transition-colors hover:bg-muted/50',
+                'max-w-[280px]',
             )}
         >
             {getFileIcon(attachment.mimeType, attachment.name)}
-            <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{attachment.name}</div>
+            <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">
+                    {attachment.name}
+                </div>
                 <div className="text-xs text-muted-foreground">
                     {formatFileSize(attachment.fileSize)}
                 </div>
             </div>
-            <Download className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Download className="h-4 w-4 shrink-0 text-muted-foreground" />
         </a>
     );
 }
@@ -137,7 +142,10 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
             {imageAttachments.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {imageAttachments.map((attachment) => (
-                        <AttachmentItem key={attachment.id} attachment={attachment} />
+                        <AttachmentItem
+                            key={attachment.id}
+                            attachment={attachment}
+                        />
                     ))}
                 </div>
             )}
@@ -146,7 +154,10 @@ export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
             {fileAttachments.length > 0 && (
                 <div className="flex flex-col gap-1">
                     {fileAttachments.map((attachment) => (
-                        <AttachmentItem key={attachment.id} attachment={attachment} />
+                        <AttachmentItem
+                            key={attachment.id}
+                            attachment={attachment}
+                        />
                     ))}
                 </div>
             )}

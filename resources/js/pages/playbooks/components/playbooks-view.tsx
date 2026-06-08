@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -8,11 +7,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
-import { PlaybookTabs } from './playbook-tabs';
-import { PlaybookCard } from './playbook-card';
-import { EmptyState } from './empty-state';
 import type { PlaybooksViewProps, PlaybookTab } from '@/types/playbooks';
+import { Plus, Search } from 'lucide-react';
+import { useMemo } from 'react';
+import { EmptyState } from './empty-state';
+import { PlaybookCard } from './playbook-card';
+import { PlaybookTabs } from './playbook-tabs';
 
 export function PlaybooksView({
     playbooks,
@@ -34,7 +34,7 @@ export function PlaybooksView({
             checklist: playbooks.filter((p) => p.type === 'checklist').length,
             template: playbooks.filter((p) => p.type === 'template').length,
             acceptance_criteria: playbooks.filter(
-                (p) => p.type === 'acceptance_criteria'
+                (p) => p.type === 'acceptance_criteria',
             ).length,
         } as Record<PlaybookTab, number>;
     }, [playbooks]);
@@ -55,14 +55,14 @@ export function PlaybooksView({
                 (p) =>
                     p.name.toLowerCase().includes(query) ||
                     p.description.toLowerCase().includes(query) ||
-                    p.tags.some((t) => t.toLowerCase().includes(query))
+                    p.tags.some((t) => t.toLowerCase().includes(query)),
             );
         }
 
         // Filter by tags
         if (selectedTags.length > 0) {
             filtered = filtered.filter((p) =>
-                selectedTags.every((tag) => p.tags.includes(tag))
+                selectedTags.every((tag) => p.tags.includes(tag)),
             );
         }
 
@@ -73,7 +73,7 @@ export function PlaybooksView({
             filtered.sort(
                 (a, b) =>
                     new Date(b.lastModified).getTime() -
-                    new Date(a.lastModified).getTime()
+                    new Date(a.lastModified).getTime(),
             );
         } else if (sortBy === 'alphabetical') {
             filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -85,9 +85,12 @@ export function PlaybooksView({
     return (
         <div className="flex h-full flex-col gap-4 p-4">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold">Playbooks</h1>
-                <Button onClick={() => onCreatePlaybook('sop')}>
+                <Button
+                    className="w-full sm:w-auto"
+                    onClick={() => onCreatePlaybook('sop')}
+                >
                     <Plus className="mr-2 size-4" />
                     Create Playbook
                 </Button>
@@ -95,7 +98,7 @@ export function PlaybooksView({
 
             {/* Search bar */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     placeholder="Search playbooks by name, description, or tags..."
                     value={searchQuery}
@@ -128,7 +131,10 @@ export function PlaybooksView({
 
             {/* Playbook grid */}
             {filteredPlaybooks.length === 0 ? (
-                <EmptyState tab={activeTab} onCreatePlaybook={onCreatePlaybook} />
+                <EmptyState
+                    tab={activeTab}
+                    onCreatePlaybook={onCreatePlaybook}
+                />
             ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredPlaybooks.map((playbook) => (

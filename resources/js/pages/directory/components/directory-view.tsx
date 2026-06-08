@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { Search, Plus, Building2, Users, UserCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PartiesList } from './parties-list';
-import { ContactsList } from './contacts-list';
-import { TeamList } from './team-list';
 import type {
+    Contact,
     DirectoryTab,
     Party,
-    Contact,
-    TeamMember,
     Project,
+    TeamMember,
 } from '@/types/directory';
+import { Building2, Plus, Search, UserCircle2, Users } from 'lucide-react';
+import { useState } from 'react';
+import { ContactsList } from './contacts-list';
+import { PartiesList } from './parties-list';
+import { TeamList } from './team-list';
 
 interface DirectoryViewProps {
     parties: Party[];
@@ -57,7 +57,7 @@ export function DirectoryView({
               (p) =>
                   p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  p.notes?.toLowerCase().includes(searchQuery.toLowerCase())
+                  p.notes?.toLowerCase().includes(searchQuery.toLowerCase()),
           )
         : parties;
 
@@ -66,7 +66,7 @@ export function DirectoryView({
               (c) =>
                   c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  c.partyName.toLowerCase().includes(searchQuery.toLowerCase())
+                  c.partyName.toLowerCase().includes(searchQuery.toLowerCase()),
           )
         : contacts;
 
@@ -75,7 +75,7 @@ export function DirectoryView({
               (m) =>
                   m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  m.role?.toLowerCase().includes(searchQuery.toLowerCase())
+                  m.role?.toLowerCase().includes(searchQuery.toLowerCase()),
           )
         : teamMembers;
 
@@ -93,9 +93,11 @@ export function DirectoryView({
     return (
         <div className="flex h-full flex-1 flex-col">
             {/* Header */}
-            <div className="border-b border-sidebar-border/70 px-6 py-6 dark:border-sidebar-border">
+            <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
                 <div className="mb-2 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-foreground">Directory</h1>
+                    <h1 className="text-2xl font-bold text-foreground">
+                        Directory
+                    </h1>
                     {showAddButton && (
                         <Button onClick={handleAdd} size="sm">
                             <Plus className="mr-2 h-4 w-4" />
@@ -110,7 +112,7 @@ export function DirectoryView({
 
             {/* Tabs */}
             <div className="border-b border-sidebar-border/70 dark:border-sidebar-border">
-                <div className="flex gap-1 px-4">
+                <div className="flex flex-wrap gap-1 px-4">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.value;
@@ -119,14 +121,11 @@ export function DirectoryView({
                             <button
                                 key={tab.value}
                                 onClick={() => onTabChange(tab.value)}
-                                className={`
-                                    flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors
-                                    ${
-                                        isActive
-                                            ? 'border-primary text-primary'
-                                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                                    }
-                                `}
+                                className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+                                    isActive
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                                } `}
                             >
                                 <Icon className="h-4 w-4" />
                                 {tab.label}
@@ -139,7 +138,7 @@ export function DirectoryView({
             {/* Search Bar */}
             <div className="border-b border-sidebar-border/70 px-6 py-4 dark:border-sidebar-border">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                     <Input
                         type="text"
                         value={searchQuery}

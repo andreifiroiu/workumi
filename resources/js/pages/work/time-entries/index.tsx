@@ -1,26 +1,6 @@
-import { useState, useCallback } from 'react';
-import { Head, router } from '@inertiajs/react';
-import { Pencil, Trash2, Clock, Calendar, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { TimeEntryForm } from '@/components/time-tracking/time-entry-form';
 import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -29,6 +9,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -36,9 +18,40 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { TimeEntryForm } from '@/components/time-tracking/time-entry-form';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { TimeEntry, TimeEntriesPageProps, TimeEntriesFilters } from '@/types/work';
+import type {
+    TimeEntriesFilters,
+    TimeEntriesPageProps,
+    TimeEntry,
+} from '@/types/work';
+import { Head, router } from '@inertiajs/react';
+import {
+    Calendar,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    Filter,
+    Pencil,
+    Trash2,
+    X,
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Work', href: '/work' },
@@ -67,7 +80,10 @@ function formatDate(dateString: string): string {
     }).format(date);
 }
 
-export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPageProps) {
+export default function TimeEntriesIndex({
+    entries,
+    filters,
+}: TimeEntriesPageProps) {
     const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
     const [deleteEntry, setDeleteEntry] = useState<TimeEntry | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -81,7 +97,10 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
     });
 
     const hasActiveFilters =
-        filters.date_from || filters.date_to || filters.task_id || filters.billable !== null;
+        filters.date_from ||
+        filters.date_to ||
+        filters.task_id ||
+        filters.billable !== null;
 
     const applyFilters = useCallback(() => {
         const params = new URLSearchParams();
@@ -99,7 +118,11 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
             params.set('billable', localFilters.billable);
         }
 
-        router.get(`/work/time-entries?${params.toString()}`, {}, { preserveState: true });
+        router.get(
+            `/work/time-entries?${params.toString()}`,
+            {},
+            { preserveState: true },
+        );
     }, [localFilters]);
 
     const clearFilters = useCallback(() => {
@@ -138,10 +161,12 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
 
             <div className="flex h-full flex-1 flex-col">
                 {/* Header */}
-                <div className="border-b border-sidebar-border/70 px-6 py-6 dark:border-sidebar-border">
+                <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="mb-2 text-2xl font-bold text-foreground">Time Entries</h1>
+                            <h1 className="mb-2 text-2xl font-bold text-foreground">
+                                Time Entries
+                            </h1>
                             <p className="text-muted-foreground">
                                 View and manage your logged work hours
                             </p>
@@ -149,7 +174,9 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                         <Button
                             variant="outline"
                             onClick={() => setShowFilters(!showFilters)}
-                            className={hasActiveFilters ? 'border-indigo-500' : ''}
+                            className={
+                                hasActiveFilters ? 'border-indigo-500' : ''
+                            }
                         >
                             <Filter className="size-4" />
                             <span>Filters</span>
@@ -197,13 +224,16 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="billable_filter">Billable Status</Label>
+                                <Label htmlFor="billable_filter">
+                                    Billable Status
+                                </Label>
                                 <Select
                                     value={localFilters.billable || 'all'}
                                     onValueChange={(value) =>
                                         setLocalFilters((prev) => ({
                                             ...prev,
-                                            billable: value === 'all' ? null : value,
+                                            billable:
+                                                value === 'all' ? null : value,
                                         }))
                                     }
                                 >
@@ -211,19 +241,31 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                         <SelectValue placeholder="All entries" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All entries</SelectItem>
-                                        <SelectItem value="1">Billable only</SelectItem>
-                                        <SelectItem value="0">Non-billable only</SelectItem>
+                                        <SelectItem value="all">
+                                            All entries
+                                        </SelectItem>
+                                        <SelectItem value="1">
+                                            Billable only
+                                        </SelectItem>
+                                        <SelectItem value="0">
+                                            Non-billable only
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="flex items-end gap-2">
-                                <Button onClick={applyFilters} className="flex-1">
+                                <Button
+                                    onClick={applyFilters}
+                                    className="flex-1"
+                                >
                                     Apply Filters
                                 </Button>
                                 {hasActiveFilters && (
-                                    <Button variant="outline" onClick={clearFilters}>
+                                    <Button
+                                        variant="outline"
+                                        onClick={clearFilters}
+                                    >
                                         <X className="size-4" />
                                     </Button>
                                 )}
@@ -248,7 +290,11 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                     : 'Start logging time on your tasks to see entries here'}
                             </p>
                             {hasActiveFilters && (
-                                <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                                <Button
+                                    variant="outline"
+                                    className="mt-4"
+                                    onClick={clearFilters}
+                                >
                                     Clear Filters
                                 </Button>
                             )}
@@ -265,8 +311,12 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                             <TableHead>Hours</TableHead>
                                             <TableHead>Mode</TableHead>
                                             <TableHead>Billable</TableHead>
-                                            <TableHead className="max-w-[200px]">Note</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead className="max-w-[200px]">
+                                                Note
+                                            </TableHead>
+                                            <TableHead className="text-right">
+                                                Actions
+                                            </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -280,28 +330,34 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="font-medium">
-                                                        {entry.task?.title || 'Unknown Task'}
+                                                        {entry.task?.title ||
+                                                            'Unknown Task'}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell className="text-muted-foreground">
-                                                    {entry.task?.work_order?.project?.name || '-'}
+                                                    {entry.task?.work_order
+                                                        ?.project?.name || '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     <span className="font-mono text-sm">
-                                                        {formatHours(Number(entry.hours))}
+                                                        {formatHours(
+                                                            Number(entry.hours),
+                                                        )}
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge
                                                         variant={
-                                                            entry.mode === 'timer'
+                                                            entry.mode ===
+                                                            'timer'
                                                                 ? 'default'
                                                                 : 'secondary'
                                                         }
                                                     >
                                                         {entry.mode === 'timer'
                                                             ? 'Timer'
-                                                            : entry.mode === 'manual'
+                                                            : entry.mode ===
+                                                                'manual'
                                                               ? 'Manual'
                                                               : 'AI'}
                                                     </Badge>
@@ -327,7 +383,11 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={() => setEditEntry(entry)}
+                                                            onClick={() =>
+                                                                setEditEntry(
+                                                                    entry,
+                                                                )
+                                                            }
                                                             aria-label={`Edit time entry for ${entry.task?.title || 'task'}`}
                                                         >
                                                             <Pencil className="size-4" />
@@ -335,7 +395,11 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={() => setDeleteEntry(entry)}
+                                                            onClick={() =>
+                                                                setDeleteEntry(
+                                                                    entry,
+                                                                )
+                                                            }
                                                             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                                             aria-label={`Delete time entry for ${entry.task?.title || 'task'}`}
                                                         >
@@ -353,15 +417,19 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                             {entries.last_page > 1 && (
                                 <div className="mt-6 flex items-center justify-between">
                                     <p className="text-sm text-muted-foreground">
-                                        Showing {entries.from} to {entries.to} of {entries.total}{' '}
-                                        entries
+                                        Showing {entries.from} to {entries.to}{' '}
+                                        of {entries.total} entries
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             disabled={!entries.prev_page_url}
-                                            onClick={() => handlePageChange(entries.prev_page_url)}
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    entries.prev_page_url,
+                                                )
+                                            }
                                             aria-label="Previous page"
                                         >
                                             <ChevronLeft className="size-4" />
@@ -370,13 +438,18 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                             </span>
                                         </Button>
                                         <span className="text-sm text-muted-foreground">
-                                            Page {entries.current_page} of {entries.last_page}
+                                            Page {entries.current_page} of{' '}
+                                            {entries.last_page}
                                         </span>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             disabled={!entries.next_page_url}
-                                            onClick={() => handlePageChange(entries.next_page_url)}
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    entries.next_page_url,
+                                                )
+                                            }
                                             aria-label="Next page"
                                         >
                                             <span className="sr-only sm:not-sr-only sm:mr-1">
@@ -393,12 +466,16 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
             </div>
 
             {/* Edit Sheet */}
-            <Sheet open={!!editEntry} onOpenChange={(open) => !open && setEditEntry(null)}>
+            <Sheet
+                open={!!editEntry}
+                onOpenChange={(open) => !open && setEditEntry(null)}
+            >
                 <SheetContent>
                     <SheetHeader>
                         <SheetTitle>Edit Time Entry</SheetTitle>
                         <SheetDescription>
-                            Update the details of this time entry. Click save when you're done.
+                            Update the details of this time entry. Click save
+                            when you're done.
                         </SheetDescription>
                     </SheetHeader>
                     <div className="mt-6">
@@ -406,10 +483,12 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                             <>
                                 <div className="mb-4 rounded-md bg-muted/50 p-3">
                                     <p className="text-sm font-medium">
-                                        {editEntry.task?.title || 'Unknown Task'}
+                                        {editEntry.task?.title ||
+                                            'Unknown Task'}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {editEntry.task?.work_order?.project?.name || 'Unknown Project'}
+                                        {editEntry.task?.work_order?.project
+                                            ?.name || 'Unknown Project'}
                                     </p>
                                 </div>
                                 <TimeEntryForm
@@ -423,13 +502,16 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
             </Sheet>
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={!!deleteEntry} onOpenChange={(open) => !open && setDeleteEntry(null)}>
+            <Dialog
+                open={!!deleteEntry}
+                onOpenChange={(open) => !open && setDeleteEntry(null)}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Delete Time Entry</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete this time entry? This action cannot be
-                            undone.
+                            Are you sure you want to delete this time entry?
+                            This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     {deleteEntry && (
@@ -437,7 +519,8 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                             <div className="flex justify-between">
                                 <div>
                                     <p className="font-medium">
-                                        {deleteEntry.task?.title || 'Unknown Task'}
+                                        {deleteEntry.task?.title ||
+                                            'Unknown Task'}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
                                         {formatDate(deleteEntry.date)}
@@ -448,7 +531,9 @@ export default function TimeEntriesIndex({ entries, filters }: TimeEntriesPagePr
                                         {formatHours(Number(deleteEntry.hours))}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {deleteEntry.is_billable ? 'Billable' : 'Non-billable'}
+                                        {deleteEntry.is_billable
+                                            ? 'Billable'
+                                            : 'Non-billable'}
                                     </p>
                                 </div>
                             </div>

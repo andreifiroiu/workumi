@@ -1,14 +1,4 @@
-import { useState } from 'react';
-import { ChevronRight, ChevronDown, Folder, List, MoreVertical, Plus, Lock, Edit, Trash2 } from 'lucide-react';
-import { Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Dialog,
     DialogContent,
@@ -17,8 +7,34 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import type {
+    Project,
+    Task,
+    WorkOrder,
+    WorkOrderInList,
+    WorkOrderList,
+} from '@/types/work';
+import { Link, router } from '@inertiajs/react';
+import {
+    ChevronDown,
+    ChevronRight,
+    Edit,
+    Folder,
+    List,
+    Lock,
+    MoreVertical,
+    Plus,
+    Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
 import { StatusBadge } from './status-badge';
-import type { Project, WorkOrder, Task, WorkOrderList, WorkOrderInList } from '@/types/work';
 
 interface ProjectTreeItemProps {
     project: Project;
@@ -38,39 +54,53 @@ export function ProjectTreeItem({
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     const totalWorkOrders =
-        (project.workOrderLists?.reduce((sum, list) => sum + list.workOrders.length, 0) ?? 0) +
-        (project.ungroupedWorkOrders?.length ?? 0);
+        (project.workOrderLists?.reduce(
+            (sum, list) => sum + list.workOrders.length,
+            0,
+        ) ?? 0) + (project.ungroupedWorkOrders?.length ?? 0);
 
-    const hasLists = project.workOrderLists && project.workOrderLists.length > 0;
-    const hasUngrouped = project.ungroupedWorkOrders && project.ungroupedWorkOrders.length > 0;
+    const hasLists =
+        project.workOrderLists && project.workOrderLists.length > 0;
+    const hasUngrouped =
+        project.ungroupedWorkOrders && project.ungroupedWorkOrders.length > 0;
 
     return (
         <div className="border-l-2 border-muted">
             {/* Project Row */}
-            <div className="group relative flex items-center gap-2 py-2 px-3 hover:bg-muted/50 transition-colors">
+            <div className="group relative flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/50">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                 >
-                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                    ) : (
+                        <ChevronRight className="h-4 w-4" />
+                    )}
                 </button>
 
-                <Folder className="flex-shrink-0 w-5 h-5 text-primary" />
+                <Folder className="h-5 w-5 flex-shrink-0 text-primary" />
 
-                <Link href={`/work/projects/${project.id}`} className="flex-1 min-w-0 text-left">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-foreground truncate">
+                <Link
+                    href={`/work/projects/${project.id}`}
+                    className="min-w-0 flex-1 text-left"
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate font-semibold text-foreground">
                             {project.name}
                         </span>
                         {project.isPrivate && (
-                            <Lock className="h-3 w-3 text-muted-foreground" title="Private project" />
+                            <Lock
+                                className="h-3 w-3 text-muted-foreground"
+                                title="Private project"
+                            />
                         )}
                         <StatusBadge status={project.status} type="project" />
                         <span className="text-sm text-muted-foreground">
                             {project.partyName}
                         </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-0.5">
+                    <div className="mt-0.5 flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{totalWorkOrders} work orders</span>
                         {project.budgetHours && (
                             <span>
@@ -85,7 +115,7 @@ export function ProjectTreeItem({
                     variant="ghost"
                     size="icon"
                     onClick={() => onCreateWorkOrder(project.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
+                    className="h-7 w-7 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     title="Add work order"
                 >
                     <Plus className="h-4 w-4" />
@@ -93,14 +123,19 @@ export function ProjectTreeItem({
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" title="More options">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="More options"
+                        >
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                             <Link href={`/work/projects/${project.id}`}>
-                                <Edit className="h-4 w-4 mr-2" />
+                                <Edit className="mr-2 h-4 w-4" />
                                 Edit Project
                             </Link>
                         </DropdownMenuItem>
@@ -109,28 +144,38 @@ export function ProjectTreeItem({
                             onClick={() => setDeleteDialogOpen(true)}
                             className="text-destructive focus:text-destructive"
                         >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete Project
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Delete Project</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete "{project.name}"? This action cannot be undone.
+                                Are you sure you want to delete "{project.name}
+                                "? This action cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => {
-                                    router.delete(`/work/projects/${project.id}`, { preserveScroll: true });
+                                    router.delete(
+                                        `/work/projects/${project.id}`,
+                                        { preserveScroll: true },
+                                    );
                                     setDeleteDialogOpen(false);
                                 }}
                             >
@@ -178,17 +223,23 @@ interface WorkOrderListTreeItemProps {
     onCreateTask: (workOrderId: string) => void;
 }
 
-function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCreateTask }: WorkOrderListTreeItemProps) {
+function WorkOrderListTreeItem({
+    list,
+    projectId,
+    tasks,
+    onCreateWorkOrder,
+    onCreateTask,
+}: WorkOrderListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     return (
         <div className="border-l-2 border-muted">
             {/* List Row */}
-            <div className="group relative flex items-center gap-2 py-2 px-3 hover:bg-muted/50 transition-colors">
+            <div className="group relative flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/50">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                 >
                     {list.workOrders.length > 0 ? (
                         isExpanded ? (
@@ -197,19 +248,21 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
                             <ChevronRight className="h-4 w-4" />
                         )
                     ) : (
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground" />
                     )}
                 </button>
 
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
                     {list.color && (
                         <div
-                            className="w-3 h-3 rounded-sm flex-shrink-0"
+                            className="h-3 w-3 flex-shrink-0 rounded-sm"
                             style={{ backgroundColor: list.color }}
                         />
                     )}
-                    {!list.color && <List className="flex-shrink-0 w-4 h-4 text-muted-foreground" />}
-                    <span className="font-medium text-foreground truncate">
+                    {!list.color && (
+                        <List className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="truncate font-medium text-foreground">
                         {list.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -221,7 +274,7 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
                     variant="ghost"
                     size="icon"
                     onClick={() => onCreateWorkOrder(projectId, list.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
+                    className="h-7 w-7 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     title="Add work order"
                 >
                     <Plus className="h-4 w-4" />
@@ -229,14 +282,19 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" title="More options">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="More options"
+                        >
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                             <Link href={`/work/work-order-lists/${list.id}`}>
-                                <Edit className="h-4 w-4 mr-2" />
+                                <Edit className="mr-2 h-4 w-4" />
                                 Edit List
                             </Link>
                         </DropdownMenuItem>
@@ -245,28 +303,38 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
                             onClick={() => setDeleteDialogOpen(true)}
                             className="text-destructive focus:text-destructive"
                         >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete List
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Delete List</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete "{list.name}"? Work orders in this list will become ungrouped.
+                                Are you sure you want to delete "{list.name}"?
+                                Work orders in this list will become ungrouped.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => {
-                                    router.delete(`/work/work-order-lists/${list.id}`, { preserveScroll: true });
+                                    router.delete(
+                                        `/work/work-order-lists/${list.id}`,
+                                        { preserveScroll: true },
+                                    );
                                     setDeleteDialogOpen(false);
                                 }}
                             >
@@ -284,7 +352,9 @@ function WorkOrderListTreeItem({ list, projectId, tasks, onCreateWorkOrder, onCr
                         <WorkOrderInListTreeItem
                             key={workOrder.id}
                             workOrder={workOrder}
-                            tasks={tasks.filter((t) => t.workOrderId === workOrder.id)}
+                            tasks={tasks.filter(
+                                (t) => t.workOrderId === workOrder.id,
+                            )}
                             onCreateTask={onCreateTask}
                         />
                     ))}
@@ -300,16 +370,20 @@ interface UngroupedWorkOrdersTreeItemProps {
     onCreateTask: (workOrderId: string) => void;
 }
 
-function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: UngroupedWorkOrdersTreeItemProps) {
+function UngroupedWorkOrdersTreeItem({
+    workOrders,
+    tasks,
+    onCreateTask,
+}: UngroupedWorkOrdersTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
 
     return (
         <div className="border-l-2 border-muted">
             {/* Ungrouped Header Row */}
-            <div className="group relative flex items-center gap-2 py-2 px-3 hover:bg-muted/50 transition-colors">
+            <div className="group relative flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/50">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                 >
                     {workOrders.length > 0 ? (
                         isExpanded ? (
@@ -318,13 +392,13 @@ function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: Ungrou
                             <ChevronRight className="h-4 w-4" />
                         )
                     ) : (
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground" />
                     )}
                 </button>
 
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <List className="flex-shrink-0 w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-muted-foreground truncate">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <List className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <span className="truncate font-medium text-muted-foreground">
                         Ungrouped
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -340,7 +414,9 @@ function UngroupedWorkOrdersTreeItem({ workOrders, tasks, onCreateTask }: Ungrou
                         <WorkOrderInListTreeItem
                             key={workOrder.id}
                             workOrder={workOrder}
-                            tasks={tasks.filter((t) => t.workOrderId === workOrder.id)}
+                            tasks={tasks.filter(
+                                (t) => t.workOrderId === workOrder.id,
+                            )}
                             onCreateTask={onCreateTask}
                         />
                     ))}
@@ -356,7 +432,11 @@ interface WorkOrderInListTreeItemProps {
     onCreateTask: (workOrderId: string) => void;
 }
 
-function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderInListTreeItemProps) {
+function WorkOrderInListTreeItem({
+    workOrder,
+    tasks,
+    onCreateTask,
+}: WorkOrderInListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -370,10 +450,10 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
     return (
         <div className="border-l-2 border-muted">
             {/* Work Order Row */}
-            <div className="group relative flex items-center gap-2 py-2 px-3 hover:bg-muted/50 transition-colors">
+            <div className="group relative flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/50">
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
                 >
                     {workOrder.tasksCount > 0 ? (
                         isExpanded ? (
@@ -382,32 +462,49 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
                             <ChevronRight className="h-4 w-4" />
                         )
                     ) : (
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full" />
+                        <div className="h-1 w-1 rounded-full bg-muted-foreground" />
                     )}
                 </button>
 
-                <Link href={`/work/work-orders/${workOrder.id}`} className="flex-1 min-w-0 text-left">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-foreground truncate">
+                <Link
+                    href={`/work/work-orders/${workOrder.id}`}
+                    className="min-w-0 flex-1 text-left"
+                >
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate font-medium text-foreground">
                             {workOrder.title}
                         </span>
-                        <StatusBadge status={workOrder.status} type="workOrder" />
-                        <span className={`text-xs font-medium ${priorityColors[workOrder.priority]}`}>
+                        <StatusBadge
+                            status={workOrder.status}
+                            type="workOrder"
+                        />
+                        <span
+                            className={`text-xs font-medium ${priorityColors[workOrder.priority]}`}
+                        >
                             {workOrder.priority}
                         </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-0.5">
+                    <div className="mt-0.5 flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{workOrder.assignedToName}</span>
                         <span>
-                            {workOrder.completedTasksCount}/{workOrder.tasksCount} tasks
+                            {workOrder.completedTasksCount}/
+                            {workOrder.tasksCount} tasks
                         </span>
                         {workOrder.dueDate && (
-                            <span className={
-                                new Date(workOrder.dueDate) < new Date() && !['done', 'archived', 'cancelled'].includes(workOrder.status)
-                                    ? 'text-destructive font-medium'
-                                    : ''
-                            }>
-                                Due {new Date(workOrder.dueDate).toLocaleDateString()}
+                            <span
+                                className={
+                                    new Date(workOrder.dueDate) < new Date() &&
+                                    !['done', 'archived', 'cancelled'].includes(
+                                        workOrder.status,
+                                    )
+                                        ? 'font-medium text-destructive'
+                                        : ''
+                                }
+                            >
+                                Due{' '}
+                                {new Date(
+                                    workOrder.dueDate,
+                                ).toLocaleDateString()}
                             </span>
                         )}
                     </div>
@@ -417,7 +514,7 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
                     variant="ghost"
                     size="icon"
                     onClick={() => onCreateTask(workOrder.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
+                    className="h-7 w-7 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                     title="Add task"
                 >
                     <Plus className="h-4 w-4" />
@@ -425,14 +522,19 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" title="More options">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            title="More options"
+                        >
                             <MoreVertical className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                             <Link href={`/work/work-orders/${workOrder.id}`}>
-                                <Edit className="h-4 w-4 mr-2" />
+                                <Edit className="mr-2 h-4 w-4" />
                                 Edit Work Order
                             </Link>
                         </DropdownMenuItem>
@@ -441,28 +543,40 @@ function WorkOrderInListTreeItem({ workOrder, tasks, onCreateTask }: WorkOrderIn
                             onClick={() => setDeleteDialogOpen(true)}
                             className="text-destructive focus:text-destructive"
                         >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="mr-2 h-4 w-4" />
                             Delete Work Order
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Delete Work Order</DialogTitle>
                             <DialogDescription>
-                                Are you sure you want to delete "{workOrder.title}"? This action cannot be undone. All associated tasks and deliverables will also be deleted.
+                                Are you sure you want to delete "
+                                {workOrder.title}"? This action cannot be
+                                undone. All associated tasks and deliverables
+                                will also be deleted.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteDialogOpen(false)}
+                            >
                                 Cancel
                             </Button>
                             <Button
                                 variant="destructive"
                                 onClick={() => {
-                                    router.delete(`/work/work-orders/${workOrder.id}`, { preserveScroll: true });
+                                    router.delete(
+                                        `/work/work-orders/${workOrder.id}`,
+                                        { preserveScroll: true },
+                                    );
                                     setDeleteDialogOpen(false);
                                 }}
                             >
@@ -491,19 +605,24 @@ interface TaskTreeItemProps {
 
 function TaskTreeItem({ task }: TaskTreeItemProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const completedItems = task.checklistItems.filter((item) => item.completed).length;
+    const completedItems = task.checklistItems.filter(
+        (item) => item.completed,
+    ).length;
     const totalItems = task.checklistItems.length;
 
     return (
-        <div className="group relative flex items-center gap-2 py-2 px-3 hover:bg-muted/50 transition-colors">
-            <div className="flex-shrink-0 w-5 h-5" />
+        <div className="group relative flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/50">
+            <div className="h-5 w-5 flex-shrink-0" />
 
-            <Link href={`/work/tasks/${task.id}`} className="flex-1 min-w-0 text-left">
-                <div className="flex items-center gap-2 flex-wrap">
+            <Link
+                href={`/work/tasks/${task.id}`}
+                className="min-w-0 flex-1 text-left"
+            >
+                <div className="flex flex-wrap items-center gap-2">
                     <span
                         className={`text-sm ${
                             task.isBlocked
-                                ? 'line-through text-muted-foreground'
+                                ? 'text-muted-foreground line-through'
                                 : 'text-foreground'
                         }`}
                     >
@@ -511,12 +630,12 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
                     </span>
                     <StatusBadge status={task.status} type="task" />
                     {task.isBlocked && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400">
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/30 dark:text-red-400">
                             blocked
                         </span>
                     )}
                 </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground mt-0.5">
+                <div className="mt-0.5 flex items-center gap-4 text-xs text-muted-foreground">
                     <span>{task.assignedToName}</span>
                     {totalItems > 0 && (
                         <span>
@@ -531,14 +650,19 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" title="More options">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        title="More options"
+                    >
                         <MoreVertical className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
                         <Link href={`/work/tasks/${task.id}`}>
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="mr-2 h-4 w-4" />
                             Edit Task
                         </Link>
                     </DropdownMenuItem>
@@ -547,7 +671,7 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
                         onClick={() => setDeleteDialogOpen(true)}
                         className="text-destructive focus:text-destructive"
                     >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Delete Task
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -558,17 +682,23 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
                     <DialogHeader>
                         <DialogTitle>Delete Task</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{task.title}"? This action cannot be undone.
+                            Are you sure you want to delete "{task.title}"? This
+                            action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                        >
                             Cancel
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={() => {
-                                router.delete(`/work/tasks/${task.id}`, { preserveScroll: true });
+                                router.delete(`/work/tasks/${task.id}`, {
+                                    preserveScroll: true,
+                                });
                                 setDeleteDialogOpen(false);
                             }}
                         >
