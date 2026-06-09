@@ -38,7 +38,7 @@ export function useLanguage() {
 
             // Update server-side via Inertia (will update database)
             router.patch(
-                '/settings/language',
+                '/account/language',
                 { language },
                 {
                     preserveState: true,

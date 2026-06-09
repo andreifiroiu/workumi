@@ -23,7 +23,7 @@ export function OrganizationSwitcher({
 }: OrganizationSwitcherProps) {
     const switchOrganization = (orgId: number) => {
         router.post(
-            `/settings/teams/${orgId}/switch`,
+            `/account/teams/${orgId}/switch`,
             {},
             {
                 preserveState: true,
@@ -73,7 +73,7 @@ export function OrganizationSwitcher({
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/settings/teams">
+                    <Link href="/account/teams">
                         <Plus className="mr-2 h-4 w-4" />
                         Create organization
                     </Link>

@@ -57,3 +57,32 @@ test('the redirect target after creating a team renders the teams component', fu
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page->component('account/teams/index'));
 });
+
+test('user can switch their current team via the account teams switch route', function () {
+    $user = User::factory()->create();
+    $teamA = Team::factory()->create(['user_id' => $user->id]);
+    $teamB = Team::factory()->create(['user_id' => $user->id]);
+
+    $user->switchTeam($teamA);
+
+    $response = $this->actingAs($user)
+        ->from('/account/teams')
+        ->post("/account/teams/{$teamB->id}/switch");
+
+    $response->assertRedirect('/account/teams');
+    expect($user->fresh()->current_team_id)->toBe($teamB->id);
+});
+
+test('user cannot switch to a team they do not belong to', function () {
+    $user = User::factory()->create();
+    $ownTeam = Team::factory()->create(['user_id' => $user->id]);
+    $user->switchTeam($ownTeam);
+
+    $otherTeam = Team::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->post("/account/teams/{$otherTeam->id}/switch");
+
+    $response->assertForbidden();
+    expect($user->fresh()->current_team_id)->toBe($ownTeam->id);
+});
