@@ -8,10 +8,11 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { Loader2 } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+
+const MdxNoteEditor = lazy(() => import('./mdx-note-editor'));
 
 export interface NoteDocument {
     id: string;
@@ -109,7 +110,7 @@ function NoteEditorForm({
             <DialogHeader>
                 <DialogTitle>{note ? 'Edit note' : 'New note'}</DialogTitle>
                 <DialogDescription>
-                    Notes are saved as Markdown (.md) files in the Documents
+                    Formatting is saved as Markdown (.md) in the Documents
                     section.
                 </DialogDescription>
             </DialogHeader>
@@ -132,34 +133,20 @@ function NoteEditorForm({
                 </div>
             </div>
 
-            <Tabs defaultValue="write" className="flex min-h-0 flex-1 flex-col">
-                <TabsList className="w-fit">
-                    <TabsTrigger value="write">Write</TabsTrigger>
-                    <TabsTrigger value="preview">Preview</TabsTrigger>
-                </TabsList>
-                <TabsContent value="write" className="min-h-0 flex-1">
-                    <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Write your note in Markdown…"
-                        className="h-full w-full resize-none rounded-md border border-input bg-background p-3 font-mono text-sm focus:ring-2 focus:ring-ring focus:outline-none"
-                    />
-                </TabsContent>
-                <TabsContent
-                    value="preview"
-                    className="min-h-0 flex-1 overflow-auto rounded-md border border-input p-3"
-                >
-                    {content.trim() ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>{content}</ReactMarkdown>
+            <div className="min-h-0 flex-1 overflow-hidden">
+                <Suspense
+                    fallback={
+                        <div className="flex h-full items-center justify-center rounded-md border border-input">
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                         </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground">
-                            Nothing to preview yet.
-                        </p>
-                    )}
-                </TabsContent>
-            </Tabs>
+                    }
+                >
+                    <MdxNoteEditor
+                        markdown={note?.content ?? ''}
+                        onChange={setContent}
+                    />
+                </Suspense>
+            </div>
 
             <DialogFooter>
                 <Button variant="outline" onClick={onClose} disabled={isSaving}>
