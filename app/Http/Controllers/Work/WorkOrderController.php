@@ -443,22 +443,24 @@ class WorkOrderController extends Controller
         $content = $validated['content'] ?? '';
         $name = $this->normalizeNoteName($validated['name']);
 
-        $document = new Document([
-            'team_id' => $workOrder->team_id,
-            'uploaded_by_id' => $request->user()->id,
-            'documentable_type' => WorkOrder::class,
-            'documentable_id' => $workOrder->id,
-            'folder_id' => $validated['folder_id'] ?? null,
-            'name' => $name,
-            'type' => DocumentType::Note,
-            'file_url' => '',
-            'file_size' => $this->formatFileSize(strlen($content)),
-        ]);
-        $document->save();
+        DB::transaction(function () use ($request, $workOrder, $validated, $name, $content): void {
+            $document = new Document([
+                'team_id' => $workOrder->team_id,
+                'uploaded_by_id' => $request->user()->id,
+                'documentable_type' => WorkOrder::class,
+                'documentable_id' => $workOrder->id,
+                'folder_id' => $validated['folder_id'] ?? null,
+                'name' => $name,
+                'type' => DocumentType::Note,
+                'file_url' => '',
+                'file_size' => $this->formatFileSize(strlen($content)),
+            ]);
+            $document->save();
 
-        $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
-        Storage::disk('public')->put($path, $content);
-        $document->update(['file_url' => Storage::disk('public')->url($path)]);
+            $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
+            Storage::disk('public')->put($path, $content);
+            $document->update(['file_url' => Storage::disk('public')->url($path)]);
+        });
 
         return back();
     }
