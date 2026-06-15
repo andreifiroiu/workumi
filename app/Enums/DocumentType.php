@@ -8,6 +8,7 @@ enum DocumentType: string
     case Artifact = 'artifact';
     case Evidence = 'evidence';
     case Template = 'template';
+    case Note = 'note';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum DocumentType: string
             self::Artifact => 'Artifact',
             self::Evidence => 'Evidence',
             self::Template => 'Template',
+            self::Note => 'Note',
         };
     }
 }

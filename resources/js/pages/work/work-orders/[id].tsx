@@ -230,12 +230,13 @@ interface WorkOrderDetailProps {
     documents: Array<{
         id: string;
         name: string;
-        type: 'reference' | 'artifact' | 'evidence' | 'template';
+        type: 'reference' | 'artifact' | 'evidence' | 'template' | 'note';
         fileUrl: string;
         fileSize: string | null;
         mimeType?: string;
         folderId?: string | null;
         uploadedDate?: string;
+        content?: string | null;
     }>;
     folders: FolderNode[];
     communicationThread: {
@@ -2275,6 +2276,8 @@ export default function WorkOrderDetail({
                         folders={folders}
                         uploadUrl={`/work/work-orders/${workOrder.id}/files`}
                         deleteUrlPrefix={`/work/work-orders/${workOrder.id}/files`}
+                        notesCreateUrl={`/work/work-orders/${workOrder.id}/notes`}
+                        notesUpdateUrlPrefix={`/work/work-orders/${workOrder.id}/notes`}
                     />
                 </div>
             </div>
