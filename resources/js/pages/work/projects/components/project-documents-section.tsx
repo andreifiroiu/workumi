@@ -1,6 +1,7 @@
 import { DocumentPreviewWithAnnotations } from '@/components/documents/document-preview-with-annotations';
 import { FolderManagement } from '@/components/documents/folder-management';
 import { FolderNode } from '@/components/documents/folder-tree';
+import { NoteEditorDialog } from '@/components/documents/note-editor-dialog';
 import { ShareLinkDialog } from '@/components/documents/share-link-dialog';
 import { ShareLinkManagement } from '@/components/documents/share-link-management';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ import {
     FolderOpen,
     Image,
     MoreVertical,
+    NotebookPen,
     Package,
     Plus,
     Settings,
@@ -47,13 +49,14 @@ import { useRef, useState } from 'react';
 interface DocumentItem {
     id: string;
     name: string;
-    type: 'reference' | 'artifact' | 'evidence' | 'template';
+    type: 'reference' | 'artifact' | 'evidence' | 'template' | 'note';
     fileUrl: string;
     fileSize: string | null;
     mimeType?: string;
     folderId?: string | null;
     uploadedBy?: string;
     uploadedDate?: string;
+    content?: string | null;
 }
 
 interface ProjectDocumentsSectionProps {
@@ -62,6 +65,10 @@ interface ProjectDocumentsSectionProps {
     folders: FolderNode[];
     uploadUrl?: string;
     deleteUrlPrefix?: string;
+    /** When provided, enables creating/editing Markdown notes inline. */
+    notesCreateUrl?: string;
+    /** Prefix for note updates; the note id is appended. */
+    notesUpdateUrlPrefix?: string;
 }
 
 export function ProjectDocumentsSection({
@@ -70,6 +77,8 @@ export function ProjectDocumentsSection({
     folders,
     uploadUrl,
     deleteUrlPrefix,
+    notesCreateUrl,
+    notesUpdateUrlPrefix,
 }: ProjectDocumentsSectionProps) {
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
         null,
@@ -84,7 +93,21 @@ export function ProjectDocumentsSection({
     const [uploadFolderId, setUploadFolderId] = useState<string | undefined>(
         undefined,
     );
+    const [noteEditorOpen, setNoteEditorOpen] = useState(false);
+    const [editingNote, setEditingNote] = useState<DocumentItem | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const notesEnabled = !!notesCreateUrl && !!notesUpdateUrlPrefix;
+
+    const openNewNote = () => {
+        setEditingNote(null);
+        setNoteEditorOpen(true);
+    };
+
+    const openNote = (doc: DocumentItem) => {
+        setEditingNote(doc);
+        setNoteEditorOpen(true);
+    };
 
     // Filter documents by selected folder
     const filteredDocuments = selectedFolderId
@@ -207,6 +230,8 @@ export function ProjectDocumentsSection({
 
     const getFileIcon = (type: string, fileName: string) => {
         const ext = fileName.split('.').pop()?.toLowerCase();
+        if (type === 'note')
+            return <NotebookPen className="h-8 w-8 text-indigo-500" />;
         if (ext === 'pdf') return <FileText className="h-8 w-8 text-red-500" />;
         if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || ''))
             return <Image className="h-8 w-8 text-blue-500" />;
@@ -264,6 +289,16 @@ export function ProjectDocumentsSection({
                         >
                             <Settings className="mr-2 h-4 w-4" />
                             Folders
+                        </Button>
+                    )}
+                    {notesEnabled && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={openNewNote}
+                        >
+                            <NotebookPen className="mr-2 h-4 w-4" />
+                            New note
                         </Button>
                     )}
                     <Button
@@ -351,7 +386,11 @@ export function ProjectDocumentsSection({
                             {getFileIcon(doc.type, doc.name)}
                             <div className="min-w-0 flex-1">
                                 <button
-                                    onClick={() => setPreviewDoc(doc)}
+                                    onClick={() =>
+                                        doc.type === 'note'
+                                            ? openNote(doc)
+                                            : setPreviewDoc(doc)
+                                    }
                                     className="block truncate text-left text-sm font-medium hover:text-primary"
                                 >
                                     {doc.name}
@@ -365,10 +404,20 @@ export function ProjectDocumentsSection({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setPreviewDoc(doc)}
-                                    title="Preview"
+                                    onClick={() =>
+                                        doc.type === 'note'
+                                            ? openNote(doc)
+                                            : setPreviewDoc(doc)
+                                    }
+                                    title={
+                                        doc.type === 'note' ? 'Edit' : 'Preview'
+                                    }
                                 >
-                                    <Eye className="h-4 w-4" />
+                                    {doc.type === 'note' ? (
+                                        <NotebookPen className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -491,6 +540,18 @@ export function ProjectDocumentsSection({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Note Editor Dialog */}
+            {notesEnabled && (
+                <NoteEditorDialog
+                    open={noteEditorOpen}
+                    onOpenChange={setNoteEditorOpen}
+                    note={editingNote}
+                    createUrl={notesCreateUrl!}
+                    updateUrlPrefix={notesUpdateUrlPrefix!}
+                    folderId={selectedFolderId}
+                />
+            )}
 
             {/* Manage Folders Dialog */}
             <Dialog

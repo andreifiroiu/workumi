@@ -68,6 +68,8 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::post('/work-orders/{workOrder}/restore', [WorkOrderController::class, 'restore'])->name('work-orders.restore');
     Route::post('/work-orders/{workOrder}/files', [WorkOrderController::class, 'uploadFile'])->name('work-orders.files.upload');
     Route::delete('/work-orders/{workOrder}/files/{document}', [WorkOrderController::class, 'deleteFile'])->name('work-orders.files.delete');
+    Route::post('/work-orders/{workOrder}/notes', [WorkOrderController::class, 'storeNote'])->name('work-orders.notes.store');
+    Route::patch('/work-orders/{workOrder}/notes/{document}', [WorkOrderController::class, 'updateNote'])->name('work-orders.notes.update');
     Route::post('/projects/{project}/work-orders/bulk-archive-delivered', [WorkOrderController::class, 'bulkArchiveDelivered'])->name('projects.work-orders.bulk-archive-delivered');
 
     // Work Order Agent Settings

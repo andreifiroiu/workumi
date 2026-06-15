@@ -199,6 +199,7 @@ class WorkOrderController extends Controller
                 'mimeType' => $this->guessMimeType($doc->name),
                 'folderId' => $doc->folder_id ? (string) $doc->folder_id : null,
                 'uploadedDate' => $doc->created_at->format('Y-m-d'),
+                'content' => $doc->type === DocumentType::Note ? $this->readNoteContent($doc) : null,
             ]),
             'folders' => $this->getWorkOrderFolders($workOrder),
             'communicationThread' => $thread ? [
@@ -426,6 +427,93 @@ class WorkOrderController extends Controller
         return back();
     }
 
+    /**
+     * Create a markdown note stored as a document in the work order's Documents section.
+     */
+    public function storeNote(Request $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $this->authorize('update', $workOrder);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'nullable|string|max:1000000',
+            'folder_id' => 'nullable|exists:folders,id',
+        ]);
+
+        $content = $validated['content'] ?? '';
+        $name = $this->normalizeNoteName($validated['name']);
+
+        DB::transaction(function () use ($request, $workOrder, $validated, $name, $content): void {
+            $document = new Document([
+                'team_id' => $workOrder->team_id,
+                'uploaded_by_id' => $request->user()->id,
+                'documentable_type' => WorkOrder::class,
+                'documentable_id' => $workOrder->id,
+                'folder_id' => $validated['folder_id'] ?? null,
+                'name' => $name,
+                'type' => DocumentType::Note,
+                'file_url' => '',
+                'file_size' => $this->formatFileSize(strlen($content)),
+            ]);
+            $document->save();
+
+            $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
+            Storage::disk('public')->put($path, $content);
+            $document->update(['file_url' => Storage::disk('public')->url($path)]);
+        });
+
+        return back();
+    }
+
+    /**
+     * Update the name and/or markdown content of an existing note.
+     */
+    public function updateNote(Request $request, WorkOrder $workOrder, Document $document): RedirectResponse
+    {
+        $this->authorize('update', $workOrder);
+
+        if ($document->documentable_type !== WorkOrder::class
+            || $document->documentable_id !== $workOrder->id
+            || $document->type !== DocumentType::Note) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'nullable|string|max:1000000',
+        ]);
+
+        $content = $validated['content'] ?? '';
+
+        $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
+        Storage::disk('public')->put($path, $content);
+
+        $document->update([
+            'name' => $this->normalizeNoteName($validated['name']),
+            'file_size' => $this->formatFileSize(strlen($content)),
+        ]);
+
+        return back();
+    }
+
+    private function normalizeNoteName(string $name): string
+    {
+        $name = trim($name);
+
+        return str_ends_with(strtolower($name), '.md') ? $name : $name.'.md';
+    }
+
+    private function readNoteContent(Document $document): string
+    {
+        $path = str_replace(Storage::disk('public')->url(''), '', $document->file_url);
+
+        if ($path && Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->get($path);
+        }
+
+        return '';
+    }
+
     private function formatFileSize(int $bytes): string
     {
         $units = ['B', 'KB', 'MB', 'GB'];
@@ -456,6 +544,7 @@ class WorkOrderController extends Controller
             'gif' => 'image/gif',
             'webp' => 'image/webp',
             'txt' => 'text/plain',
+            'md' => 'text/markdown',
             'zip' => 'application/zip',
         ];
 
