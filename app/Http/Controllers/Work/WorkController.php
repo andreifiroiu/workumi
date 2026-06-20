@@ -347,6 +347,7 @@ class WorkController extends Controller
     private function getTasks(Team $team): array
     {
         return Task::forTeam($team->id)
+            ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Cancelled, TaskStatus::Archived])
             ->with(['workOrder', 'project', 'assignedTo'])
             ->orderBy('due_date')
             ->get()
