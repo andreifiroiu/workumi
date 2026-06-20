@@ -26,7 +26,8 @@ export type WorkOrderStatus =
     | 'delivered'
     | 'blocked'
     | 'cancelled'
-    | 'revision_requested';
+    | 'revision_requested'
+    | 'backlog';
 
 /**
  * Union type for all possible status values
@@ -56,6 +57,7 @@ const workOrderStatusLabels: Record<WorkOrderStatus, string> = {
     blocked: 'Blocked',
     cancelled: 'Cancelled',
     revision_requested: 'Revision Requested',
+    backlog: 'Backlog',
 };
 
 /**
@@ -83,6 +85,7 @@ const statusColorClasses: Record<Status, string> = {
     active: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-800',
     delivered:
         'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-300 dark:border-emerald-800',
+    backlog: 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
 };
 
 const statusBadgeVariants = cva(

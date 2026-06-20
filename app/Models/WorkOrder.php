@@ -220,6 +220,16 @@ class WorkOrder extends Model
         return $query->where('status', '!=', WorkOrderStatus::Delivered);
     }
 
+    public function scopeBacklog(Builder $query): Builder
+    {
+        return $query->where('status', WorkOrderStatus::Backlog);
+    }
+
+    public function scopeNotBacklog(Builder $query): Builder
+    {
+        return $query->where('status', '!=', WorkOrderStatus::Backlog);
+    }
+
     public function scopeInList(Builder $query, ?int $listId): Builder
     {
         return $query->where('work_order_list_id', $listId);

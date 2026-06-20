@@ -15,6 +15,7 @@ enum WorkOrderStatus: string
     case Cancelled = 'cancelled';
     case RevisionRequested = 'revision_requested';
     case Archived = 'archived';
+    case Backlog = 'backlog';
 
     public function label(): string
     {
@@ -28,6 +29,7 @@ enum WorkOrderStatus: string
             self::Cancelled => 'Cancelled',
             self::RevisionRequested => 'Revision Requested',
             self::Archived => 'Archived',
+            self::Backlog => 'Backlog',
         };
     }
 
@@ -43,6 +45,7 @@ enum WorkOrderStatus: string
             self::Cancelled => 'red',
             self::RevisionRequested => 'orange',
             self::Archived => 'slate',
+            self::Backlog => 'zinc',
         };
     }
 }

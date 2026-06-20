@@ -54,6 +54,7 @@ class TodayController extends Controller
 
         $upcomingDeadlines = WorkOrder::forTeam($team->id)
             ->whereNotIn('status', [WorkOrderStatus::Delivered->value, WorkOrderStatus::Approved->value])
+            ->notBacklog()
             ->whereBetween('due_date', [Carbon::today(), Carbon::today()->addDays(3)])
             ->count();
 
@@ -175,6 +176,7 @@ class TodayController extends Controller
     {
         return WorkOrder::forTeam($team->id)
             ->whereNotIn('status', [WorkOrderStatus::Delivered->value, WorkOrderStatus::Approved->value])
+            ->notBacklog()
             ->where('due_date', '>=', Carbon::today())
             ->where('due_date', '<=', Carbon::today()->addDays(14))
             ->with(['project', 'assignedTo', 'tasks'])

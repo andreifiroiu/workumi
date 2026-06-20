@@ -57,14 +57,15 @@ class WorkflowTransitionService
      * @var array<string, array<string>>
      */
     private const WORK_ORDER_TRANSITIONS = [
-        'draft' => ['active', 'cancelled'],
-        'active' => ['in_review', 'delivered', 'blocked', 'cancelled'],
-        'in_review' => ['approved', 'revision_requested', 'cancelled'],
-        'approved' => ['delivered', 'revision_requested', 'cancelled'],
-        'delivered' => [], // Terminal state
-        'blocked' => ['active', 'cancelled'],
-        'revision_requested' => [], // Auto-transitions to active
-        'cancelled' => [], // Terminal state
+        'draft' => ['active', 'cancelled', 'backlog'],
+        'active' => ['in_review', 'delivered', 'blocked', 'cancelled', 'backlog'],
+        'in_review' => ['approved', 'revision_requested', 'cancelled', 'backlog'],
+        'approved' => ['delivered', 'revision_requested', 'cancelled', 'backlog'],
+        'delivered' => ['backlog'],
+        'blocked' => ['active', 'cancelled', 'backlog'],
+        'revision_requested' => ['backlog'], // Otherwise auto-transitions to active
+        'cancelled' => ['backlog'],
+        'backlog' => ['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested'],
     ];
 
     /**
@@ -198,6 +199,11 @@ class WorkflowTransitionService
             // Handle InboxItem resolution for approval/rejection transitions
             if ($fromStatus->value === 'in_review' && in_array($toStatus->value, ['approved', 'revision_requested'], true)) {
                 $this->resolveApprovalInboxItem($item, $toStatus->value === 'approved');
+            }
+
+            // Backlogging an in-review item clears its pending approval so it is hidden everywhere
+            if ($fromStatus->value === 'in_review' && $toStatus->value === 'backlog') {
+                $this->resolveApprovalInboxItem($item, false);
             }
 
             // Handle auto-transition for RevisionRequested

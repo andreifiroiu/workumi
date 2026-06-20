@@ -64,6 +64,7 @@ class SendDailyTaskDigestCommand extends Command
         WorkOrderStatus::Delivered->value,
         WorkOrderStatus::Cancelled->value,
         WorkOrderStatus::Archived->value,
+        WorkOrderStatus::Backlog->value,
     ];
 
     /**
