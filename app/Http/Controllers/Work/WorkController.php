@@ -118,6 +118,7 @@ class WorkController extends Controller
 
         $accountableWorkOrdersCount = WorkOrder::forTeam($team->id)
             ->whereUserIsAccountable($user->id)
+            ->notBacklog()
             ->count();
 
         $responsibleProjectsCount = Project::forTeam($team->id)
@@ -126,6 +127,7 @@ class WorkController extends Controller
 
         $responsibleWorkOrdersCount = WorkOrder::forTeam($team->id)
             ->whereUserIsResponsible($user->id)
+            ->notBacklog()
             ->count();
 
         $awaitingReviewCount = WorkOrder::forTeam($team->id)
@@ -184,7 +186,7 @@ class WorkController extends Controller
     {
         return WorkOrder::forTeam($team->id)
             ->whereUserHasRaciRole($user->id, excludeInformed: ! $showInformed)
-            ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled])
+            ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled, WorkOrderStatus::Backlog])
             ->with(['project', 'assignedTo', 'createdBy', 'tasks'])
             ->orderBy('due_date')
             ->get()
@@ -251,7 +253,7 @@ class WorkController extends Controller
             ->with([
                 'party',
                 'owner',
-                'workOrderLists.workOrders' => fn ($query) => $query->notArchived(),
+                'workOrderLists.workOrders' => fn ($query) => $query->notArchived()->notBacklog(),
                 'workOrderLists.workOrders.tasks',
                 'workOrderLists.workOrders.accountable',
             ])
@@ -292,6 +294,7 @@ class WorkController extends Controller
                 ])->all(),
                 'ungroupedWorkOrders' => $project->ungroupedWorkOrders()
                     ->notArchived()
+                    ->notBacklog()
                     ->with(['tasks', 'accountable'])
                     ->get()
                     ->map(fn ($wo) => [
@@ -314,6 +317,7 @@ class WorkController extends Controller
         return WorkOrder::forTeam($team->id)
             ->notArchived()
             ->notDelivered()
+            ->notBacklog()
             ->with(['project', 'assignedTo', 'createdBy', 'workOrderList', 'tasks'])
             ->orderBy('due_date')
             ->get()

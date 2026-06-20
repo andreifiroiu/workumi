@@ -6,11 +6,11 @@ use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
 use App\Exceptions\InvalidTransitionException;
 use App\Models\AIAgent;
+use App\Models\InboxItem;
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\StatusTransition;
 use App\Models\Task;
-use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\WorkflowTransitionService;
@@ -34,7 +34,7 @@ beforeEach(function () {
         'accountable_id' => $this->user->id,
     ]);
 
-    $this->service = new WorkflowTransitionService();
+    $this->service = new WorkflowTransitionService;
 });
 
 test('valid transitions are allowed for tasks', function () {
@@ -202,4 +202,74 @@ test('work order rejection auto-transitions to Active', function () {
 
     // Should have 2 transitions: InReview -> RevisionRequested -> Active
     expect($workOrder->statusTransitions)->toHaveCount(2);
+});
+
+test('a work order can be moved to backlog from any status', function (WorkOrderStatus $from) {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => $from,
+    ]);
+
+    $this->service->transition(
+        item: $workOrder,
+        actor: $this->user,
+        toStatus: WorkOrderStatus::Backlog,
+    );
+
+    $workOrder->refresh();
+    expect($workOrder->status)->toBe(WorkOrderStatus::Backlog);
+})->with([
+    'draft' => WorkOrderStatus::Draft,
+    'active' => WorkOrderStatus::Active,
+    'in_review' => WorkOrderStatus::InReview,
+    'approved' => WorkOrderStatus::Approved,
+    'delivered' => WorkOrderStatus::Delivered,
+    'blocked' => WorkOrderStatus::Blocked,
+    'cancelled' => WorkOrderStatus::Cancelled,
+    'revision_requested' => WorkOrderStatus::RevisionRequested,
+]);
+
+test('a backlogged work order can be moved to any status', function (WorkOrderStatus $to) {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => WorkOrderStatus::Backlog,
+    ]);
+
+    expect($this->service->canTransition($workOrder, $this->user, $to))->toBeTrue();
+})->with([
+    'draft' => WorkOrderStatus::Draft,
+    'active' => WorkOrderStatus::Active,
+    'delivered' => WorkOrderStatus::Delivered,
+]);
+
+test('backlogging an in-review work order clears its pending approval', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => WorkOrderStatus::Active,
+    ]);
+
+    $this->service->transition(
+        item: $workOrder,
+        actor: $this->user,
+        toStatus: WorkOrderStatus::InReview,
+    );
+
+    expect(InboxItem::findPendingApprovalFor($workOrder))->not->toBeNull();
+
+    $this->service->transition(
+        item: $workOrder->fresh(),
+        actor: $this->user,
+        toStatus: WorkOrderStatus::Backlog,
+    );
+
+    expect(InboxItem::findPendingApprovalFor($workOrder))->toBeNull();
 });

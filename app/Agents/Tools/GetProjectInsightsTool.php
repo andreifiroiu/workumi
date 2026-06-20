@@ -191,7 +191,7 @@ class GetProjectInsightsTool implements ToolInterface
         $workOrdersQuery = WorkOrder::where('team_id', $teamId)
             ->whereNotNull('due_date')
             ->where('due_date', '<', $now)
-            ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled]);
+            ->whereNotIn('status', [WorkOrderStatus::Delivered, WorkOrderStatus::Cancelled, WorkOrderStatus::Backlog]);
 
         if ($projectId !== null) {
             $workOrdersQuery->where('project_id', $projectId);

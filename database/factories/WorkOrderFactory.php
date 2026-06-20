@@ -6,7 +6,6 @@ namespace Database\Factories;
 
 use App\Enums\Priority;
 use App\Enums\WorkOrderStatus;
-use App\Models\Party;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
@@ -14,7 +13,7 @@ use App\Models\WorkOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\WorkOrder>
+ * @extends Factory<WorkOrder>
  */
 class WorkOrderFactory extends Factory
 {
@@ -112,6 +111,13 @@ class WorkOrderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => WorkOrderStatus::RevisionRequested,
+        ]);
+    }
+
+    public function backlog(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => WorkOrderStatus::Backlog,
         ]);
     }
 

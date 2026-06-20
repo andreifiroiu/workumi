@@ -73,12 +73,16 @@ function dueWorkOrder(array $overrides = []): WorkOrder
 }
 
 /**
- * Freeze "now" to a UTC instant that is the given local hour in New York.
- * In June, New York is UTC-4 (EDT), so 8am local == 12:00 UTC.
+ * Freeze "now" to the UTC instant matching the given local hour in New York,
+ * on the current date. Anchored to the real date (and DST offset) so the due
+ * dates created by the helpers above — which are relative to "now" — always
+ * line up with the frozen clock.
  */
 function freezeAtNewYorkHour(int $hour): void
 {
-    Carbon::setTestNow(Carbon::create(2026, 6, 2, $hour + 4, 0, 0, 'UTC'));
+    Carbon::setTestNow(
+        Carbon::now('America/New_York')->setTime($hour, 0, 0)->setTimezone('UTC')
+    );
 }
 
 afterEach(function () {

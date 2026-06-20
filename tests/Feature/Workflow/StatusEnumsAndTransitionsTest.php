@@ -8,7 +8,6 @@ use App\Models\Party;
 use App\Models\Project;
 use App\Models\StatusTransition;
 use App\Models\Task;
-use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkOrder;
 
@@ -77,6 +76,7 @@ test('WorkOrderStatus enum has all required cases including new workflow statuse
         'Cancelled',
         'RevisionRequested',
         'Archived',
+        'Backlog',
     ];
 
     $actualCases = array_map(fn ($case) => $case->name, WorkOrderStatus::cases());
@@ -85,7 +85,7 @@ test('WorkOrderStatus enum has all required cases including new workflow statuse
         expect($actualCases)->toContain($expectedCase);
     }
 
-    expect(count(WorkOrderStatus::cases()))->toBe(9);
+    expect(count(WorkOrderStatus::cases()))->toBe(10);
 });
 
 test('WorkOrderStatus enum has label and color methods for all cases', function () {

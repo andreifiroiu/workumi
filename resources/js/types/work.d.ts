@@ -55,7 +55,7 @@ export interface WorkOrder {
     projectName: string;
     assignedToId: string | null;
     assignedToName: string;
-    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived';
+    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived' | 'backlog';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     dueDate: string | null;
     estimatedHours: number;
@@ -83,7 +83,7 @@ export interface WorkOrder {
 export interface WorkOrderInList {
     id: string;
     title: string;
-    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived';
+    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived' | 'backlog';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     dueDate: string | null;
     assignedToName: string;

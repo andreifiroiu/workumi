@@ -290,6 +290,7 @@ class WorkOrderController extends Controller
             'blocked' => 'Mark as Blocked',
             'cancelled' => 'Cancel',
             'revision_requested' => 'Request Changes',
+            'backlog' => 'Move to Backlog',
         ];
 
         $destructive = ['cancelled', 'revision_requested'];
@@ -867,7 +868,7 @@ class WorkOrderController extends Controller
         $this->authorize('update', $workOrder);
 
         $validated = $request->validate([
-            'status' => 'required|string|in:draft,active,in_review,approved,delivered',
+            'status' => 'required|string|in:draft,active,in_review,approved,delivered,backlog',
         ]);
 
         $workOrder->update([
