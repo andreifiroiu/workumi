@@ -11,9 +11,18 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
     DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    workOrderStatusLabels,
+    type WorkOrderStatus,
+} from '@/components/ui/status-badge';
 import type {
     Project,
     Task,
@@ -23,14 +32,19 @@ import type {
 } from '@/types/work';
 import { Link, router } from '@inertiajs/react';
 import {
+    Archive,
+    ArchiveRestore,
     ChevronDown,
     ChevronRight,
     Edit,
     Folder,
+    FolderMinus,
     List,
     Lock,
     MoreVertical,
+    PackageCheck,
     Plus,
+    RefreshCw,
     Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -352,6 +366,7 @@ function WorkOrderListTreeItem({
                         <WorkOrderInListTreeItem
                             key={workOrder.id}
                             workOrder={workOrder}
+                            listId={list.id}
                             tasks={tasks.filter(
                                 (t) => t.workOrderId === workOrder.id,
                             )}
@@ -430,15 +445,87 @@ interface WorkOrderInListTreeItemProps {
     workOrder: WorkOrderInList;
     tasks: Task[];
     onCreateTask: (workOrderId: string) => void;
+    listId?: string | null;
 }
 
 function WorkOrderInListTreeItem({
     workOrder,
     tasks,
     onCreateTask,
+    listId,
 }: WorkOrderInListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [actionError, setActionError] = useState<string | null>(null);
+
+    const isArchived = workOrder.status === 'archived';
+
+    // Statuses selectable from the "Change status" submenu. Mirrors the
+    // values accepted by WorkOrderController@updateStatus (archived is set
+    // via its own dedicated action, not this list).
+    const selectableStatuses: WorkOrderStatus[] = [
+        'draft',
+        'active',
+        'in_review',
+        'approved',
+        'delivered',
+    ];
+
+    const handleStatusChange = (status: string) => {
+        if (status === workOrder.status) {
+            return;
+        }
+        router.patch(
+            `/work/work-orders/${workOrder.id}/status`,
+            { status },
+            { preserveScroll: true },
+        );
+    };
+
+    const handleArchive = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/archive`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setActionError(
+                        errors.tasks ?? 'Failed to archive work order.',
+                    ),
+            },
+        );
+    };
+
+    const handleDeliverAndArchive = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/deliver-and-archive`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setActionError(
+                        errors.tasks ??
+                            'Failed to deliver and archive work order.',
+                    ),
+            },
+        );
+    };
+
+    const handleUnarchive = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/restore`,
+            {},
+            { preserveScroll: true },
+        );
+    };
+
+    const handleRemoveFromList = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/remove-from-list`,
+            {},
+            { preserveScroll: true },
+        );
+    };
 
     const priorityColors: Record<string, string> = {
         low: 'text-muted-foreground',
@@ -538,6 +625,46 @@ function WorkOrderInListTreeItem({
                                 Edit Work Order
                             </Link>
                         </DropdownMenuItem>
+                        {!isArchived && (
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    Change Status
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuRadioGroup
+                                        value={workOrder.status}
+                                        onValueChange={handleStatusChange}
+                                    >
+                                        {selectableStatuses.map((status) => (
+                                            <DropdownMenuRadioItem
+                                                key={status}
+                                                value={status}
+                                            >
+                                                {workOrderStatusLabels[status]}
+                                            </DropdownMenuRadioItem>
+                                        ))}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        )}
+                        {!isArchived && (
+                            <DropdownMenuItem onClick={handleDeliverAndArchive}>
+                                <PackageCheck className="mr-2 h-4 w-4" />
+                                Mark as Delivered & Archive
+                            </DropdownMenuItem>
+                        )}
+                        {isArchived ? (
+                            <DropdownMenuItem onClick={handleUnarchive}>
+                                <ArchiveRestore className="mr-2 h-4 w-4" />
+                                Unarchive
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem onClick={handleArchive}>
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             onClick={() => setDeleteDialogOpen(true)}
@@ -546,6 +673,15 @@ function WorkOrderInListTreeItem({
                             <Trash2 className="mr-2 h-4 w-4" />
                             Delete Work Order
                         </DropdownMenuItem>
+                        {listId && (
+                            <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleRemoveFromList}>
+                                    <FolderMinus className="mr-2 h-4 w-4" />
+                                    Remove from List
+                                </DropdownMenuItem>
+                            </>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -581,6 +717,27 @@ function WorkOrderInListTreeItem({
                                 }}
                             >
                                 Delete
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog
+                    open={actionError !== null}
+                    onOpenChange={(open) => !open && setActionError(null)}
+                >
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>
+                                Cannot complete work order
+                            </DialogTitle>
+                            <DialogDescription>
+                                {actionError}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button onClick={() => setActionError(null)}>
+                                OK
                             </Button>
                         </DialogFooter>
                     </DialogContent>
