@@ -39,8 +39,12 @@ class CreateWorkOrderTool extends Tool
 
         Project::forTeam($context->teamId)->findOrFail($validated['project_id']);
 
+        $userId = $request->user()->id;
+
         $workOrder = WorkOrder::create(array_merge($validated, [
             'team_id' => $context->teamId,
+            'created_by_id' => $userId,
+            'accountable_id' => $userId,
         ]));
 
         return Response::json($workOrder->fresh()->load(['project:id,name', 'assignedTo:id,name'])->toArray());
