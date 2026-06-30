@@ -70,7 +70,11 @@ export function ReviewSession({
             });
 
             if (!response.ok) {
-                throw new Error(`Request failed (${response.status})`);
+                const data = await response.json().catch(() => null);
+                setError(
+                    data?.message ?? 'Something went wrong. Please try again.',
+                );
+                return;
             }
 
             if (kind === 'snooze') {

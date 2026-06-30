@@ -1,13 +1,19 @@
 export type ReviewEntityType = 'work_order' | 'task';
 
-export type ReviewActionKind = 'set_due_date' | 'assign' | 'snooze' | 'open';
+export type ReviewActionKind =
+    | 'set_due_date'
+    | 'assign'
+    | 'snooze'
+    | 'open'
+    | 'complete';
 
 export type ReviewActionVariant =
     | 'today'
     | 'primary'
     | 'accent'
     | 'later'
-    | 'neutral';
+    | 'neutral'
+    | 'success';
 
 export interface ReviewAction {
     key: string;

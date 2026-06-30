@@ -53,6 +53,7 @@ class WorkOrdersOverdueFlow extends AbstractReviewFlow
             new ReviewAction('next_week', 'Next week', 'CalendarArrowUp', 'set_due_date', 'accent', ['preset' => 'next_week']),
             new ReviewAction('pick_date', 'Reschedule', 'CalendarPlus', 'set_due_date', 'neutral', ['preset' => 'custom']),
             new ReviewAction('snooze', 'Later', 'Clock', 'snooze', 'later', ['days' => 3]),
+            new ReviewAction('complete', 'Completed', 'CheckCircle2', 'complete', 'success'),
         ];
     }
 

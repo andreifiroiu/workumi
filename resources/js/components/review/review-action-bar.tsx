@@ -37,6 +37,8 @@ const variantStyles: Record<string, string> = {
     later: 'border-amber-500 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/40',
     neutral:
         'border-slate-400 text-slate-600 hover:bg-slate-100 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800',
+    success:
+        'border-teal-500 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-950/40',
 };
 
 function todayString(): string {
@@ -155,6 +157,8 @@ function ActionButton({
             onAction('snooze', { days: action.payload.days ?? 7 });
         } else if (action.kind === 'open') {
             onAction('open', null);
+        } else if (action.kind === 'complete') {
+            onAction('complete', null);
         }
     };
 
