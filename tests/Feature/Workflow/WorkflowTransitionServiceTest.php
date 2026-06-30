@@ -76,6 +76,49 @@ test('invalid transitions are rejected for tasks', function () {
     );
 })->throws(InvalidTransitionException::class);
 
+test('a done task can be reopened to in_progress', function () {
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'status' => TaskStatus::Done,
+    ]);
+
+    $transition = $this->service->transition(
+        item: $task,
+        actor: $this->user,
+        toStatus: TaskStatus::InProgress,
+    );
+
+    expect($transition->from_status)->toBe(TaskStatus::Done->value);
+    expect($transition->to_status)->toBe(TaskStatus::InProgress->value);
+
+    $task->refresh();
+    expect($task->status)->toBe(TaskStatus::InProgress);
+});
+
+test('a done task can be reopened to todo', function () {
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'status' => TaskStatus::Done,
+    ]);
+
+    $transition = $this->service->transition(
+        item: $task,
+        actor: $this->user,
+        toStatus: TaskStatus::Todo,
+    );
+
+    expect($transition->to_status)->toBe(TaskStatus::Todo->value);
+
+    $task->refresh();
+    expect($task->status)->toBe(TaskStatus::Todo);
+});
+
 test('AI agents cannot approve work', function () {
     $task = Task::factory()->create([
         'team_id' => $this->team->id,

@@ -45,7 +45,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
     in_progress: ['in_review', 'done', 'blocked', 'cancelled'],
     in_review: ['approved', 'revision_requested', 'cancelled'],
     approved: ['done', 'revision_requested', 'cancelled'],
-    done: [],
+    done: ['in_progress', 'todo'],
     blocked: ['in_progress', 'cancelled'],
     revision_requested: [],
     cancelled: [],

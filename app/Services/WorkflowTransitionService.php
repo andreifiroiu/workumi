@@ -33,7 +33,7 @@ class WorkflowTransitionService
         'in_progress' => ['in_review', 'done', 'blocked', 'cancelled'],
         'in_review' => ['approved', 'revision_requested', 'cancelled'],
         'approved' => ['done', 'revision_requested', 'cancelled'],
-        'done' => [], // Terminal state
+        'done' => ['in_progress', 'todo'], // Reopen a completed task
         'blocked' => ['in_progress', 'cancelled'],
         'revision_requested' => [], // Auto-transitions to in_progress
         'cancelled' => [], // Terminal state

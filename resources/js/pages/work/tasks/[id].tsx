@@ -566,7 +566,10 @@ export default function TaskDetail({
                 { value: 'in_progress', label: 'Unblock' },
                 { value: 'cancelled', label: 'Cancel', destructive: true },
             ],
-            done: [],
+            done: [
+                { value: 'in_progress', label: 'Reopen Task' },
+                { value: 'todo', label: 'Move to To Do' },
+            ],
             cancelled: [],
             revision_requested: [],
         };
