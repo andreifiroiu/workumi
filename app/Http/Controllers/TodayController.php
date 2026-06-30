@@ -13,6 +13,7 @@ use App\Models\Team;
 use App\Models\TimeEntry;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Services\Review\ReviewFlowRegistry;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ use Inertia\Response;
 
 class TodayController extends Controller
 {
+    public function __construct(private ReviewFlowRegistry $reviewFlows) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -37,6 +40,7 @@ class TodayController extends Controller
             'upcomingDeadlines' => $this->getUpcomingDeadlines($team),
             'activities' => $this->getActivities($team),
             'metrics' => $this->getMetrics($team, $user),
+            'reviewFlows' => $this->reviewFlows->summaries($team, $user),
         ]);
     }
 
@@ -268,6 +272,7 @@ class TodayController extends Controller
                 'hoursLoggedToday' => 0.0,
                 'activeBlockers' => 0,
             ],
+            'reviewFlows' => [],
         ];
     }
 

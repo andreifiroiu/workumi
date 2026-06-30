@@ -36,7 +36,11 @@ export interface TodayBlocker {
     id: string;
     type: 'task' | 'work_order';
     title: string;
-    reason: 'waiting_on_external' | 'missing_information' | 'technical_issue' | 'waiting_on_approval';
+    reason:
+        | 'waiting_on_external'
+        | 'missing_information'
+        | 'technical_issue'
+        | 'waiting_on_approval';
     blockerDetails: string;
     blockedSince: string;
     workOrderId: string;
@@ -60,7 +64,15 @@ export interface TodayUpcomingDeadline {
 
 export interface TodayActivity {
     id: string;
-    type: 'task_completed' | 'approval_created' | 'comment_added' | 'deliverable_submitted' | 'blocker_flagged' | 'task_started' | 'time_logged' | 'work_order_created';
+    type:
+        | 'task_completed'
+        | 'approval_created'
+        | 'comment_added'
+        | 'deliverable_submitted'
+        | 'blocker_flagged'
+        | 'task_started'
+        | 'time_logged'
+        | 'work_order_created';
     title: string;
     description: string;
     timestamp: string;
@@ -107,4 +119,5 @@ export interface TodayPageProps {
     upcomingDeadlines: TodayUpcomingDeadline[];
     activities: TodayActivity[];
     metrics: TodayMetrics;
+    reviewFlows: import('./review').ReviewFlowSummary[];
 }

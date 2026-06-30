@@ -1,22 +1,29 @@
-import { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
-import type { TodayApproval, TodayTask, TodayBlocker, QuickCaptureData, TodayPageProps } from '@/types/today';
-import { getCsrfToken } from '@/lib/csrf';
 import {
+    ActivityFeed,
+    ApprovalsCard,
+    ApprovalSheet,
+    BlockersCard,
+    BlockerSheet,
     DailySummaryCard,
     MetricsBar,
-    ApprovalsCard,
-    TasksCard,
-    BlockersCard,
-    UpcomingDeadlinesCard,
-    ActivityFeed,
     QuickCapture,
-    ApprovalSheet,
+    ReviewPromptCard,
+    TasksCard,
     TaskSheet,
-    BlockerSheet,
+    UpcomingDeadlinesCard,
 } from '@/components/today';
+import AppLayout from '@/layouts/app-layout';
+import { getCsrfToken } from '@/lib/csrf';
+import { type BreadcrumbItem } from '@/types';
+import type {
+    QuickCaptureData,
+    TodayApproval,
+    TodayBlocker,
+    TodayPageProps,
+    TodayTask,
+} from '@/types/today';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Today', href: '/today' }];
 
@@ -28,12 +35,15 @@ export default function Today({
     upcomingDeadlines,
     activities,
     metrics,
+    reviewFlows,
 }: TodayPageProps) {
-
     // Local state for selected items
-    const [selectedApproval, setSelectedApproval] = useState<TodayApproval | null>(null);
+    const [selectedApproval, setSelectedApproval] =
+        useState<TodayApproval | null>(null);
     const [selectedTask, setSelectedTask] = useState<TodayTask | null>(null);
-    const [selectedBlocker, setSelectedBlocker] = useState<TodayBlocker | null>(null);
+    const [selectedBlocker, setSelectedBlocker] = useState<TodayBlocker | null>(
+        null,
+    );
 
     // Handlers for approvals
     const handleViewApproval = (id: string) => {
@@ -82,7 +92,10 @@ export default function Today({
         }
     };
 
-    const handleUpdateTask = async (id: string, status: TodayTask['status']) => {
+    const handleUpdateTask = async (
+        id: string,
+        status: TodayTask['status'],
+    ) => {
         const backendStatus = status === 'completed' ? 'done' : status;
 
         try {
@@ -153,17 +166,26 @@ export default function Today({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Today</h1>
+                        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                            Today
+                        </h1>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Your command center for what needs attention right now
+                            Your command center for what needs attention right
+                            now
                         </p>
                     </div>
                 </div>
 
                 {/* Main content */}
                 <div className="space-y-6">
+                    {/* Review prompt - guided review flows */}
+                    <ReviewPromptCard flows={reviewFlows} />
+
                     {/* Daily summary - full width at top */}
-                    <DailySummaryCard summary={dailySummary} onRefresh={handleRefreshSummary} />
+                    <DailySummaryCard
+                        summary={dailySummary}
+                        onRefresh={handleRefreshSummary}
+                    />
 
                     {/* Metrics bar - full width */}
                     <MetricsBar metrics={metrics} />
@@ -172,15 +194,30 @@ export default function Today({
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {/* Left column */}
                         <div className="space-y-6">
-                            <ApprovalsCard approvals={approvals} onViewApproval={handleViewApproval} />
-                            <TasksCard tasks={tasks} onViewTask={handleViewTask} />
-                            <BlockersCard blockers={blockers} onViewBlocker={handleViewBlocker} />
+                            <ApprovalsCard
+                                approvals={approvals}
+                                onViewApproval={handleViewApproval}
+                            />
+                            <TasksCard
+                                tasks={tasks}
+                                onViewTask={handleViewTask}
+                            />
+                            <BlockersCard
+                                blockers={blockers}
+                                onViewBlocker={handleViewBlocker}
+                            />
                         </div>
 
                         {/* Right column */}
                         <div className="space-y-6">
-                            <UpcomingDeadlinesCard deadlines={upcomingDeadlines} onViewWorkOrder={handleViewWorkOrder} />
-                            <ActivityFeed activities={activities} onViewActivity={handleViewActivity} />
+                            <UpcomingDeadlinesCard
+                                deadlines={upcomingDeadlines}
+                                onViewWorkOrder={handleViewWorkOrder}
+                            />
+                            <ActivityFeed
+                                activities={activities}
+                                onViewActivity={handleViewActivity}
+                            />
                         </div>
                     </div>
                 </div>
