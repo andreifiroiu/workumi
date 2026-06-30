@@ -1,9 +1,24 @@
 import { cn } from '@/lib/utils';
 import type { ReviewItem } from '@/types/review';
-import { Briefcase, CalendarOff, FolderOpen, UserX } from 'lucide-react';
+import {
+    Briefcase,
+    CalendarDays,
+    CalendarOff,
+    CalendarX,
+    FolderOpen,
+    UserX,
+} from 'lucide-react';
 
 interface ReviewCardProps {
     item: ReviewItem;
+}
+
+function isOverdue(dueDate: string | null): boolean {
+    if (!dueDate) {
+        return false;
+    }
+
+    return new Date(dueDate) < new Date(new Date().toDateString());
 }
 
 const priorityStyles: Record<string, string> = {
@@ -60,15 +75,29 @@ export function ReviewCard({ item }: ReviewCardProps) {
                 )}
                 <ContextRow
                     icon={
-                        item.dueDate ? (
-                            <FolderOpen className="h-4 w-4" />
-                        ) : (
+                        !item.dueDate ? (
                             <CalendarOff className="h-4 w-4" />
+                        ) : isOverdue(item.dueDate) ? (
+                            <CalendarX className="h-4 w-4" />
+                        ) : (
+                            <CalendarDays className="h-4 w-4" />
                         )
                     }
                     label="Due date"
-                    value={item.dueDate ?? 'Not set'}
-                    muted={!item.dueDate}
+                    value={
+                        item.dueDate
+                            ? isOverdue(item.dueDate)
+                                ? `${item.dueDate} · overdue`
+                                : item.dueDate
+                            : 'Not set'
+                    }
+                    tone={
+                        !item.dueDate
+                            ? 'warning'
+                            : isOverdue(item.dueDate)
+                              ? 'danger'
+                              : 'default'
+                    }
                 />
                 <ContextRow
                     icon={
@@ -82,38 +111,43 @@ export function ReviewCard({ item }: ReviewCardProps) {
                         item.entityType === 'work_order' ? 'Owner' : 'Assignee'
                     }
                     value={item.assignedTo ?? 'Unassigned'}
-                    muted={!item.assignedTo}
+                    tone={item.assignedTo ? 'default' : 'warning'}
                 />
             </div>
         </div>
     );
 }
 
+const toneStyles: Record<'default' | 'warning' | 'danger', string> = {
+    default: 'text-slate-900 dark:text-white',
+    warning: 'text-amber-600 dark:text-amber-400',
+    danger: 'text-red-600 dark:text-red-400',
+};
+
 function ContextRow({
     icon,
     label,
     value,
-    muted,
+    tone = 'default',
 }: {
     icon: React.ReactNode;
     label: string;
     value: string;
-    muted?: boolean;
+    tone?: 'default' | 'warning' | 'danger';
 }) {
     return (
         <div className="flex items-center gap-2">
-            <span className="text-slate-400">{icon}</span>
+            <span
+                className={
+                    tone === 'default' ? 'text-slate-400' : toneStyles[tone]
+                }
+            >
+                {icon}
+            </span>
             <span className="w-24 shrink-0 text-slate-500 dark:text-slate-500">
                 {label}
             </span>
-            <span
-                className={cn(
-                    'truncate font-medium',
-                    muted
-                        ? 'text-amber-600 dark:text-amber-400'
-                        : 'text-slate-900 dark:text-white',
-                )}
-            >
+            <span className={cn('truncate font-medium', toneStyles[tone])}>
                 {value}
             </span>
         </div>

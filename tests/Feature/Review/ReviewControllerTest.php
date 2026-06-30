@@ -70,6 +70,36 @@ test('index lists flows with their pending counts', function () {
         );
 });
 
+test('the overdue flow only counts past-due, non-terminal work orders', function () {
+    reviewMakeWorkOrder(['due_date' => now()->subDays(3)]);                              // overdue
+    reviewMakeWorkOrder(['due_date' => now()->addWeek()]);                               // future, not overdue
+    reviewMakeWorkOrder(['due_date' => null]);                                           // no due date
+    reviewMakeWorkOrder(['due_date' => now()->subDays(3), 'status' => WorkOrderStatus::Delivered]); // delivered
+
+    $this->actingAs($this->user)
+        ->get('/review/work-orders-overdue')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('review/show')
+            ->where('flow.key', 'work-orders-overdue')
+            ->has('items', 1)
+        );
+});
+
+test('apply reschedules an overdue work order', function () {
+    $workOrder = reviewMakeWorkOrder(['due_date' => now()->subWeek()]);
+
+    $this->actingAs($this->user)
+        ->postJson('/review/work-orders-overdue/apply', [
+            'itemId' => $workOrder->id,
+            'action' => 'set_due_date',
+            'dueDate' => '2026-08-01',
+        ])
+        ->assertOk();
+
+    expect($workOrder->fresh()->due_date->toDateString())->toBe('2026-08-01');
+});
+
 test('index excludes delivered and backlog work orders from counts', function () {
     reviewMakeWorkOrder(['due_date' => null, 'status' => WorkOrderStatus::Delivered]);
     reviewMakeWorkOrder(['due_date' => null, 'status' => WorkOrderStatus::Backlog]);

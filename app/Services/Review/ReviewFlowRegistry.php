@@ -10,6 +10,7 @@ use App\Services\Review\Contracts\ReviewFlow;
 use App\Services\Review\Flows\TasksMissingAssigneeFlow;
 use App\Services\Review\Flows\WorkOrdersMissingAssigneeFlow;
 use App\Services\Review\Flows\WorkOrdersMissingDueDateFlow;
+use App\Services\Review\Flows\WorkOrdersOverdueFlow;
 
 class ReviewFlowRegistry
 {
@@ -20,6 +21,7 @@ class ReviewFlowRegistry
         WorkOrdersMissingDueDateFlow::class,
         WorkOrdersMissingAssigneeFlow::class,
         TasksMissingAssigneeFlow::class,
+        WorkOrdersOverdueFlow::class,
     ];
 
     /**
