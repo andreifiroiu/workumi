@@ -11,7 +11,7 @@ import type {
     ReviewActionKind,
     ReviewTeamMember,
 } from '@/types/review';
-import { endOfWeek, format } from 'date-fns';
+import { addWeeks, endOfWeek, format } from 'date-fns';
 import { useState } from 'react';
 import { fallbackReviewIcon, reviewIcons } from './review-icons';
 
@@ -47,6 +47,24 @@ function endOfWeekString(): string {
     return format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 }
 
+function endOfNextWeekString(): string {
+    return format(
+        endOfWeek(addWeeks(new Date(), 1), { weekStartsOn: 1 }),
+        'yyyy-MM-dd',
+    );
+}
+
+function dueDateForPreset(preset?: string): string {
+    switch (preset) {
+        case 'this_week':
+            return endOfWeekString();
+        case 'next_week':
+            return endOfNextWeekString();
+        default:
+            return todayString();
+    }
+}
+
 export function ReviewActionBar({
     actions,
     teamMembers,
@@ -55,7 +73,7 @@ export function ReviewActionBar({
     onAction,
 }: ReviewActionBarProps) {
     return (
-        <div className="flex items-start justify-center gap-3 sm:gap-6">
+        <div className="flex flex-wrap items-start justify-center gap-x-3 gap-y-4 sm:gap-x-6">
             {actions.map((action) => (
                 <ActionButton
                     key={action.key}
@@ -128,11 +146,9 @@ function ActionButton({
 
     const handleClick = () => {
         if (action.kind === 'set_due_date') {
-            const dueDate =
-                action.payload.preset === 'this_week'
-                    ? endOfWeekString()
-                    : todayString();
-            onAction('set_due_date', { dueDate });
+            onAction('set_due_date', {
+                dueDate: dueDateForPreset(action.payload.preset),
+            });
         } else if (action.kind === 'assign') {
             onAction('assign', { userId: currentUserId });
         } else if (action.kind === 'snooze') {

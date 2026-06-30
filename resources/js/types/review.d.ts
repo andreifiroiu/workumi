@@ -17,7 +17,7 @@ export interface ReviewAction {
     kind: ReviewActionKind;
     variant: ReviewActionVariant;
     payload: {
-        preset?: 'today' | 'this_week' | 'custom';
+        preset?: 'today' | 'this_week' | 'next_week' | 'custom';
         target?: 'me' | 'pick';
         days?: number;
     };

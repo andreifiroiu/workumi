@@ -120,7 +120,8 @@ test('show returns the items and actions for a flow', function () {
         ->assertInertia(fn ($page) => $page
             ->component('review/show')
             ->where('flow.key', 'work-orders-missing-due-date')
-            ->has('flow.actions', 4)
+            ->has('flow.actions', 5)
+            ->where('flow.actions.2.key', 'next_week')
             ->has('items', 2)
             ->where('currentUserId', (string) $this->user->id)
         );
