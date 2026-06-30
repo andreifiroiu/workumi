@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
 import type { ReviewActionKind, ReviewShowProps } from '@/types/review';
 import { Link, usePage } from '@inertiajs/react';
-import { X } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ReviewActionBar, type ReviewActionValue } from './review-action-bar';
 import { ReviewCard } from './review-card';
@@ -24,16 +24,31 @@ export function ReviewSession({
     const [index, setIndex] = useState(0);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [handledCount, setHandledCount] = useState(0);
-    const [snoozedCount, setSnoozedCount] = useState(0);
+    const [outcomes, setOutcomes] = useState<
+        Record<number, 'handled' | 'snoozed'>
+    >({});
 
     const total = items.length;
     const current = items[index] ?? null;
     const isComplete = index >= total;
+    const canGoBack = index > 0 && !processing;
+
+    const outcomeValues = Object.values(outcomes);
+    const handledCount = outcomeValues.filter(
+        (outcome) => outcome === 'handled',
+    ).length;
+    const snoozedCount = outcomeValues.filter(
+        (outcome) => outcome === 'snoozed',
+    ).length;
 
     const advance = () => {
         setError(null);
         setIndex((value) => value + 1);
+    };
+
+    const goBack = () => {
+        setError(null);
+        setIndex((value) => Math.max(0, value - 1));
     };
 
     const handleAction = async (
@@ -77,11 +92,10 @@ export function ReviewSession({
                 return;
             }
 
-            if (kind === 'snooze') {
-                setSnoozedCount((value) => value + 1);
-            } else {
-                setHandledCount((value) => value + 1);
-            }
+            setOutcomes((previous) => ({
+                ...previous,
+                [index]: kind === 'snooze' ? 'snoozed' : 'handled',
+            }));
             advance();
         } catch (requestError) {
             console.error('Failed to apply review action:', requestError);
@@ -95,13 +109,27 @@ export function ReviewSession({
         <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col px-4 py-6">
             {/* Header */}
             <div className="flex items-start justify-between">
-                <div>
-                    <h1 className="text-2xl font-light text-slate-400 dark:text-slate-500">
-                        {firstName ? `Good day, ${firstName}` : 'Take a moment'}
-                    </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-500">
-                        {flow.title}
-                    </p>
+                <div className="flex items-center gap-1">
+                    {canGoBack && (
+                        <button
+                            type="button"
+                            onClick={goBack}
+                            aria-label="Previous item"
+                            className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </button>
+                    )}
+                    <div>
+                        <h1 className="text-2xl font-light text-slate-400 dark:text-slate-500">
+                            {firstName
+                                ? `Good day, ${firstName}`
+                                : 'Take a moment'}
+                        </h1>
+                        <p className="text-sm text-slate-500 dark:text-slate-500">
+                            {flow.title}
+                        </p>
+                    </div>
                 </div>
                 <Link
                     href="/review"
