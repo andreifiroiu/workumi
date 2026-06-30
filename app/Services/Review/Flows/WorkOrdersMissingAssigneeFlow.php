@@ -47,6 +47,7 @@ class WorkOrdersMissingAssigneeFlow extends AbstractReviewFlow
             new ReviewAction('assign_other', 'Assign…', 'Users', 'assign', 'primary', ['target' => 'pick']),
             new ReviewAction('open', 'Open', 'ArrowUpRight', 'open', 'neutral'),
             new ReviewAction('snooze', 'Later', 'Clock', 'snooze', 'later', ['days' => 7]),
+            new ReviewAction('complete', 'Completed', 'CheckCircle2', 'complete', 'success'),
         ];
     }
 

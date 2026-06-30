@@ -14,8 +14,8 @@ namespace App\Services\Review;
 final class ReviewAction
 {
     /**
-     * @param  'set_due_date'|'assign'|'snooze'|'open'  $kind
-     * @param  'today'|'primary'|'accent'|'later'|'neutral'  $variant
+     * @param  'set_due_date'|'assign'|'snooze'|'open'|'complete'  $kind
+     * @param  'today'|'primary'|'accent'|'later'|'neutral'|'success'  $variant
      * @param  array<string, mixed>  $payload
      */
     public function __construct(

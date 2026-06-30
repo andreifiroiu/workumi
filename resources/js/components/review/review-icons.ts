@@ -1,6 +1,7 @@
 import {
     ArrowUpRight,
     Calendar,
+    CalendarArrowUp,
     CalendarCheck,
     CalendarClock,
     CalendarPlus,
@@ -22,6 +23,7 @@ import {
 export const reviewIcons: Record<string, LucideIcon> = {
     ArrowUpRight,
     Calendar,
+    CalendarArrowUp,
     CalendarCheck,
     CalendarClock,
     CalendarPlus,
