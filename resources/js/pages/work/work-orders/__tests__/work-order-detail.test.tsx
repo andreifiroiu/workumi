@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
+
+// Radix dropdown primitives rely on these in jsdom.
+window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 /**
  * Mock data for tests
@@ -17,6 +23,8 @@ const mockWorkOrder = {
     priority: 'high',
     dueDate: '2024-12-31',
     estimatedHours: 40,
+    estimatedHoursManual: 40,
+    estimatedHoursIsManual: true,
     actualHours: 20,
     acceptanceCriteria: ['Criterion 1', 'Criterion 2'],
     sopAttached: false,
@@ -43,10 +51,13 @@ const mockTasks = [
         dueDate: '2024-12-15',
         assignedToId: '1',
         assignedToName: 'John Doe',
+        assignedAgentId: null,
+        assignedAgentName: null,
         estimatedHours: 8,
         actualHours: 6,
         checklistItems: [{ id: '1', text: 'Item 1', completed: true }],
         isBlocked: false,
+        positionInWorkOrder: 0,
     },
 ];
 
@@ -266,6 +277,7 @@ vi.mock('@/components/work', () => ({
     },
     PriorityBadge: ({ priority }: { priority: string }) => <span data-priority={priority}>{priority}</span>,
     ProgressBar: ({ progress }: { progress: number }) => <div data-progress={progress} />,
+    DatePresetButtons: () => null,
 }));
 
 /**
@@ -283,6 +295,7 @@ vi.mock('@/components/time-tracking', () => ({
  * Import the component - must be after mocks
  */
 import WorkOrderDetail from '../[id]';
+import { router } from '@inertiajs/react';
 
 describe('WorkOrderDetail - Status Display', () => {
     it('displays current status with badge', () => {
@@ -486,5 +499,58 @@ describe('WorkOrderDetail - Transition History', () => {
         // Check that the alert element exists with proper role
         const alert = screen.getByRole('alert');
         expect(alert).toBeInTheDocument();
+    });
+});
+
+describe('WorkOrderDetail - Header Actions', () => {
+    beforeEach(() => {
+        vi.mocked(router.post).mockClear();
+    });
+
+    const renderPage = (workOrderOverrides = {}) =>
+        render(
+            <WorkOrderDetail
+                workOrder={{ ...mockWorkOrder, ...workOrderOverrides }}
+                tasks={mockTasks}
+                deliverables={mockDeliverables}
+                documents={[]}
+                communicationThread={null}
+                messages={[]}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                raciValue={mockRaciValue}
+            />
+        );
+
+    const openHeaderMenu = async () => {
+        const user = userEvent.setup();
+        const trigger = screen
+            .getAllByRole('button')
+            .find((b) => b.getAttribute('aria-haspopup') === 'menu')!;
+        await user.click(trigger);
+        return user;
+    };
+
+    it('posts to the deliver-and-archive endpoint', async () => {
+        renderPage();
+
+        const user = await openHeaderMenu();
+        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+
+        expect(router.post).toHaveBeenCalledWith(
+            '/work/work-orders/1/deliver-and-archive',
+            {},
+            expect.objectContaining({ preserveScroll: true })
+        );
+    });
+
+    it('hides Mark as Delivered & Archive for archived work orders', async () => {
+        renderPage({ status: 'archived' });
+
+        await openHeaderMenu();
+
+        expect(screen.queryByText('Mark as Delivered & Archive')).not.toBeInTheDocument();
+        expect(await screen.findByText('Unarchive')).toBeInTheDocument();
     });
 });
