@@ -112,6 +112,7 @@ import {
     List,
     MessageSquare,
     MoreVertical,
+    PackageCheck,
     Plus,
     RefreshCw,
     Trash2,
@@ -937,6 +938,22 @@ export default function WorkOrderDetail({
         );
     };
 
+    const handleDeliverAndArchive = () => {
+        router.post(
+            `/work/work-orders/${workOrder.id}/deliver-and-archive`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setLocalStatus('archived'),
+                onError: (errors) =>
+                    setTransitionError(
+                        errors.tasks ??
+                            'Failed to deliver and archive work order.',
+                    ),
+            },
+        );
+    };
+
     const handleDelete = () => {
         if (
             confirm(
@@ -1684,6 +1701,14 @@ export default function WorkOrderDetail({
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
+                                    {workOrder.status !== 'archived' && (
+                                        <DropdownMenuItem
+                                            onClick={handleDeliverAndArchive}
+                                        >
+                                            <PackageCheck className="mr-2 h-4 w-4" />
+                                            Mark as Delivered & Archive
+                                        </DropdownMenuItem>
+                                    )}
                                     {workOrder.status === 'archived' ? (
                                         <DropdownMenuItem
                                             onClick={() =>
