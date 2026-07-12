@@ -6,7 +6,6 @@ use App\Enums\DocumentType;
 use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
-use App\Exceptions\InvalidTransitionException;
 use App\Http\Controllers\Controller;
 use App\Models\AIAgent;
 use App\Models\Document;
@@ -18,10 +17,10 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
+use App\Services\WorkItemCompletionService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -585,62 +584,36 @@ class WorkOrderController extends Controller
         ];
     }
 
-    public function archive(Request $request, WorkOrder $workOrder, WorkflowTransitionService $service): RedirectResponse
+    public function archive(Request $request, WorkOrder $workOrder, WorkItemCompletionService $completion): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
         $user = $request->user();
 
-        if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+        if ($completion->uncompletableTaskTitles($workOrder, $user) !== []) {
             return back()->withErrors([
                 'tasks' => $this->uncompletableTasksMessage(),
             ]);
         }
 
-        DB::transaction(function () use ($workOrder, $user, $service): void {
-            $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order archived.');
-
-            $workOrder->update(['status' => WorkOrderStatus::Archived]);
-        });
-
-        // Recalculate project progress
-        $workOrder->project->recalculateProgress();
+        $completion->archive($workOrder, $user);
 
         return back();
     }
 
-    public function deliverAndArchive(Request $request, WorkOrder $workOrder, WorkflowTransitionService $service): RedirectResponse
+    public function deliverAndArchive(Request $request, WorkOrder $workOrder, WorkItemCompletionService $completion): RedirectResponse
     {
         $this->authorize('update', $workOrder);
 
         $user = $request->user();
 
-        if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+        if ($completion->uncompletableTaskTitles($workOrder, $user) !== []) {
             return back()->withErrors([
                 'tasks' => $this->uncompletableTasksMessage(),
             ]);
         }
 
-        DB::transaction(function () use ($request, $workOrder, $user, $service): void {
-            $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order delivered and archived.');
-
-            $fromStatus = $workOrder->status;
-
-            if ($fromStatus !== WorkOrderStatus::Delivered) {
-                $workOrder->statusTransitions()->create([
-                    'user_id' => $request->user()?->id,
-                    'from_status' => $fromStatus->value,
-                    'to_status' => WorkOrderStatus::Delivered->value,
-                    'comment' => 'Marked as delivered and archived.',
-                    'created_at' => now(),
-                ]);
-            }
-
-            $workOrder->update(['status' => WorkOrderStatus::Archived]);
-        });
-
-        // Recalculate project progress
-        $workOrder->project->recalculateProgress();
+        $completion->deliverAndArchive($workOrder, $user);
 
         return back();
     }
@@ -657,7 +630,7 @@ class WorkOrderController extends Controller
         return back();
     }
 
-    public function bulkArchiveDelivered(Request $request, Project $project, WorkflowTransitionService $service): RedirectResponse
+    public function bulkArchiveDelivered(Request $request, Project $project, WorkItemCompletionService $completion): RedirectResponse
     {
         $this->authorize('update', $project);
 
@@ -669,73 +642,18 @@ class WorkOrderController extends Controller
             ->get();
 
         foreach ($deliveredWorkOrders as $workOrder) {
-            if ($this->findUncompletableTasks($workOrder, $user, $service) !== []) {
+            if ($completion->uncompletableTaskTitles($workOrder, $user) !== []) {
                 return back()->withErrors([
                     'tasks' => $this->uncompletableTasksMessage(),
                 ]);
             }
         }
 
-        DB::transaction(function () use ($deliveredWorkOrders, $user, $service): void {
-            foreach ($deliveredWorkOrders as $workOrder) {
-                $this->completeOpenTasks($workOrder, $user, $service, 'Auto-completed: work order archived.');
-
-                $workOrder->update(['status' => WorkOrderStatus::Archived]);
-            }
-        });
-
-        // Recalculate project progress
-        $project->recalculateProgress();
+        foreach ($deliveredWorkOrders as $workOrder) {
+            $completion->archive($workOrder, $user);
+        }
 
         return back();
-    }
-
-    /**
-     * Return titles of the work order's open tasks that cannot transition
-     * directly to Done. Open tasks are those not already in a finished state
-     * (Done, Cancelled, or Archived).
-     *
-     * @return array<int, string>
-     */
-    private function findUncompletableTasks(WorkOrder $workOrder, User $user, WorkflowTransitionService $service): array
-    {
-        return $this->openTasks($workOrder)
-            ->reject(fn (Task $task) => in_array(TaskStatus::Done->value, $service->getAvailableTransitions($task, $user), true))
-            ->map(fn (Task $task) => $task->title)
-            ->values()
-            ->all();
-    }
-
-    /**
-     * Transition every open task on the work order to Done through the workflow
-     * service. Tasks whose transition is denied (e.g. an Approved task whose
-     * actor lacks delivery permission) are skipped.
-     *
-     * Only call this after findUncompletableTasks() returns an empty array.
-     */
-    private function completeOpenTasks(WorkOrder $workOrder, User $user, WorkflowTransitionService $service, string $comment): void
-    {
-        foreach ($this->openTasks($workOrder) as $task) {
-            try {
-                $service->transition($task, $user, TaskStatus::Done, $comment);
-            } catch (InvalidTransitionException) {
-                continue;
-            }
-        }
-    }
-
-    /**
-     * The work order's tasks that are not yet in a finished state.
-     *
-     * @return Collection<int, Task>
-     */
-    private function openTasks(WorkOrder $workOrder): Collection
-    {
-        $finished = [TaskStatus::Done, TaskStatus::Cancelled, TaskStatus::Archived];
-
-        return $workOrder->tasks
-            ->reject(fn (Task $task) => in_array($task->status, $finished, true))
-            ->values();
     }
 
     private function uncompletableTasksMessage(): string
