@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\ReviewEntityType;
-use App\Enums\TaskStatus;
-use App\Enums\WorkOrderStatus;
 use App\Exceptions\InvalidTransitionException;
 use App\Models\ReviewSnooze;
 use App\Models\Team;
@@ -83,7 +80,7 @@ class ReviewController extends Controller
             'set_due_date' => $this->applyDueDate($request, $item),
             'assign' => $this->applyAssignee($request, $team, $item),
             'snooze' => $this->applySnooze($request, $reviewFlow, $user, $team, $item),
-            'complete' => $this->applyComplete($reviewFlow, $user, $item),
+            'complete' => $this->applyComplete($user, $item),
             default => response()->json(['message' => 'Unsupported action.'], 422),
         };
     }
@@ -145,20 +142,17 @@ class ReviewController extends Controller
 
     /**
      * Mark the item complete by transitioning it to its terminal "done" status
-     * (task → done, work order → delivered) through the workflow service, which
-     * enforces the allowed-transition rules.
+     * (task → done, work order → delivered) through the workflow service. The
+     * review "Completed" action is a deliberate statement that the work is
+     * finished, so it force-completes from any active status; only items that
+     * are already finished or abandoned are rejected.
      */
-    private function applyComplete(ReviewFlow $flow, User $user, Model $item): JsonResponse
+    private function applyComplete(User $user, Model $item): JsonResponse
     {
-        $toStatus = $flow->type()->entityType() === ReviewEntityType::Task
-            ? TaskStatus::Done
-            : WorkOrderStatus::Delivered;
-
         try {
-            $this->transitions->transition(
+            $this->transitions->complete(
                 item: $item,
                 actor: $user,
-                toStatus: $toStatus,
                 comment: 'Marked complete from review',
             );
         } catch (InvalidTransitionException $e) {

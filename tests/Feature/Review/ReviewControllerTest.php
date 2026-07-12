@@ -223,10 +223,31 @@ test('apply complete delivers an active work order', function () {
     expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Delivered);
 });
 
-test('apply complete rejects a transition the workflow does not allow', function () {
+test('apply complete delivers an overdue work order regardless of its status', function (WorkOrderStatus $status) {
+    $workOrder = reviewMakeWorkOrder([
+        'due_date' => now()->subWeek(),
+        'status' => $status,
+    ]);
+
+    $this->actingAs($this->user)
+        ->postJson('/review/work-orders-overdue/apply', [
+            'itemId' => $workOrder->id,
+            'action' => 'complete',
+        ])
+        ->assertOk();
+
+    expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Delivered);
+})->with([
+    'draft' => [WorkOrderStatus::Draft],
+    'in review' => [WorkOrderStatus::InReview],
+    'blocked' => [WorkOrderStatus::Blocked],
+    'revision requested' => [WorkOrderStatus::RevisionRequested],
+]);
+
+test('apply complete rejects an already-finished work order', function () {
     $workOrder = reviewMakeWorkOrder([
         'due_date' => null,
-        'status' => WorkOrderStatus::Draft,
+        'status' => WorkOrderStatus::Cancelled,
     ]);
 
     $this->actingAs($this->user)
@@ -236,7 +257,7 @@ test('apply complete rejects a transition the workflow does not allow', function
         ])
         ->assertStatus(422);
 
-    expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Draft);
+    expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Cancelled);
 });
 
 test('apply snooze records a snooze and removes the item from the flow', function () {

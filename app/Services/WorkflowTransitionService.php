@@ -52,6 +52,19 @@ class WorkflowTransitionService
     ];
 
     /**
+     * Statuses that are already finished or abandoned, and therefore cannot be
+     * marked complete again through the review "Completed" action.
+     *
+     * @var array<string>
+     */
+    private const UNCOMPLETABLE_STATUSES = [
+        'delivered',
+        'done',
+        'cancelled',
+        'archived',
+    ];
+
+    /**
      * Allowed transitions for WorkOrderStatus.
      *
      * @var array<string, array<string>>
@@ -275,6 +288,52 @@ class WorkflowTransitionService
 
             // Auto-activate parent WorkOrder when a Task moves to InProgress
             $this->autoActivateParentWorkOrder($task, $user);
+
+            return $transition;
+        });
+    }
+
+    /**
+     * Force a Task or WorkOrder to its terminal completed status (task → done,
+     * work order → delivered) regardless of its current position in the
+     * workflow graph.
+     *
+     * Unlike transition(), this does not require the current status to have a
+     * direct edge to the completed status: the review "Completed" action is a
+     * deliberate statement that the work is finished, so an overdue item in
+     * draft, in_review, blocked, or revision_requested may be completed
+     * directly. Items that are already finished (delivered/done) or abandoned
+     * (cancelled/archived) cannot be completed.
+     *
+     * @throws InvalidTransitionException
+     */
+    public function complete(
+        Model $item,
+        User|AIAgent $actor,
+        ?string $comment = null,
+    ): StatusTransition {
+        $fromStatus = $this->getCurrentStatus($item);
+
+        $toStatus = $item instanceof Task
+            ? TaskStatus::Done
+            : WorkOrderStatus::Delivered;
+
+        if (in_array($fromStatus->value, self::UNCOMPLETABLE_STATUSES, true)) {
+            throw InvalidTransitionException::notAllowed($fromStatus->value, $toStatus->value);
+        }
+
+        return DB::transaction(function () use ($item, $actor, $fromStatus, $toStatus, $comment) {
+            $transition = $this->createTransitionRecord($item, $actor, $fromStatus, $toStatus, $comment);
+
+            $item->status = $toStatus;
+            $item->save();
+
+            // Clear any pending approval so a completed item is not left waiting in an inbox.
+            if ($fromStatus->value === 'in_review') {
+                $this->resolveApprovalInboxItem($item, false);
+            }
+
+            $this->logToAuditLog($item, $actor, $fromStatus, $toStatus, $comment);
 
             return $transition;
         });

@@ -316,3 +316,83 @@ test('backlogging an in-review work order clears its pending approval', function
 
     expect(InboxItem::findPendingApprovalFor($workOrder))->toBeNull();
 });
+
+test('complete force-delivers a work order from a status without a direct edge', function (WorkOrderStatus $status) {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => $status,
+    ]);
+
+    $transition = $this->service->complete(
+        item: $workOrder,
+        actor: $this->user,
+        comment: 'Marked complete from review',
+    );
+
+    expect($transition->from_status)->toBe($status->value);
+    expect($transition->to_status)->toBe(WorkOrderStatus::Delivered->value);
+    expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Delivered);
+})->with([
+    'draft' => WorkOrderStatus::Draft,
+    'blocked' => WorkOrderStatus::Blocked,
+    'revision requested' => WorkOrderStatus::RevisionRequested,
+]);
+
+test('complete marks a task done from a status without a direct edge', function () {
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'status' => TaskStatus::Blocked,
+    ]);
+
+    $this->service->complete(item: $task, actor: $this->user);
+
+    expect($task->fresh()->status)->toBe(TaskStatus::Done);
+});
+
+test('completing an in-review work order clears its pending approval', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => WorkOrderStatus::Active,
+    ]);
+
+    $this->service->transition(
+        item: $workOrder,
+        actor: $this->user,
+        toStatus: WorkOrderStatus::InReview,
+    );
+
+    expect(InboxItem::findPendingApprovalFor($workOrder))->not->toBeNull();
+
+    $this->service->complete(item: $workOrder->fresh(), actor: $this->user);
+
+    expect($workOrder->fresh()->status)->toBe(WorkOrderStatus::Delivered);
+    expect(InboxItem::findPendingApprovalFor($workOrder))->toBeNull();
+});
+
+test('complete rejects an already-finished or abandoned item', function (WorkOrderStatus $status) {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'status' => $status,
+    ]);
+
+    expect(fn () => $this->service->complete(item: $workOrder, actor: $this->user))
+        ->toThrow(InvalidTransitionException::class);
+
+    expect($workOrder->fresh()->status)->toBe($status);
+})->with([
+    'delivered' => WorkOrderStatus::Delivered,
+    'cancelled' => WorkOrderStatus::Cancelled,
+    'archived' => WorkOrderStatus::Archived,
+]);
