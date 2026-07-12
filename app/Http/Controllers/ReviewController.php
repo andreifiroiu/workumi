@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\InvalidTransitionException;
 use App\Models\ReviewSnooze;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\WorkOrder;
 use App\Services\Review\Contracts\ReviewFlow;
 use App\Services\Review\ReviewFlowRegistry;
-use App\Services\WorkflowTransitionService;
+use App\Services\WorkItemCompletionService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class ReviewController extends Controller
 {
     public function __construct(
         private ReviewFlowRegistry $registry,
-        private WorkflowTransitionService $transitions,
+        private WorkItemCompletionService $completion,
     ) {}
 
     public function index(Request $request): Response
@@ -141,27 +142,34 @@ class ReviewController extends Controller
     }
 
     /**
-     * Mark the item complete by transitioning it to its terminal "done" status
-     * (task → done, work order → delivered) through the workflow service. The
-     * review "Completed" action is a deliberate statement that the work is
-     * finished, so it force-completes from any active status; only items that
-     * are already finished or abandoned are rejected.
+     * Mark the item complete. This mirrors the work order detail page's "Mark as
+     * Delivered & Archive" action: a work order is delivered (if not already)
+     * and archived, and a task is marked done and archived. Its open tasks are
+     * completed first; if any cannot be completed the request is rejected.
      */
     private function applyComplete(User $user, Model $item): JsonResponse
     {
-        try {
-            $this->transitions->complete(
-                item: $item,
-                actor: $user,
-                comment: 'Marked complete from review',
-            );
-        } catch (InvalidTransitionException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+        if ($item instanceof WorkOrder) {
+            if ($this->completion->uncompletableTaskTitles($item, $user) !== []) {
+                return response()->json([
+                    'message' => $this->uncompletableTasksMessage(),
+                ], 422);
+            }
+
+            $this->completion->deliverAndArchive($item, $user);
+
+            return response()->json(['ok' => true]);
         }
 
+        /** @var Task $item */
+        $this->completion->completeAndArchiveTask($item, $user);
+
         return response()->json(['ok' => true]);
+    }
+
+    private function uncompletableTasksMessage(): string
+    {
+        return 'Cannot complete this work order: one or more tasks are in review, blocked, or awaiting revision and must be resolved first.';
     }
 
     private function isTeamMember(Team $team, int $userId): bool
