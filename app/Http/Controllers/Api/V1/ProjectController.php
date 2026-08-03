@@ -31,6 +31,7 @@ class ProjectController extends Controller
         ]);
 
         $query = Project::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->visibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'party:id,name', 'owner:id,name'])
             ->orderBy('name');
 
@@ -52,7 +53,7 @@ class ProjectController extends Controller
     public function show(TeamAccess $access, int $project): ProjectResource
     {
         return new ProjectResource(
-            Project::forTeams($access->teamIds)
+            Project::forTeams($access->teamIds)->visibleTo($access->userId)
                 ->with([
                     'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                     'party:id,name',

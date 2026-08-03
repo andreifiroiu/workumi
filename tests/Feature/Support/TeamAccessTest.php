@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 test('allows only the teams it was built with', function () {
-    $access = new TeamAccess([3, 7], 3);
+    $access = new TeamAccess(1, [3, 7], 3);
 
     expect($access->allows(3))->toBeTrue()
         ->and($access->allows(7))->toBeTrue()
@@ -16,7 +16,7 @@ test('allows only the teams it was built with', function () {
 });
 
 test('assert aborts with 403 for an unreachable team', function () {
-    $access = new TeamAccess([3], 3);
+    $access = new TeamAccess(1, [3], 3);
 
     $access->assert(3);
 
@@ -25,13 +25,13 @@ test('assert aborts with 403 for an unreachable team', function () {
 });
 
 test('resolve returns the requested team when it is reachable', function () {
-    $access = new TeamAccess([3, 7], 3);
+    $access = new TeamAccess(1, [3, 7], 3);
 
     expect($access->resolve(7))->toBe(7);
 });
 
 test('resolve falls back to the default team for a single-team user', function () {
-    $access = new TeamAccess([3], 3);
+    $access = new TeamAccess(1, [3], 3);
 
     expect($access->resolve(null))->toBe(3);
 });
@@ -41,7 +41,7 @@ test('resolve refuses to guess when several teams are reachable', function () {
     $first = $owner->createTeam(['name' => 'Acme']);
     $second = $owner->createTeam(['name' => 'Beta']);
 
-    $access = new TeamAccess([$first->id, $second->id], $first->id);
+    $access = new TeamAccess($owner->id, [$first->id, $second->id], $first->id);
 
     expect(fn () => $access->resolve(null))->toThrow(ValidationException::class);
 
@@ -55,7 +55,7 @@ test('resolve refuses to guess when several teams are reachable', function () {
 });
 
 test('filter narrows to one team or spans them all', function () {
-    $access = new TeamAccess([3, 7], 3);
+    $access = new TeamAccess(1, [3, 7], 3);
 
     expect($access->filter(null))->toBe([3, 7])
         ->and($access->filter(7))->toBe([7])

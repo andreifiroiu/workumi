@@ -58,7 +58,7 @@ class WorkumiMcpCommand extends Command
             $defaultTeamId = $teamIds[0];
         }
 
-        $this->laravel->instance(TeamAccess::class, new TeamAccess($teamIds, $defaultTeamId));
+        $this->laravel->instance(TeamAccess::class, new TeamAccess($userId, $teamIds, $defaultTeamId));
 
         $server = $registrar->getLocalServer('workumi');
 

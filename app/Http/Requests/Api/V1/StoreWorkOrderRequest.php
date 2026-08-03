@@ -28,7 +28,7 @@ class StoreWorkOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'project_id' => ['required', 'integer', Rule::exists('projects', 'id')->whereIn('team_id', $this->teamAccess()->teamIds)],
+            'project_id' => ['required', 'integer', $this->visibleProjectRule()],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', 'string', Rule::in(['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested'])],
@@ -46,8 +46,27 @@ class StoreWorkOrderRequest extends FormRequest
      */
     public function project(): Project
     {
-        return $this->project ??= Project::forTeams($this->teamAccess()->teamIds)
+        return $this->project ??= Project::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->input('project_id'));
+    }
+
+    /**
+     * A plain `exists` rule cannot express project privacy, and letting an
+     * invisible project pass validation only to 404 later would report the same
+     * refusal two different ways.
+     */
+    private function visibleProjectRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $exists = Project::forTeams($this->teamAccess()->teamIds)
+                ->visibleTo($this->teamAccess()->userId)
+                ->whereKey($value)
+                ->exists();
+
+            if (! $exists) {
+                $fail('The selected project is invalid.');
+            }
+        };
     }
 
     /**
@@ -57,7 +76,7 @@ class StoreWorkOrderRequest extends FormRequest
     private function assigneeRule(): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
-            $project = Project::forTeams($this->teamAccess()->teamIds)->find($this->input('project_id'));
+            $project = Project::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)->find($this->input('project_id'));
 
             if ($project === null) {
                 return;

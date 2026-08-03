@@ -27,7 +27,7 @@ class UpdateProjectTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $project = Project::forTeams($access->teamIds)->findOrFail($identified['id']);
+        $project = Project::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],
