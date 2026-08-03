@@ -31,6 +31,8 @@ class DeliverableController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Deliverable::class);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

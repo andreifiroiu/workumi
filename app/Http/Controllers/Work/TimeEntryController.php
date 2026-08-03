@@ -67,6 +67,8 @@ class TimeEntryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', TimeEntry::class);
+
         $validated = $request->validate([
             'taskId' => 'required|exists:tasks,id',
             'hours' => 'required|numeric|min:0.01|max:24',

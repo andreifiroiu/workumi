@@ -263,6 +263,7 @@ export interface SettingsPageProps {
     pendingInvitations: TeamInvitation[];
     teamRoles: TeamRole[];
     isTeamOwner: boolean;
+    canAdministerTeam: boolean;
     currentUserId: number;
     aiAgents: AIAgent[];
     usedTemplateIds?: number[];

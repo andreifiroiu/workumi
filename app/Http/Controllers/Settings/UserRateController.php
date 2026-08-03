@@ -22,6 +22,8 @@ class UserRateController extends Controller
         $user = $request->user();
         $team = $user->currentTeam;
 
+        $this->authorize('administer', $team);
+
         // Get all team members
         $teamMembers = $team->allUsers();
         $teamMemberIds = $teamMembers->pluck('id')->toArray();
@@ -74,6 +76,8 @@ class UserRateController extends Controller
         $user = $request->user();
         $team = $user->currentTeam;
 
+        $this->authorize('administer', $team);
+
         $validated = $request->validated();
 
         UserRate::create([
@@ -86,5 +90,4 @@ class UserRateController extends Controller
 
         return back()->with('status', 'Rate created successfully.');
     }
-
 }

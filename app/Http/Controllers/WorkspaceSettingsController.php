@@ -28,6 +28,8 @@ class WorkspaceSettingsController extends Controller
             return redirect()->route('account.teams.index');
         }
 
+        $this->authorize('administer', $team);
+
         // Get or create workspace settings
         $workspaceSettings = WorkspaceSettings::forTeam($team);
 
@@ -67,8 +69,10 @@ class WorkspaceSettingsController extends Controller
             'name' => $role->name,
         ]);
 
-        // Check if current user is team owner
+        // Owner-only actions (deleting the workspace) versus administrative
+        // actions, which the `admin` role also holds.
         $isTeamOwner = $user->ownsTeam($team);
+        $canAdministerTeam = $user->canAdministerTeam($team);
 
         // Get AI agents with configurations (scoped to current team)
         $teamAgents = AIAgent::whereHas('configurations', function ($q) use ($team) {
@@ -292,6 +296,7 @@ class WorkspaceSettingsController extends Controller
             'pendingInvitations' => $pendingInvitations,
             'teamRoles' => $teamRoles,
             'isTeamOwner' => $isTeamOwner,
+            'canAdministerTeam' => $canAdministerTeam,
             'currentUserId' => $user->id,
             'aiAgents' => $aiAgents,
             'usedTemplateIds' => $usedTemplateIds,
@@ -332,6 +337,9 @@ class WorkspaceSettingsController extends Controller
 
     public function updateWorkspace(Request $request)
     {
+        $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'timezone' => 'required|string',
@@ -343,7 +351,6 @@ class WorkspaceSettingsController extends Controller
             'currency' => 'required|string|size:3',
         ]);
 
-        $team = $request->user()->currentTeam;
         $settings = WorkspaceSettings::forTeam($team);
         $settings->update($validated);
 
@@ -352,6 +359,9 @@ class WorkspaceSettingsController extends Controller
 
     public function updateGlobalAI(Request $request)
     {
+        $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
         $validated = $request->validate([
             'total_monthly_budget' => 'sometimes|numeric|min:0',
             'per_project_budget_cap' => 'sometimes|numeric|min:0',
@@ -362,7 +372,6 @@ class WorkspaceSettingsController extends Controller
             'approval_task_assignment' => 'sometimes|boolean',
         ]);
 
-        $team = $request->user()->currentTeam;
         $settings = GlobalAISettings::forTeam($team);
         $settings->update($validated);
 

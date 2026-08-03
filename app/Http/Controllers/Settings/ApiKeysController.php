@@ -24,6 +24,15 @@ class ApiKeysController extends Controller
             'label' => ['nullable', 'string', 'max:255'],
         ]);
 
+        // The route is already restricted to team administrators. Re-checking
+        // here keeps the rule with the action: a team-scoped key acts on behalf
+        // of the whole workspace, a personal key only on behalf of its owner.
+        if ($validated['scope'] === 'team') {
+            $this->authorize('administer', $team);
+        } else {
+            abort_unless($user->canWriteTeamContent($team), 403);
+        }
+
         $userId = $validated['scope'] === 'user' ? $user->id : null;
 
         // Check for duplicate
@@ -60,6 +69,11 @@ class ApiKeysController extends Controller
         // Key must belong to the user's current team
         if ($apiKey->team_id !== $team->id) {
             abort(403);
+        }
+
+        // Deleting a team-scoped key affects the whole workspace.
+        if ($apiKey->user_id === null) {
+            $this->authorize('administer', $team);
         }
 
         // User-level keys can only be deleted by the owner

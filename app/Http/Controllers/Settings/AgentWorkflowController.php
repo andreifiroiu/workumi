@@ -25,6 +25,7 @@ class AgentWorkflowController extends Controller
     public function show(Request $request, AgentWorkflowState $workflowState): Response
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
 
         // Verify the workflow state belongs to the user's team
         if ($workflowState->team_id !== $team->id) {
@@ -46,6 +47,7 @@ class AgentWorkflowController extends Controller
     {
         $team = $request->user()->currentTeam;
         $user = $request->user();
+        $this->authorize('administer', $team);
 
         // Verify the workflow state belongs to the user's team
         if ($workflowState->team_id !== $team->id) {
@@ -79,6 +81,7 @@ class AgentWorkflowController extends Controller
 
         $team = $request->user()->currentTeam;
         $user = $request->user();
+        $this->authorize('administer', $team);
 
         // Verify the workflow state belongs to the user's team
         if ($workflowState->team_id !== $team->id) {
@@ -110,6 +113,7 @@ class AgentWorkflowController extends Controller
     public function index(Request $request): Response
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
 
         $query = AgentWorkflowState::query()
             ->forTeam($team->id)

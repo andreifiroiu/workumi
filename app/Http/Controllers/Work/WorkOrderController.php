@@ -30,6 +30,8 @@ class WorkOrderController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', WorkOrder::class);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

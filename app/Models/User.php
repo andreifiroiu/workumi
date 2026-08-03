@@ -49,6 +49,13 @@ class User extends Authenticatable
     ];
 
     /**
+     * Memoized team role checks, keyed by "{teamId}:{tier}".
+     *
+     * @var array<string, bool>
+     */
+    private array $teamRoleMemo = [];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -97,6 +104,60 @@ class User extends Authenticatable
         }
 
         return $this->allTeams()->first();
+    }
+
+    /**
+     * Determine whether the user may administer the given team.
+     *
+     * The admin surface is the team owner plus any member holding the `admin`
+     * role. The owner is deliberately absent from the `team_user` pivot (see
+     * createTeam() below), so ownsTeam() must be consulted alongside the role.
+     */
+    public function canAdministerTeam(?object $team = null): bool
+    {
+        $team ??= $this->currentTeam;
+
+        if (! $team) {
+            return false;
+        }
+
+        return $this->rememberTeamRoleCheck($team->id, 'admin', function () use ($team): bool {
+            return $this->ownsTeam($team) || $this->hasTeamRole($team, 'admin');
+        });
+    }
+
+    /**
+     * Determine whether the user may create or modify team content.
+     *
+     * Uses a positive allow-list rather than negating the `viewer` role:
+     * hasTeamRole() returns true unconditionally for the team owner, so the
+     * negated form would lock the owner out of every write. The allow-list is
+     * also fail-closed when the pivot or role row is missing.
+     */
+    public function canWriteTeamContent(?object $team = null): bool
+    {
+        $team ??= $this->currentTeam;
+
+        if (! $team) {
+            return false;
+        }
+
+        return $this->rememberTeamRoleCheck($team->id, 'write', function () use ($team): bool {
+            return $this->hasTeamRole($team, ['admin', 'member']);
+        });
+    }
+
+    /**
+     * Memoize a role check for the lifetime of the instance.
+     *
+     * hasTeamRole() costs roughly three queries and is not cached by the
+     * package, while policies re-run these checks on every authorize() call.
+     *
+     * @param  \Closure(): bool  $check
+     */
+    private function rememberTeamRoleCheck(int|string $teamId, string $tier, \Closure $check): bool
+    {
+        return $this->teamRoleMemo["{$teamId}:{$tier}"] ??= $check();
     }
 
     /**

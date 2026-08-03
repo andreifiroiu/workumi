@@ -18,6 +18,8 @@ class AgentTemplateController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('administer', $request->user()->currentTeam);
+
         $templates = AgentTemplate::query()
             ->active()
             ->withCount('agents')
@@ -34,6 +36,8 @@ class AgentTemplateController extends Controller
      */
     public function show(Request $request, AgentTemplate $template): Response
     {
+        $this->authorize('administer', $request->user()->currentTeam);
+
         $template->loadCount('agents');
 
         return Inertia::render('settings/agent-templates/show', [

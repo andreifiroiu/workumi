@@ -6,6 +6,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRateRequest extends FormRequest
 {
@@ -14,7 +15,7 @@ class StoreUserRateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->canAdministerTeam() ?? false;
     }
 
     /**
@@ -24,8 +25,17 @@ class StoreUserRateRequest extends FormRequest
      */
     public function rules(): array
     {
+        $team = $this->user()?->currentTeam;
+
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            // Constrained to the acting user's own team. Uses allUsers() rather
+            // than an exists rule against the pivot because the team owner has
+            // no team_user row and must still be able to hold a rate.
+            'user_id' => [
+                'required',
+                'integer',
+                Rule::in($team?->allUsers()->pluck('id')->all() ?? []),
+            ],
             'internal_rate' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'billing_rate' => ['required', 'numeric', 'min:0', 'regex:/^\d+(\.\d{1,2})?$/'],
             'effective_date' => ['required', 'date'],
@@ -40,6 +50,7 @@ class StoreUserRateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'user_id.in' => 'The selected user is not a member of your workspace.',
             'internal_rate.regex' => 'The internal rate must have at most 2 decimal places.',
             'billing_rate.regex' => 'The billing rate must have at most 2 decimal places.',
             'internal_rate.min' => 'The internal rate must be a positive number.',

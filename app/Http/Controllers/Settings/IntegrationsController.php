@@ -12,6 +12,8 @@ class IntegrationsController extends Controller
     public function connect(Request $request, $integrationId)
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
         $integration = AvailableIntegration::findOrFail($integrationId);
 
         $teamIntegration = TeamIntegration::forTeam($team, $integration);
@@ -30,6 +32,8 @@ class IntegrationsController extends Controller
     public function disconnect(Request $request, $integrationId)
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
         $integration = AvailableIntegration::findOrFail($integrationId);
 
         $teamIntegration = TeamIntegration::where('team_id', $team->id)

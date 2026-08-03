@@ -11,6 +11,8 @@ class AuditLogController extends Controller
     public function export(Request $request)
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
         $logs = AuditLog::where('team_id', $team->id)->latest('timestamp')->get();
 
         // Generate CSV

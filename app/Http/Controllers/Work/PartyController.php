@@ -31,6 +31,8 @@ class PartyController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Party::class);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|in:client,vendor,department,team_member',
@@ -64,10 +66,18 @@ class PartyController extends Controller
         ]);
 
         $updateData = [];
-        if (isset($validated['name'])) $updateData['name'] = $validated['name'];
-        if (isset($validated['type'])) $updateData['type'] = PartyType::from($validated['type']);
-        if (array_key_exists('contactName', $validated)) $updateData['contact_name'] = $validated['contactName'];
-        if (array_key_exists('contactEmail', $validated)) $updateData['contact_email'] = $validated['contactEmail'];
+        if (isset($validated['name'])) {
+            $updateData['name'] = $validated['name'];
+        }
+        if (isset($validated['type'])) {
+            $updateData['type'] = PartyType::from($validated['type']);
+        }
+        if (array_key_exists('contactName', $validated)) {
+            $updateData['contact_name'] = $validated['contactName'];
+        }
+        if (array_key_exists('contactEmail', $validated)) {
+            $updateData['contact_email'] = $validated['contactEmail'];
+        }
 
         $party->update($updateData);
 
