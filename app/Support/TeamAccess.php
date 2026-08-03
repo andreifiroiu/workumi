@@ -8,11 +8,15 @@ use App\Models\Team;
 use Illuminate\Validation\ValidationException;
 
 /**
- * The set of teams a token-authenticated request may operate on.
+ * Who is acting, and which teams they may act on.
  *
  * Access tokens represent a user, not a team, so this holds every team the
  * authenticated user belongs to (optionally narrowed by a per-token
  * restriction) plus the team to fall back on when the caller does not name one.
+ *
+ * The user ID is carried alongside because team membership is not the only
+ * access rule: private projects are further limited to the people with a RACI
+ * role on them, exactly as in the web app.
  */
 final class TeamAccess
 {
@@ -20,6 +24,7 @@ final class TeamAccess
      * @param  list<int>  $teamIds
      */
     public function __construct(
+        public readonly int $userId,
         public readonly array $teamIds,
         public readonly ?int $defaultTeamId,
     ) {}

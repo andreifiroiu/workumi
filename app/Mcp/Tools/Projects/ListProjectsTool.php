@@ -27,6 +27,7 @@ class ListProjectsTool extends Tool
         ]);
 
         $query = Project::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->visibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'party:id,name', 'owner:id,name'])
             ->orderBy('name');
 

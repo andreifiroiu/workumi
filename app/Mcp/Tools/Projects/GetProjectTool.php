@@ -21,7 +21,7 @@ class GetProjectTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $project = Project::forTeams($access->teamIds)
+        $project = Project::forTeams($access->teamIds)->visibleTo($access->userId)
             ->with([
                 'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                 'party:id,name,type',

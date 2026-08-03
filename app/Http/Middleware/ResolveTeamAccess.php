@@ -42,7 +42,7 @@ class ResolveTeamAccess
             ? $currentTeamId
             : $teamIds[0];
 
-        app()->instance(TeamAccess::class, new TeamAccess($teamIds, $defaultTeamId));
+        app()->instance(TeamAccess::class, new TeamAccess((int) $user->id, $teamIds, $defaultTeamId));
 
         return $next($request);
     }

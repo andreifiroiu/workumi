@@ -49,7 +49,7 @@ class UpdateProjectRequest extends FormRequest
      */
     public function project(): Project
     {
-        return $this->project ??= Project::forTeams($this->teamAccess()->teamIds)
+        return $this->project ??= Project::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->route('project'));
     }
 }
