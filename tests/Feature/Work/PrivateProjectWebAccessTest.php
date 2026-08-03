@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Models\Deliverable;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderList;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /**
@@ -115,6 +118,81 @@ test('the owner still sees the private project and its work orders on the work i
             expect($projects->pluck('name'))->toContain('Secret Project')
                 ->and($workOrders->pluck('title'))->toContain('Hidden Work Order');
         });
+});
+
+test('the task and deliverable detail pages of a hidden work order are refused', function () {
+    // Hiding these from the board is not enough on its own — the detail pages
+    // are reachable by direct URL and authorize through their own policies.
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $this->hiddenWorkOrder->id,
+        'project_id' => $this->private->id, 'title' => 'Hidden Task',
+        'assigned_to_id' => $this->owner->id, 'status' => 'todo',
+    ]);
+
+    $deliverable = Deliverable::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $this->hiddenWorkOrder->id,
+        'project_id' => $this->private->id, 'title' => 'Hidden Deliverable',
+    ]);
+
+    $this->actingAs($this->outsider)->get(route('tasks.show', $task->id))->assertForbidden();
+    $this->actingAs($this->outsider)->get(route('deliverables.show', $deliverable->id))->assertForbidden();
+
+    $this->actingAs($this->owner)->get(route('tasks.show', $task->id))->assertOk();
+
+    expect($this->outsider->can('update', $task))->toBeFalse()
+        ->and($this->outsider->can('delete', $task))->toBeFalse()
+        ->and($this->outsider->can('update', $deliverable))->toBeFalse();
+});
+
+test('a task assignee reaches their task even inside a hidden work order', function () {
+    $assignee = User::factory()->create();
+    $this->team->addUser($assignee, 'member');
+    $assignee->forceFill(['current_team_id' => $this->team->id])->save();
+
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $this->hiddenWorkOrder->id,
+        'project_id' => $this->private->id, 'title' => 'My Task',
+        'assigned_to_id' => $assignee->id, 'status' => 'todo',
+    ]);
+
+    $this->actingAs($assignee)->get(route('tasks.show', $task->id))->assertOk();
+    $this->actingAs($assignee)->get(route('work-orders.show', $this->hiddenWorkOrder->id))->assertForbidden();
+});
+
+test('mention search does not autocomplete hidden work items', function () {
+    $response = $this->actingAs($this->outsider)->getJson('/api/mentions/search?q=Hidden');
+
+    $response->assertOk();
+
+    expect(collect($response->json('workItems'))->pluck('name'))
+        ->not->toContain('Hidden Work Order')
+        ->not->toContain('Secret Project');
+
+    // The owner still gets their own work surfaced.
+    $ownerResults = $this->actingAs($this->owner)->getJson('/api/mentions/search?q=Hidden');
+
+    expect(collect($ownerResults->json('workItems'))->pluck('name'))->toContain('Hidden Work Order');
+});
+
+test('the work order lists of a hidden project are closed', function () {
+    // moveWorkOrder authorizes the list, so a team-only list policy would let a
+    // teammate shuffle work orders inside a project they cannot see.
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id, 'name' => 'Hidden List',
+    ]);
+
+    expect($this->outsider->can('view', $list))->toBeFalse()
+        ->and($this->outsider->can('update', $list))->toBeFalse()
+        ->and($this->outsider->can('delete', $list))->toBeFalse()
+        ->and($this->owner->can('update', $list))->toBeTrue();
+
+    $this->actingAs($this->outsider)
+        ->post(route('work-order-lists.move-work-order', $list->id), [
+            'workOrderId' => $this->hiddenWorkOrder->id,
+        ])
+        ->assertForbidden();
+
+    expect($this->hiddenWorkOrder->fresh()->work_order_list_id)->not->toBe($list->id);
 });
 
 test('a teammate cannot update or delete a work order they cannot see', function () {

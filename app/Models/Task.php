@@ -180,6 +180,22 @@ class Task extends Model
         });
     }
 
+    /**
+     * Check if this task is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        if ($this->workOrder?->isVisibleTo($userId)) {
+            return true;
+        }
+
+        return $this->assigned_to_id === $userId
+            || $this->reviewer_id === $userId
+            || $this->created_by_id === $userId;
+    }
+
     public function scopeAssignedTo($query, int $userId)
     {
         return $query->where('assigned_to_id', $userId);
