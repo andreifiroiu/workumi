@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkOrderListItem } from '../work-order-list-item';
@@ -84,8 +84,34 @@ describe('WorkOrderListItem dropdown actions', () => {
         expect(routerMock.post).toHaveBeenCalledWith(
             '/work/work-orders/wo-1/deliver-and-archive',
             {},
-            { preserveScroll: true }
+            expect.objectContaining({ preserveScroll: true })
         );
+    });
+
+    it('surfaces the server error when deliver-and-archive fails', async () => {
+        render(<WorkOrderListItem workOrder={workOrder} />);
+
+        const user = await openMenu();
+        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+
+        const { onError } = routerMock.post.mock.calls[0][2];
+        act(() => onError({ tasks: 'Some tasks are still open.' }));
+
+        expect(await screen.findByText('Some tasks are still open.')).toBeInTheDocument();
+    });
+
+    it('falls back to a generic message when the failure has no task error', async () => {
+        render(<WorkOrderListItem workOrder={workOrder} />);
+
+        const user = await openMenu();
+        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+
+        const { onError } = routerMock.post.mock.calls[0][2];
+        act(() => onError({}));
+
+        expect(
+            await screen.findByText('Failed to deliver and archive work order.')
+        ).toBeInTheDocument();
     });
 
     it('lists the selectable statuses under Change Status', async () => {

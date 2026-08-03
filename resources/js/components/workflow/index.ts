@@ -25,6 +25,7 @@ export {
 } from './raci-selector';
 export {
     AssignmentConfirmationDialog,
+    resolveAssignmentChange,
     type AssignmentConfirmationDialogProps,
     type AssignmentRole,
     type AssignmentUser,

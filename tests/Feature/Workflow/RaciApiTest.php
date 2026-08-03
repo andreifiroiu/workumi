@@ -194,3 +194,39 @@ test('confirmed request updates existing values', function () {
     expect($project->accountable_id)->toBe($this->consulted1->id);
     expect($project->responsible_id)->toBe($this->consulted2->id);
 });
+
+test('a null responsible_id clears an existing work order assignment', function () {
+    $project = Project::factory()->create([
+        'team_id' => $this->team->id,
+        'party_id' => $this->party->id,
+        'owner_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+    ]);
+
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $project->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+        'responsible_id' => $this->otherUser->id,
+        'consulted_ids' => [$this->consulted1->id],
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->patchJson(route('work-orders.raci', $workOrder), [
+            'accountable_id' => $this->user->id,
+            'responsible_id' => null,
+            'consulted_ids' => [],
+            'informed_ids' => [],
+            'confirmed' => true,
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('confirmation_required', false)
+        ->assertJsonPath('work_order.responsible_id', null);
+
+    $workOrder->refresh();
+    expect($workOrder->responsible_id)->toBeNull();
+    expect($workOrder->consulted_ids)->toBe([]);
+    expect($workOrder->accountable_id)->toBe($this->user->id);
+});
