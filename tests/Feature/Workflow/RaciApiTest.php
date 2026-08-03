@@ -19,10 +19,11 @@ beforeEach(function () {
 
     $this->party = Party::factory()->create(['team_id' => $this->team->id]);
 
-    // Create additional users for RACI testing
-    $this->otherUser = User::factory()->create();
-    $this->consulted1 = User::factory()->create();
-    $this->consulted2 = User::factory()->create();
+    // Create additional users for RACI testing. They must be real members of the team -
+    // a RACI role grants access to a private project, so assignees are validated against it.
+    $this->otherUser = addTeamMember($this->team);
+    $this->consulted1 = addTeamMember($this->team);
+    $this->consulted2 = addTeamMember($this->team);
 });
 
 test('PATCH /projects/{id}/raci updates RACI fields', function () {

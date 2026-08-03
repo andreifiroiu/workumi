@@ -43,8 +43,9 @@ beforeEach(function () {
     $this->manager->current_team_id = $this->team->id;
     $this->manager->save();
 
-    $this->worker = User::factory()->create();
-    $this->reviewer = User::factory()->create();
+    // RACI assignees must be real members of the team
+    $this->worker = addTeamMember($this->team);
+    $this->reviewer = addTeamMember($this->team);
 
     // Create party and project
     $this->party = Party::factory()->create(['team_id' => $this->team->id]);
@@ -442,8 +443,8 @@ describe('Timer Confirmation Flow', function () {
 
 describe('RACI Assignment with Audit Logging', function () {
     test('RACI changes are logged to audit trail and confirmation required for existing values', function () {
-        $newAccountable = User::factory()->create();
-        $newResponsible = User::factory()->create();
+        $newAccountable = addTeamMember($this->team);
+        $newResponsible = addTeamMember($this->team);
 
         // Update RACI via API
         $response = $this->actingAs($this->manager)

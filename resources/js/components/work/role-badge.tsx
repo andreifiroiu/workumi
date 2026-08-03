@@ -38,6 +38,11 @@ const roleConfig: Record<
         label: 'Informed',
         className: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-400',
     },
+    // Access without a responsibility, so deliberately quieter than the RACI roles.
+    member: {
+        label: 'Member',
+        className: 'bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300',
+    },
 };
 
 export function RoleBadge({ role, className }: RoleBadgeProps) {

@@ -91,6 +91,8 @@ export default function ProjectDetail({
     communicationThread,
     parties,
     teamMembers,
+    assignableUsers,
+    canManageMembers,
     siblingProjects,
 }: ProjectDetailPageProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -454,6 +456,9 @@ export default function ProjectDetail({
                     <ProjectTeamSection
                         teamMembers={teamMembers}
                         projectId={project.id}
+                        isPrivate={project.isPrivate ?? false}
+                        canManageMembers={canManageMembers}
+                        assignableUsers={assignableUsers}
                     />
 
                     {/* Work Orders Section */}

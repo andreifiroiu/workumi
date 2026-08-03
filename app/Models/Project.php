@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -93,6 +94,27 @@ class Project extends Model
         return $this->belongsTo(User::class, 'responsible_id');
     }
 
+    /**
+     * Users explicitly granted access to this project, independent of any RACI role.
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_members')
+            ->using(ProjectMember::class)
+            ->withPivot('added_by_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * The raw membership rows.
+     *
+     * Used by the visibility scope so it probes only the indexed pivot rather than joining users.
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ProjectMember::class);
+    }
+
     public function workOrders(): HasMany
     {
         return $this->hasMany(WorkOrder::class);
@@ -165,6 +187,7 @@ class Project extends Model
      * - The project is not private (visible to all team members)
      * - The user is the owner
      * - The user has any RACI role (accountable, responsible, consulted, or informed)
+     * - The user has been explicitly added as a member
      */
     public function scopeVisibleTo(Builder $query, int $userId): Builder
     {
@@ -174,7 +197,8 @@ class Project extends Model
                 ->orWhere('accountable_id', $userId)
                 ->orWhere('responsible_id', $userId)
                 ->orWhereJsonContains('consulted_ids', $userId)
-                ->orWhereJsonContains('informed_ids', $userId);
+                ->orWhereJsonContains('informed_ids', $userId)
+                ->orWhereHas('memberships', fn (Builder $m) => $m->where('user_id', $userId));
         });
     }
 
@@ -187,11 +211,19 @@ class Project extends Model
             return true;
         }
 
-        return $this->owner_id === $userId
+        // Checked before membership so the common cases never touch the database.
+        if ($this->owner_id === $userId
             || $this->accountable_id === $userId
             || $this->responsible_id === $userId
             || (is_array($this->consulted_ids) && in_array($userId, $this->consulted_ids, true))
-            || (is_array($this->informed_ids) && in_array($userId, $this->informed_ids, true));
+            || (is_array($this->informed_ids) && in_array($userId, $this->informed_ids, true))
+        ) {
+            return true;
+        }
+
+        return $this->relationLoaded('members')
+            ? $this->members->contains('id', $userId)
+            : $this->memberships()->where('user_id', $userId)->exists();
     }
 
     /**

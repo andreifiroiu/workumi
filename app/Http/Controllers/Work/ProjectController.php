@@ -62,7 +62,7 @@ class ProjectController extends Controller
         $user = $request->user();
 
         $project->load([
-            'party', 'owner', 'accountable', 'responsible',
+            'party', 'owner', 'accountable', 'responsible', 'members',
             'workOrders.tasks', 'workOrders.deliverables',
             'workOrders.assignedTo', 'workOrders.accountable',
             'workOrders.responsible', 'workOrders.reviewer',
@@ -181,6 +181,21 @@ class ProjectController extends Controller
                 'name' => $p->name,
             ]),
             'teamMembers' => $this->aggregateProjectTeamMembers($project),
+            'assignableUsers' => $project->team->allUsers()
+                ->filter()
+                ->sortBy('name')
+                ->values()
+                ->map(fn (User $u) => [
+                    'id' => (string) $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'avatarUrl' => $u->profile_photo_url ?? null,
+                    // Appearing in the team list is not the same as having access: a work order
+                    // assignee shows up there with no way in. Resolved from the eager-loaded
+                    // members relation, so this costs no extra queries.
+                    'hasAccess' => $project->isVisibleTo($u->id),
+                ]),
+            'canManageMembers' => $user->can('manageMembers', $project),
         ]);
     }
 
@@ -482,6 +497,14 @@ class ProjectController extends Controller
             }
         }
 
+        // Explicitly granted members. $addRole creates the bucket when absent, so a member with no
+        // RACI role and no workload still gets a row.
+        $explicitMemberIds = [];
+        foreach ($project->members as $member) {
+            $addRole($member->id, 'member', 'project', $project->name);
+            $explicitMemberIds[$member->id] = true;
+        }
+
         // Now fetch all users
         $userIds = array_keys($userRoles);
         if (empty($userIds)) {
@@ -511,11 +534,16 @@ class ProjectController extends Controller
                     'tasksCount' => $data['tasksCount'],
                     'totalEstimatedHours' => $data['totalEstimatedHours'],
                 ],
+                'isExplicitMember' => isset($explicitMemberIds[$userId]),
+                'canRemove' => isset($explicitMemberIds[$userId]),
             ];
         }
 
-        // Sort by number of roles (most involved first)
-        usort($result, fn ($a, $b) => count($b['roles']) <=> count($a['roles']));
+        // Sort by number of roles (most involved first), then name so pure members are stable
+        usort(
+            $result,
+            fn ($a, $b) => count($b['roles']) <=> count($a['roles']) ?: strcasecmp($a['name'], $b['name'])
+        );
 
         return $result;
     }

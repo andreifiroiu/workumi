@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Rules\BelongsToTeam;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -24,14 +25,18 @@ class RaciUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
+        // A RACI role grants access to a private project, so the assignee must be on the team.
+        // One instance so the team's user collection is resolved once, not once per id.
+        $belongsToTeam = new BelongsToTeam($this->user()?->currentTeam);
+
         return [
-            'accountable_id' => ['sometimes', 'required', 'integer', 'exists:users,id'],
-            'responsible_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
-            'reviewer_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+            'accountable_id' => ['sometimes', 'required', 'integer', 'exists:users,id', $belongsToTeam],
+            'responsible_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id', $belongsToTeam],
+            'reviewer_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id', $belongsToTeam],
             'consulted_ids' => ['sometimes', 'nullable', 'array'],
-            'consulted_ids.*' => ['integer', 'exists:users,id'],
+            'consulted_ids.*' => ['integer', 'exists:users,id', $belongsToTeam],
             'informed_ids' => ['sometimes', 'nullable', 'array'],
-            'informed_ids.*' => ['integer', 'exists:users,id'],
+            'informed_ids.*' => ['integer', 'exists:users,id', $belongsToTeam],
             'confirmed' => ['sometimes', 'boolean'],
         ];
     }
