@@ -11,6 +11,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { usePermissions } from '@/hooks/use-permissions';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -26,6 +27,7 @@ import {
     Settings,
     Users,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -78,6 +80,7 @@ const mainNavItems: NavItem[] = [
         title: 'Settings',
         href: '/settings',
         icon: Settings,
+        requires: 'administerTeam',
     },
 ];
 
@@ -91,6 +94,13 @@ const footerNavItems: NavItem[] = [
 
 export function AppSidebar() {
     const { currentOrganization, organizations } = usePage<SharedData>().props;
+    const { can } = usePermissions();
+
+    // Hide entries the user cannot reach, so they never click into a 403.
+    const visibleNavItems = useMemo(
+        () => mainNavItems.filter((item) => !item.requires || can[item.requires]),
+        [can],
+    );
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -112,7 +122,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={visibleNavItems} />
             </SidebarContent>
 
             <SidebarFooter>

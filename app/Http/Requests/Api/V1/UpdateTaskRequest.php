@@ -48,4 +48,9 @@ class UpdateTaskRequest extends FormRequest
         return $this->task ??= Task::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->route('task'));
     }
+
+    protected function targetTeamId(): int
+    {
+        return (int) $this->task()->team_id;
+    }
 }

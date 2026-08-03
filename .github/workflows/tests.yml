@@ -46,5 +46,11 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      # Passport signs the tokens the MCP endpoint authenticates with. The keys
+      # are gitignored, so a fresh checkout has none and Passport::actingAs()
+      # fails with "Invalid key supplied".
+      - name: Generate Passport Keys
+        run: php artisan passport:keys --no-interaction
+
       - name: Tests
         run: ./vendor/bin/pest

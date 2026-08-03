@@ -4,9 +4,12 @@ namespace App\Policies;
 
 use App\Models\Task;
 use App\Models\User;
+use App\Policies\Concerns\ChecksTeamAccess;
 
 class TaskPolicy
 {
+    use ChecksTeamAccess;
+
     /**
      * A task follows its work order, so a task inside a private project is
      * limited to the people who can see that work order — or who are on the
@@ -14,24 +17,24 @@ class TaskPolicy
      */
     public function view(User $user, Task $task): bool
     {
-        return $this->belongsToCurrentTeam($user, $task)
+        return $this->inTeam($user, $task->team_id)
             && $task->isVisibleTo($user->id);
+    }
+
+    public function create(User $user): bool
+    {
+        return $this->canWriteInCurrentTeam($user);
     }
 
     public function update(User $user, Task $task): bool
     {
-        return $this->belongsToCurrentTeam($user, $task)
+        return $this->canWrite($user, $task->team_id)
             && $task->isVisibleTo($user->id);
     }
 
     public function delete(User $user, Task $task): bool
     {
-        return $this->belongsToCurrentTeam($user, $task)
+        return $this->canWrite($user, $task->team_id)
             && $task->isVisibleTo($user->id);
-    }
-
-    private function belongsToCurrentTeam(User $user, Task $task): bool
-    {
-        return $user->currentTeam?->id === $task->team_id;
     }
 }

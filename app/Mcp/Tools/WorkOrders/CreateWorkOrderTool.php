@@ -30,6 +30,8 @@ class CreateWorkOrderTool extends Tool
 
         $project = Project::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['project_id']);
 
+        $this->authorizeTeamWrite($request, (int) $project->team_id);
+
         $validated = $request->validate([
             'project_id' => ['required', 'integer'],
             'title' => ['required', 'string', 'max:255'],

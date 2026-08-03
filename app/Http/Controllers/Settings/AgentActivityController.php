@@ -20,6 +20,13 @@ class AgentActivityController extends Controller
     public function index(Request $request, AIAgent $agent): Response
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
+
+        // AIAgent rows are global; only AgentConfiguration is team-scoped.
+        abort_unless(
+            $agent->configurations()->where('team_id', $team->id)->exists(),
+            404
+        );
 
         $query = AgentActivityLog::query()
             ->forTeam($team->id)
@@ -70,6 +77,7 @@ class AgentActivityController extends Controller
     public function show(Request $request, AgentActivityLog $activity): Response
     {
         $team = $request->user()->currentTeam;
+        $this->authorize('administer', $team);
 
         // Verify the activity belongs to the user's team
         if ($activity->team_id !== $team->id) {

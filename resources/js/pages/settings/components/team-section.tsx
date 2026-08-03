@@ -27,7 +27,7 @@ interface TeamSectionProps {
     members: TeamMember[];
     pendingInvitations: TeamInvitation[];
     teamRoles: TeamRole[];
-    isTeamOwner: boolean;
+    canManageTeam: boolean;
     currentUserId: number;
 }
 
@@ -35,7 +35,7 @@ export function TeamSection({
     members,
     pendingInvitations,
     teamRoles,
-    isTeamOwner,
+    canManageTeam,
     currentUserId,
 }: TeamSectionProps) {
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -65,7 +65,7 @@ export function TeamSection({
                             Manage your team members, roles, and permissions
                         </CardDescription>
                     </div>
-                    {isTeamOwner && (
+                    {canManageTeam && (
                         <Button onClick={() => setInviteModalOpen(true)}>
                             <UserPlus className="mr-2 h-4 w-4" />
                             Invite Member
@@ -80,7 +80,7 @@ export function TeamSection({
                                 <TableHead>Role</TableHead>
                                 <TableHead>Joined</TableHead>
                                 <TableHead>Last Active</TableHead>
-                                {isTeamOwner && <TableHead className="w-[70px]" />}
+                                {canManageTeam && <TableHead className="w-[70px]" />}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -116,7 +116,7 @@ export function TeamSection({
                                     <TableCell className="text-muted-foreground">
                                         {formatDate(member.lastActiveAt)}
                                     </TableCell>
-                                    {isTeamOwner && (
+                                    {canManageTeam && (
                                         <TableCell>
                                             {!member.isOwner && member.id !== currentUserId && (
                                                 <DropdownMenu>
@@ -149,7 +149,7 @@ export function TeamSection({
 
             <PendingInvitationsSection
                 invitations={pendingInvitations}
-                isTeamOwner={isTeamOwner}
+                canManageTeam={canManageTeam}
             />
 
             <InviteMemberModal

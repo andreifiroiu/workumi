@@ -43,4 +43,9 @@ class UpdateDeliverableRequest extends FormRequest
         return $this->deliverable ??= Deliverable::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->route('deliverable'));
     }
+
+    protected function targetTeamId(): int
+    {
+        return (int) $this->deliverable()->team_id;
+    }
 }

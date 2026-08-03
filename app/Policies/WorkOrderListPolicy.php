@@ -6,9 +6,12 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\WorkOrderList;
+use App\Policies\Concerns\ChecksTeamAccess;
 
 class WorkOrderListPolicy
 {
+    use ChecksTeamAccess;
+
     /**
      * A list belongs to a project, so it is only reachable by the people who
      * can see that project. Without this, the lists of a private project stay
@@ -16,27 +19,29 @@ class WorkOrderListPolicy
      */
     public function view(User $user, WorkOrderList $workOrderList): bool
     {
-        return $this->belongsToVisibleProject($user, $workOrderList);
+        return $this->inTeam($user, $workOrderList->team_id)
+            && $this->projectIsVisible($user, $workOrderList);
     }
 
     public function create(User $user): bool
     {
-        return $user->currentTeam !== null;
+        return $this->canWriteInCurrentTeam($user);
     }
 
     public function update(User $user, WorkOrderList $workOrderList): bool
     {
-        return $this->belongsToVisibleProject($user, $workOrderList);
+        return $this->canWrite($user, $workOrderList->team_id)
+            && $this->projectIsVisible($user, $workOrderList);
     }
 
     public function delete(User $user, WorkOrderList $workOrderList): bool
     {
-        return $this->belongsToVisibleProject($user, $workOrderList);
+        return $this->canWrite($user, $workOrderList->team_id)
+            && $this->projectIsVisible($user, $workOrderList);
     }
 
-    private function belongsToVisibleProject(User $user, WorkOrderList $workOrderList): bool
+    private function projectIsVisible(User $user, WorkOrderList $workOrderList): bool
     {
-        return $user->currentTeam?->id === $workOrderList->team_id
-            && (bool) $workOrderList->project?->isVisibleTo($user->id);
+        return (bool) $workOrderList->project?->isVisibleTo($user->id);
     }
 }

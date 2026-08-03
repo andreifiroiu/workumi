@@ -50,7 +50,7 @@ class DocumentAnnotationController extends Controller
      */
     public function store(Request $request, Document $document): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
 
         $validated = $request->validate([
             'page' => ['nullable', 'integer', 'min:1'],
@@ -144,7 +144,7 @@ class DocumentAnnotationController extends Controller
      */
     public function update(Request $request, Document $document, DocumentAnnotation $annotation): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
         $this->ensureAnnotationBelongsToDocument($document, $annotation);
 
         $user = $request->user();
@@ -186,7 +186,7 @@ class DocumentAnnotationController extends Controller
      */
     public function destroy(Request $request, Document $document, DocumentAnnotation $annotation): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
         $this->ensureAnnotationBelongsToDocument($document, $annotation);
 
         $user = $request->user();
@@ -226,7 +226,7 @@ class DocumentAnnotationController extends Controller
      */
     public function addReply(Request $request, Document $document, DocumentAnnotation $annotation): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
         $this->ensureAnnotationBelongsToDocument($document, $annotation);
 
         $validated = $request->validate([

@@ -8,9 +8,12 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Models\Team;
 use App\Models\User;
+use App\Policies\Concerns\ChecksTeamAccess;
 
 class DocumentPolicy
 {
+    use ChecksTeamAccess;
+
     /**
      * Determine if the user can view the document.
      *
@@ -21,7 +24,7 @@ class DocumentPolicy
     public function view(User $user, Document $document): bool
     {
         // User must be in the same team
-        if ($user->currentTeam?->id !== $document->team_id) {
+        if (! $this->inTeam($user, $document->team_id)) {
             return false;
         }
 
@@ -36,8 +39,8 @@ class DocumentPolicy
      */
     public function create(User $user, Document $document): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $document->team_id) {
+        // Writing requires a non-viewer role in the document's team
+        if (! $this->canWrite($user, $document->team_id)) {
             return false;
         }
 
@@ -52,8 +55,8 @@ class DocumentPolicy
      */
     public function update(User $user, Document $document): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $document->team_id) {
+        // Writing requires a non-viewer role in the document's team
+        if (! $this->canWrite($user, $document->team_id)) {
             return false;
         }
 
@@ -68,8 +71,8 @@ class DocumentPolicy
      */
     public function delete(User $user, Document $document): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $document->team_id) {
+        // Writing requires a non-viewer role in the document's team
+        if (! $this->canWrite($user, $document->team_id)) {
             return false;
         }
 
@@ -84,8 +87,8 @@ class DocumentPolicy
      */
     public function share(User $user, Document $document): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $document->team_id) {
+        // Sharing externally is a write action
+        if (! $this->canWrite($user, $document->team_id)) {
             return false;
         }
 

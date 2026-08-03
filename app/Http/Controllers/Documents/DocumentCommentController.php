@@ -59,7 +59,7 @@ class DocumentCommentController extends Controller
      */
     public function store(Request $request, Document $document): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
 
         $validated = $request->validate([
             'content' => ['required', 'string', 'max:10000'],
@@ -105,7 +105,7 @@ class DocumentCommentController extends Controller
      */
     public function update(Request $request, Document $document, Message $comment): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
 
         $user = $request->user();
 
@@ -177,7 +177,7 @@ class DocumentCommentController extends Controller
      */
     public function destroy(Request $request, Document $document, Message $comment): JsonResponse|RedirectResponse
     {
-        $this->authorize('view', $document);
+        $this->authorize('update', $document);
 
         $user = $request->user();
 

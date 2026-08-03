@@ -10,6 +10,8 @@ class PlaybookController extends Controller
 {
     public function store(Request $request)
     {
+        $this->authorize('create', Playbook::class);
+
         $user = $request->user();
         $team = $user->currentTeam;
 
@@ -70,7 +72,7 @@ class PlaybookController extends Controller
         $duplicate = Playbook::create([
             'team_id' => $team->id,
             'type' => $playbook->type,
-            'name' => $playbook->name . ' (Copy)',
+            'name' => $playbook->name.' (Copy)',
             'description' => $playbook->description,
             'content' => $playbook->content,
             'tags' => $playbook->tags,
@@ -97,7 +99,7 @@ class PlaybookController extends Controller
                     'attached_by' => $request->user()->id,
                     'attached_at' => now(),
                     'ai_suggested' => false,
-                ]
+                ],
             ]);
         }
 

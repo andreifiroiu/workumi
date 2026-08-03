@@ -4,15 +4,18 @@ namespace App\Policies;
 
 use App\Models\Playbook;
 use App\Models\User;
+use App\Policies\Concerns\ChecksTeamAccess;
 
 class PlaybookPolicy
 {
+    use ChecksTeamAccess;
+
     /**
      * Determine whether the user can view any playbooks.
      */
     public function viewAny(User $user): bool
     {
-        return true; // All team members can view playbooks
+        return $user->currentTeam !== null;
     }
 
     /**
@@ -20,7 +23,7 @@ class PlaybookPolicy
      */
     public function view(User $user, Playbook $playbook): bool
     {
-        return $user->currentTeam->id === $playbook->team_id;
+        return $this->inTeam($user, $playbook->team_id);
     }
 
     /**
@@ -28,7 +31,7 @@ class PlaybookPolicy
      */
     public function create(User $user): bool
     {
-        return true; // All team members can create playbooks
+        return $this->canWriteInCurrentTeam($user);
     }
 
     /**
@@ -36,15 +39,17 @@ class PlaybookPolicy
      */
     public function update(User $user, Playbook $playbook): bool
     {
-        return $user->currentTeam->id === $playbook->team_id;
+        return $this->canWrite($user, $playbook->team_id);
     }
 
     /**
      * Determine whether the user can delete the playbook.
+     *
+     * Only the creator or a team administrator may delete.
      */
     public function delete(User $user, Playbook $playbook): bool
     {
-        return $user->currentTeam->id === $playbook->team_id
-            && ($user->id === $playbook->created_by || $user->isAdmin());
+        return $this->canWrite($user, $playbook->team_id)
+            && ($user->id === $playbook->created_by || $this->canAdminister($user, $playbook->team_id));
     }
 }

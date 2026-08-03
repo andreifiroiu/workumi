@@ -699,11 +699,11 @@ class WorkflowTransitionService
     }
 
     /**
-     * Check if user has a manager or admin role on the team.
+     * Check if the user administers the team (owner or `admin` role).
      */
     private function isTeamManager(User $user, Team $team): bool
     {
-        return $user->hasTeamRole($team, ['admin', 'manager']);
+        return $user->canAdministerTeam($team);
     }
 
     /**

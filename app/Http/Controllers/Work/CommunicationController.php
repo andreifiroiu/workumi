@@ -94,6 +94,9 @@ class CommunicationController extends Controller
             abort(404);
         }
 
+        // Posting to a thread modifies the parent work item
+        $this->authorize('update', $model);
+
         // Validate file extensions
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {

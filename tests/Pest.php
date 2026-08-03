@@ -1,5 +1,11 @@
 <?php
 
+use App\Models\Team;
+use App\Models\User;
+use App\Observers\TeamObserver;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,8 +17,8 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -41,7 +47,37 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Create a user owning a fresh team, with their current team set.
+ */
+function createTeamOwner(array $attributes = []): User
 {
-    // ..
+    $user = User::factory()->create($attributes);
+    $team = $user->createTeam(['name' => 'Test Team']);
+
+    $user->forceFill(['current_team_id' => $team->id])->save();
+
+    return $user->refresh();
+}
+
+/**
+ * Create a user holding the given role on the team.
+ *
+ * Sets both the team_user pivot row and current_team_id: policies compare the
+ * current team, while the role checks read the pivot, so a user missing either
+ * one fails authorization in ways that do not occur in production.
+ */
+function createTeamUser(Team $team, string $roleCode = 'member', array $attributes = []): User
+{
+    $user = User::factory()->create($attributes);
+
+    if (! $team->hasRole($roleCode)) {
+        (new TeamObserver)->createDefaultRoles($team);
+        $team->refresh();
+    }
+
+    $team->users()->attach($user, ['role_id' => $team->getRole($roleCode)->id]);
+    $user->forceFill(['current_team_id' => $team->id])->save();
+
+    return $user->refresh();
 }
