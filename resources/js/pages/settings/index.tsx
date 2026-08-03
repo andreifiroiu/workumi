@@ -34,7 +34,7 @@ export default function Settings({
     teamMembers,
     pendingInvitations,
     teamRoles,
-    isTeamOwner,
+    canAdministerTeam,
     currentUserId,
     aiAgents,
     usedTemplateIds,
@@ -84,7 +84,7 @@ export default function Settings({
                                         members={teamMembers}
                                         pendingInvitations={pendingInvitations}
                                         teamRoles={teamRoles}
-                                        isTeamOwner={isTeamOwner}
+                                        canManageTeam={canAdministerTeam}
                                         currentUserId={currentUserId}
                                     />
                                 )}

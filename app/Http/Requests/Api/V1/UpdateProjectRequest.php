@@ -52,4 +52,9 @@ class UpdateProjectRequest extends FormRequest
         return $this->project ??= Project::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->route('project'));
     }
+
+    protected function targetTeamId(): int
+    {
+        return (int) $this->project()->team_id;
+    }
 }

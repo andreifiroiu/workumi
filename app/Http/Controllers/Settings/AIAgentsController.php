@@ -11,6 +11,7 @@ use App\Models\AgentActivityLog;
 use App\Models\AgentConfiguration;
 use App\Models\AgentTemplate;
 use App\Models\AIAgent;
+use App\Models\Team;
 use App\Services\AgentRunner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,15 +26,45 @@ class AIAgentsController extends Controller
     ) {}
 
     /**
+     * Resolve the acting user's current team and assert they may administer it.
+     */
+    private function authorizeAdministration(Request $request): Team
+    {
+        $team = $request->user()->currentTeam;
+
+        $this->authorize('administer', $team);
+
+        return $team;
+    }
+
+    /**
+     * As authorizeAdministration(), but also assert the agent belongs to the team.
+     *
+     * AIAgent rows are global; only AgentConfiguration is team-scoped. Without
+     * this check an unscoped route-model binding exposes every tenant's agents.
+     */
+    private function authorizeAgentAdministration(Request $request, AIAgent $agent): Team
+    {
+        $team = $this->authorizeAdministration($request);
+
+        abort_unless(
+            $agent->configurations()->where('team_id', $team->id)->exists(),
+            404
+        );
+
+        return $team;
+    }
+
+    /**
      * Toggle an agent's enabled status.
      */
     public function toggleAgent(Request $request, AIAgent $agent): RedirectResponse
     {
+        $team = $this->authorizeAgentAdministration($request, $agent);
+
         $validated = $request->validate([
             'enabled' => 'required|boolean',
         ]);
-
-        $team = $request->user()->currentTeam;
 
         $config = AgentConfiguration::firstOrCreate(
             ['team_id' => $team->id, 'ai_agent_id' => $agent->id]
@@ -49,6 +80,8 @@ class AIAgentsController extends Controller
      */
     public function updateConfig(Request $request, AIAgent $agent): RedirectResponse
     {
+        $team = $this->authorizeAgentAdministration($request, $agent);
+
         $providerKeys = implode(',', array_keys(config('ai-providers.providers', [])));
 
         $validated = $request->validate([
@@ -67,8 +100,6 @@ class AIAgentsController extends Controller
             'risk_tolerance' => 'required|in:low,medium,high',
         ]);
 
-        $team = $request->user()->currentTeam;
-
         $config = AgentConfiguration::where('team_id', $team->id)
             ->where('ai_agent_id', $agent->id)
             ->firstOrFail();
@@ -83,6 +114,8 @@ class AIAgentsController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $team = $this->authorizeAdministration($request);
+
         $validated = $request->validate([
             'template_id' => 'nullable|exists:agent_templates,id',
             'name' => 'required_without:template_id|nullable|string|max:255',
@@ -90,7 +123,6 @@ class AIAgentsController extends Controller
             'type' => 'nullable|string',
         ]);
 
-        $team = $request->user()->currentTeam;
         $template = null;
 
         if (isset($validated['template_id'])) {
@@ -152,6 +184,8 @@ class AIAgentsController extends Controller
      */
     public function update(Request $request, AIAgent $agent): RedirectResponse
     {
+        $this->authorizeAgentAdministration($request, $agent);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -180,6 +214,8 @@ class AIAgentsController extends Controller
      */
     public function updateConfiguration(Request $request, AIAgent $agent): RedirectResponse
     {
+        $team = $this->authorizeAgentAdministration($request, $agent);
+
         $providerKeys = implode(',', array_keys(config('ai-providers.providers', [])));
 
         $validated = $request->validate([
@@ -199,8 +235,6 @@ class AIAgentsController extends Controller
             'tool_permissions' => 'nullable|array',
         ]);
 
-        $team = $request->user()->currentTeam;
-
         $config = AgentConfiguration::where('team_id', $team->id)
             ->where('ai_agent_id', $agent->id)
             ->firstOrFail();
@@ -215,13 +249,13 @@ class AIAgentsController extends Controller
      */
     public function run(Request $request, AIAgent $agent): RedirectResponse
     {
+        $team = $this->authorizeAgentAdministration($request, $agent);
+
         $validated = $request->validate([
             'prompt' => 'required|string|max:10000',
             'context_entity_type' => 'nullable|string',
             'context_entity_id' => 'nullable|integer',
         ]);
-
-        $team = $request->user()->currentTeam;
 
         $config = AgentConfiguration::where('team_id', $team->id)
             ->where('ai_agent_id', $agent->id)
@@ -260,7 +294,9 @@ class AIAgentsController extends Controller
      */
     public function approveOutput(Request $request, AgentActivityLog $log): RedirectResponse
     {
-        $this->authorize('update', $log->team);
+        $team = $this->authorizeAdministration($request);
+
+        abort_unless($log->team_id === $team->id, 403);
 
         $log->update([
             'approval_status' => 'approved',
@@ -276,7 +312,9 @@ class AIAgentsController extends Controller
      */
     public function rejectOutput(Request $request, AgentActivityLog $log): RedirectResponse
     {
-        $this->authorize('update', $log->team);
+        $team = $this->authorizeAdministration($request);
+
+        abort_unless($log->team_id === $team->id, 403);
 
         $log->update([
             'approval_status' => 'rejected',
@@ -292,7 +330,7 @@ class AIAgentsController extends Controller
      */
     public function destroy(Request $request, AIAgent $agent): RedirectResponse
     {
-        $team = $request->user()->currentTeam;
+        $team = $this->authorizeAgentAdministration($request, $agent);
 
         // Delete the team's configuration for this agent
         AgentConfiguration::where('team_id', $team->id)
@@ -315,7 +353,7 @@ class AIAgentsController extends Controller
      */
     public function activity(Request $request, AIAgent $agent): Response
     {
-        $team = $request->user()->currentTeam;
+        $team = $this->authorizeAgentAdministration($request, $agent);
 
         $query = AgentActivityLog::query()
             ->forTeam($team->id)

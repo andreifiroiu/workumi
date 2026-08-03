@@ -7,9 +7,12 @@ namespace App\Policies;
 use App\Models\Folder;
 use App\Models\Project;
 use App\Models\User;
+use App\Policies\Concerns\ChecksTeamAccess;
 
 class FolderPolicy
 {
+    use ChecksTeamAccess;
+
     /**
      * Determine if the user can view the folder.
      *
@@ -20,7 +23,7 @@ class FolderPolicy
     public function view(User $user, Folder $folder): bool
     {
         // User must be in the same team
-        if ($user->currentTeam?->id !== $folder->team_id) {
+        if (! $this->inTeam($user, $folder->team_id)) {
             return false;
         }
 
@@ -35,8 +38,8 @@ class FolderPolicy
      */
     public function create(User $user, Folder $folder): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $folder->team_id) {
+        // Writing requires a non-viewer role in the folder's team
+        if (! $this->canWrite($user, $folder->team_id)) {
             return false;
         }
 
@@ -51,8 +54,8 @@ class FolderPolicy
      */
     public function update(User $user, Folder $folder): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $folder->team_id) {
+        // Writing requires a non-viewer role in the folder's team
+        if (! $this->canWrite($user, $folder->team_id)) {
             return false;
         }
 
@@ -67,8 +70,8 @@ class FolderPolicy
      */
     public function delete(User $user, Folder $folder): bool
     {
-        // User must be in the same team
-        if ($user->currentTeam?->id !== $folder->team_id) {
+        // Writing requires a non-viewer role in the folder's team
+        if (! $this->canWrite($user, $folder->team_id)) {
             return false;
         }
 

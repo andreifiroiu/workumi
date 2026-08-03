@@ -45,6 +45,12 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $currentTeam = $user?->currentTeam;
 
+        // One role lookup per response; both ability flags are derived from it
+        // rather than re-querying through the User helpers.
+        $teamRoleCode = ($user && $currentTeam)
+            ? $user->teamRole($currentTeam)?->code
+            : null;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -57,6 +63,19 @@ class HandleInertiaRequests extends Middleware
                     'timezone' => $user->timezone ?? 'UTC',
                     'language' => $user->language ?? 'en',
                 ] : null,
+
+                // Team membership role. Distinct from auth.user.role, which is
+                // a free-text job title on the users table, not a permission.
+                'team' => ($user && $currentTeam) ? [
+                    'id' => $currentTeam->id,
+                    'roleCode' => $teamRoleCode,
+                    'isOwner' => $teamRoleCode === 'owner',
+                ] : null,
+
+                'can' => [
+                    'administerTeam' => in_array($teamRoleCode, ['owner', 'admin'], true),
+                    'writeContent' => in_array($teamRoleCode, ['owner', 'admin', 'member'], true),
+                ],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
 

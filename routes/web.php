@@ -72,11 +72,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/time/actual-vs-estimated', [TimeReportsController::class, 'actualVsEstimated'])->name('reports.time.actual-vs-estimated');
 
     // Profitability Reports
-    Route::get('reports/profitability', [ProfitabilityReportsController::class, 'index'])->name('reports.profitability.index');
-    Route::get('reports/profitability/by-project', [ProfitabilityReportsController::class, 'byProject'])->name('reports.profitability.by-project');
-    Route::get('reports/profitability/by-work-order', [ProfitabilityReportsController::class, 'byWorkOrder'])->name('reports.profitability.by-work-order');
-    Route::get('reports/profitability/by-team-member', [ProfitabilityReportsController::class, 'byTeamMember'])->name('reports.profitability.by-team-member');
-    Route::get('reports/profitability/by-client', [ProfitabilityReportsController::class, 'byClient'])->name('reports.profitability.by-client');
+    // Derived from member cost rates and margins, so restricted to team admins.
+    Route::middleware('team.admin')->group(function () {
+        Route::get('reports/profitability', [ProfitabilityReportsController::class, 'index'])->name('reports.profitability.index');
+        Route::get('reports/profitability/by-project', [ProfitabilityReportsController::class, 'byProject'])->name('reports.profitability.by-project');
+        Route::get('reports/profitability/by-work-order', [ProfitabilityReportsController::class, 'byWorkOrder'])->name('reports.profitability.by-work-order');
+        Route::get('reports/profitability/by-team-member', [ProfitabilityReportsController::class, 'byTeamMember'])->name('reports.profitability.by-team-member');
+        Route::get('reports/profitability/by-client', [ProfitabilityReportsController::class, 'byClient'])->name('reports.profitability.by-client');
+    });
 
     // Client Communications
     Route::post('client-communications/draft', [ClientCommsController::class, 'draftUpdate'])

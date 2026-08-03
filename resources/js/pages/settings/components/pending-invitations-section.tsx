@@ -26,12 +26,12 @@ import type { TeamInvitation } from '@/types/settings';
 
 interface PendingInvitationsSectionProps {
     invitations: TeamInvitation[];
-    isTeamOwner: boolean;
+    canManageTeam: boolean;
 }
 
 export function PendingInvitationsSection({
     invitations,
-    isTeamOwner,
+    canManageTeam,
 }: PendingInvitationsSectionProps) {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [selectedInvitation, setSelectedInvitation] = useState<TeamInvitation | null>(null);
@@ -91,7 +91,7 @@ export function PendingInvitationsSection({
                                 <TableHead>Email</TableHead>
                                 <TableHead>Role</TableHead>
                                 <TableHead>Sent</TableHead>
-                                {isTeamOwner && <TableHead className="w-[100px]">Actions</TableHead>}
+                                {canManageTeam && <TableHead className="w-[100px]">Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -113,7 +113,7 @@ export function PendingInvitationsSection({
                                     <TableCell className="text-muted-foreground">
                                         {formatDate(invitation.createdAt)}
                                     </TableCell>
-                                    {isTeamOwner && (
+                                    {canManageTeam && (
                                         <TableCell>
                                             <Button
                                                 variant="ghost"

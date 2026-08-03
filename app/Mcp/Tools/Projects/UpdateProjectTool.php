@@ -29,6 +29,8 @@ class UpdateProjectTool extends Tool
 
         $project = Project::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
+        $this->authorizeTeamWrite($request, (int) $project->team_id);
+
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'name' => ['sometimes', 'string', 'max:255'],

@@ -21,7 +21,7 @@ use App\Http\Controllers\WorkspaceSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // ========================================================================
     // Account Routes (User Settings)
     // ========================================================================
@@ -58,8 +58,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/teams/{team}/switch', [TeamController::class, 'switch'])->name('account.teams.switch');
 
         // Account Settings - Rates (rates are immutable for history tracking, only create is allowed)
-        Route::get('/settings/rates', [UserRateController::class, 'index'])->name('settings.rates.index');
-        Route::post('/settings/rates', [UserRateController::class, 'store'])->name('settings.rates.store');
+        // Exposes every member's internal cost and billing rate, so admin-only.
+        Route::get('/settings/rates', [UserRateController::class, 'index'])
+            ->middleware('team.admin')
+            ->name('settings.rates.index');
+        Route::post('/settings/rates', [UserRateController::class, 'store'])
+            ->middleware('team.admin')
+            ->name('settings.rates.store');
 
         // API Tokens (Sanctum personal access tokens for remote MCP / API access)
         Route::get('/api-tokens', [ApiTokenController::class, 'index'])->name('account.api-tokens.index');
@@ -68,77 +73,88 @@ Route::middleware('auth')->group(function () {
     });
 
     // ========================================================================
-    // Workspace Settings (Admin)
+    // Workspace Administration
+    //
+    // Restricted to the team owner and members holding the `admin` role. The
+    // controllers authorize the `administer` ability independently, so the rule
+    // still holds if any of these actions is reached by another route.
     // ========================================================================
-    Route::get('/settings', [WorkspaceSettingsController::class, 'index'])->name('settings.index');
-    Route::patch('/settings/workspace', [WorkspaceSettingsController::class, 'updateWorkspace'])->name('settings.workspace.update');
-    Route::patch('/settings/global-ai', [WorkspaceSettingsController::class, 'updateGlobalAI'])->name('settings.global-ai.update');
+    Route::middleware('team.admin')->group(function () {
 
-    // ========================================================================
-    // Agent Templates
-    // ========================================================================
-    Route::get('/settings/agent-templates', [AgentTemplateController::class, 'index'])->name('settings.agent-templates.index');
-    Route::get('/settings/agent-templates/{template}', [AgentTemplateController::class, 'show'])->name('settings.agent-templates.show');
+        // ========================================================================
+        // Workspace Settings (Admin)
+        // ========================================================================
+        Route::get('/settings', [WorkspaceSettingsController::class, 'index'])->name('settings.index');
+        Route::patch('/settings/workspace', [WorkspaceSettingsController::class, 'updateWorkspace'])->name('settings.workspace.update');
+        Route::patch('/settings/global-ai', [WorkspaceSettingsController::class, 'updateGlobalAI'])->name('settings.global-ai.update');
 
-    // ========================================================================
-    // AI Agents
-    // ========================================================================
-    Route::post('/settings/agents', [AIAgentsController::class, 'store'])->name('settings.agents.store');
-    Route::delete('/settings/agents/{agent}', [AIAgentsController::class, 'destroy'])->name('settings.agents.destroy');
-    Route::patch('/settings/agents/{agent}', [AIAgentsController::class, 'update'])->name('settings.agents.update');
-    Route::patch('/settings/agents/{agent}/configuration', [AIAgentsController::class, 'updateConfiguration'])->name('settings.agents.configuration.update');
-    Route::post('/settings/agents/{agent}/run', [AIAgentsController::class, 'run'])->name('settings.agents.run');
-    Route::get('/settings/agents/{agent}/activity', [AIAgentsController::class, 'activity'])->name('settings.agents.activity');
+        // ========================================================================
+        // Agent Templates
+        // ========================================================================
+        Route::get('/settings/agent-templates', [AgentTemplateController::class, 'index'])->name('settings.agent-templates.index');
+        Route::get('/settings/agent-templates/{template}', [AgentTemplateController::class, 'show'])->name('settings.agent-templates.show');
 
-    // Legacy AI Agent routes (backward compatibility)
-    Route::post('/settings/ai-agents/{agent}/toggle', [AIAgentsController::class, 'toggleAgent'])->name('settings.ai-agents.toggle');
-    Route::patch('/settings/ai-agents/{agent}/config', [AIAgentsController::class, 'updateConfig'])->name('settings.ai-agents.config.update');
-    Route::post('/settings/ai-agents/activity/{log}/approve', [AIAgentsController::class, 'approveOutput'])->name('settings.ai-agents.activity.approve');
-    Route::post('/settings/ai-agents/activity/{log}/reject', [AIAgentsController::class, 'rejectOutput'])->name('settings.ai-agents.activity.reject');
+        // ========================================================================
+        // AI Agents
+        // ========================================================================
+        Route::post('/settings/agents', [AIAgentsController::class, 'store'])->name('settings.agents.store');
+        Route::delete('/settings/agents/{agent}', [AIAgentsController::class, 'destroy'])->name('settings.agents.destroy');
+        Route::patch('/settings/agents/{agent}', [AIAgentsController::class, 'update'])->name('settings.agents.update');
+        Route::patch('/settings/agents/{agent}/configuration', [AIAgentsController::class, 'updateConfiguration'])->name('settings.agents.configuration.update');
+        Route::post('/settings/agents/{agent}/run', [AIAgentsController::class, 'run'])->name('settings.agents.run');
+        Route::get('/settings/agents/{agent}/activity', [AIAgentsController::class, 'activity'])->name('settings.agents.activity');
 
-    // ========================================================================
-    // Agent Activity
-    // ========================================================================
-    Route::get('/settings/agent-activity/{agent}', [AgentActivityController::class, 'index'])->name('settings.agent-activity.index');
-    Route::get('/settings/agent-activity/detail/{activity}', [AgentActivityController::class, 'show'])->name('settings.agent-activity.show');
+        // Legacy AI Agent routes (backward compatibility)
+        Route::post('/settings/ai-agents/{agent}/toggle', [AIAgentsController::class, 'toggleAgent'])->name('settings.ai-agents.toggle');
+        Route::patch('/settings/ai-agents/{agent}/config', [AIAgentsController::class, 'updateConfig'])->name('settings.ai-agents.config.update');
+        Route::post('/settings/ai-agents/activity/{log}/approve', [AIAgentsController::class, 'approveOutput'])->name('settings.ai-agents.activity.approve');
+        Route::post('/settings/ai-agents/activity/{log}/reject', [AIAgentsController::class, 'rejectOutput'])->name('settings.ai-agents.activity.reject');
 
-    // ========================================================================
-    // Agent Workflow States
-    // ========================================================================
-    Route::get('/settings/workflow-states', [AgentWorkflowController::class, 'index'])->name('settings.workflow-states.index');
-    Route::get('/settings/workflow-states/{workflowState}', [AgentWorkflowController::class, 'show'])->name('settings.workflow-states.show');
-    Route::post('/settings/workflow-states/{workflowState}/approve', [AgentWorkflowController::class, 'approve'])->name('settings.workflow-states.approve');
-    Route::post('/settings/workflow-states/{workflowState}/reject', [AgentWorkflowController::class, 'reject'])->name('settings.workflow-states.reject');
+        // ========================================================================
+        // Agent Activity
+        // ========================================================================
+        Route::get('/settings/agent-activity/{agent}', [AgentActivityController::class, 'index'])->name('settings.agent-activity.index');
+        Route::get('/settings/agent-activity/detail/{activity}', [AgentActivityController::class, 'show'])->name('settings.agent-activity.show');
 
-    // ========================================================================
-    // API Keys
-    // ========================================================================
-    Route::post('/settings/api-keys', [ApiKeysController::class, 'store'])->name('settings.api-keys.store');
-    Route::delete('/settings/api-keys/{apiKey}', [ApiKeysController::class, 'destroy'])->name('settings.api-keys.destroy');
+        // ========================================================================
+        // Agent Workflow States
+        // ========================================================================
+        Route::get('/settings/workflow-states', [AgentWorkflowController::class, 'index'])->name('settings.workflow-states.index');
+        Route::get('/settings/workflow-states/{workflowState}', [AgentWorkflowController::class, 'show'])->name('settings.workflow-states.show');
+        Route::post('/settings/workflow-states/{workflowState}/approve', [AgentWorkflowController::class, 'approve'])->name('settings.workflow-states.approve');
+        Route::post('/settings/workflow-states/{workflowState}/reject', [AgentWorkflowController::class, 'reject'])->name('settings.workflow-states.reject');
 
-    // ========================================================================
-    // Audit Log
-    // ========================================================================
-    Route::get('/settings/audit-log/export', [AuditLogController::class, 'export'])->name('settings.audit-log.export');
+        // ========================================================================
+        // API Keys
+        // ========================================================================
+        Route::post('/settings/api-keys', [ApiKeysController::class, 'store'])->name('settings.api-keys.store');
+        Route::delete('/settings/api-keys/{apiKey}', [ApiKeysController::class, 'destroy'])->name('settings.api-keys.destroy');
 
-    // ========================================================================
-    // Integrations
-    // ========================================================================
-    Route::post('/settings/integrations/{integration}/connect', [IntegrationsController::class, 'connect'])->name('settings.integrations.connect');
-    Route::post('/settings/integrations/{integration}/disconnect', [IntegrationsController::class, 'disconnect'])->name('settings.integrations.disconnect');
+        // ========================================================================
+        // Audit Log
+        // ========================================================================
+        Route::get('/settings/audit-log/export', [AuditLogController::class, 'export'])->name('settings.audit-log.export');
 
-    // ========================================================================
-    // Team Members
-    // ========================================================================
-    Route::post('/settings/team-members', [TeamMemberController::class, 'store'])->name('settings.team-members.store');
-    Route::patch('/settings/team-members/{user}', [TeamMemberController::class, 'update'])->name('settings.team-members.update');
-    Route::delete('/settings/team-members/{user}', [TeamMemberController::class, 'destroy'])->name('settings.team-members.destroy');
+        // ========================================================================
+        // Integrations
+        // ========================================================================
+        Route::post('/settings/integrations/{integration}/connect', [IntegrationsController::class, 'connect'])->name('settings.integrations.connect');
+        Route::post('/settings/integrations/{integration}/disconnect', [IntegrationsController::class, 'disconnect'])->name('settings.integrations.disconnect');
 
-    // ========================================================================
-    // Invitations
-    // ========================================================================
-    Route::get('/settings/invitations', [InvitationController::class, 'index'])->name('settings.invitations.index');
-    Route::delete('/settings/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('settings.invitations.destroy');
+        // ========================================================================
+        // Team Members
+        // ========================================================================
+        Route::post('/settings/team-members', [TeamMemberController::class, 'store'])->name('settings.team-members.store');
+        Route::patch('/settings/team-members/{user}', [TeamMemberController::class, 'update'])->name('settings.team-members.update');
+        Route::delete('/settings/team-members/{user}', [TeamMemberController::class, 'destroy'])->name('settings.team-members.destroy');
+
+        // ========================================================================
+        // Invitations
+        // ========================================================================
+        Route::get('/settings/invitations', [InvitationController::class, 'index'])->name('settings.invitations.index');
+        Route::delete('/settings/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('settings.invitations.destroy');
+
+    });
 
     // ========================================================================
     // Legacy Routes (Backward Compatibility - Redirect to Account)
@@ -171,7 +187,8 @@ Route::middleware('auth')->group(function () {
     Route::post('_legacy/settings/teams/{team}/switch', [TeamController::class, 'switch'])->name('teams.switch');
 
     // Team members (legacy)
-    Route::get('_legacy/settings/teams/{team}/members', [TeamMemberController::class, 'index'])->name('teams.members.index');
-    Route::post('_legacy/settings/teams/{team}/members', [TeamMemberController::class, 'store'])->name('teams.members.store');
-    Route::delete('_legacy/settings/teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])->name('teams.members.destroy');
+    Route::middleware('team.admin')->group(function () {
+        Route::post('_legacy/settings/teams/{team}/members', [TeamMemberController::class, 'store'])->name('teams.members.store');
+        Route::delete('_legacy/settings/teams/{team}/members/{user}', [TeamMemberController::class, 'destroy'])->name('teams.members.destroy');
+    });
 });

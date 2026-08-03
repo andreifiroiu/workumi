@@ -29,6 +29,8 @@ class UpdateTaskTool extends Tool
 
         $task = Task::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
+        $this->authorizeTeamWrite($request, (int) $task->team_id);
+
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'title' => ['sometimes', 'string', 'max:255'],

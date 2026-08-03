@@ -77,13 +77,17 @@ class FolderController extends Controller
             $validated['project_id'] = $parentFolder->project_id;
         }
 
-        $folder = Folder::create([
+        $folder = new Folder([
             'team_id' => $team->id,
             'project_id' => $validated['project_id'] ?? null,
             'parent_id' => $validated['parent_id'] ?? null,
             'name' => $validated['name'],
             'created_by_id' => $user->id,
         ]);
+
+        $this->authorize('create', $folder);
+
+        $folder->save();
 
         if ($request->wantsJson() && ! $request->header('X-Inertia')) {
             $folder->load(['creator', 'parent', 'children']);

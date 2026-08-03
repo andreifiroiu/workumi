@@ -125,6 +125,34 @@ test('an added member can themselves add further members', function () {
     expect($this->project->fresh()->members->pluck('id')->all())->toContain($another->id);
 });
 
+test('a viewer with access to the project cannot grant it to anyone else', function () {
+    $viewer = addTeamMember($this->team, null, 'viewer');
+    $this->project->members()->attach($viewer, ['added_by_id' => $this->owner->id]);
+
+    // They can see it...
+    expect($viewer->can('view', $this->project))->toBeTrue();
+
+    // ...but granting access is a write, and viewers are read-only.
+    $target = addTeamMember($this->team);
+
+    $this->actingAs($viewer)
+        ->post(route('projects.members.store', $this->project), ['user_ids' => [$target->id]])
+        ->assertForbidden();
+
+    expect($this->project->fresh()->members->pluck('id')->all())->not->toContain($target->id);
+});
+
+test('a viewer cannot remove a member either, including themselves', function () {
+    $viewer = addTeamMember($this->team, null, 'viewer');
+    $this->project->members()->attach($viewer, ['added_by_id' => $this->owner->id]);
+
+    $this->actingAs($viewer)
+        ->delete(route('projects.members.destroy', [$this->project, $viewer]))
+        ->assertForbidden();
+
+    expect($this->project->fresh()->members->pluck('id')->all())->toContain($viewer->id);
+});
+
 test('an explicit member can be removed', function () {
     $member = addTeamMember($this->team);
     $this->project->members()->attach($member, ['added_by_id' => $this->owner->id]);
