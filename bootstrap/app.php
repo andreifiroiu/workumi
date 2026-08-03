@@ -23,9 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SetLocale::class,
             HandleAppearance::class,
+            // Must run before HandleInertiaRequests: Inertia computes shared props before calling
+            // the next middleware, so a team repaired afterwards would not reach the current response.
+            EnsureUserHasTeam::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-            EnsureUserHasTeam::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

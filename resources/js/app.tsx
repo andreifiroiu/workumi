@@ -1,6 +1,7 @@
 import '../css/app.css';
 import './lib/i18n';
 
+import { ErrorBoundary } from './components/error-boundary';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
@@ -34,9 +35,11 @@ createInertiaApp({
 
         root.render(
             <StrictMode>
-                <QueryClientProvider client={queryClient}>
-                    <App {...props} />
-                </QueryClientProvider>
+                <ErrorBoundary>
+                    <QueryClientProvider client={queryClient}>
+                        <App {...props} />
+                    </QueryClientProvider>
+                </ErrorBoundary>
             </StrictMode>,
         );
     },

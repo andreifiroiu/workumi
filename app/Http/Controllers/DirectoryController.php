@@ -6,6 +6,7 @@ use App\Models\Contact;
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,10 +16,14 @@ class DirectoryController extends Controller
     /**
      * Display the directory page with all parties, contacts, and team members.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
         $team = $user->currentTeam;
+
+        if (! $team) {
+            return redirect()->route('account.teams.index');
+        }
 
         // Fetch all parties for the current team
         $parties = Party::forTeam($team->id)
@@ -38,8 +43,8 @@ class DirectoryController extends Controller
                 'address' => $party->address,
                 'notes' => $party->notes,
                 'tags' => $party->tags ?? [],
-                'linkedContactIds' => $party->contacts->pluck('id')->map(fn($id) => (string) $id)->toArray(),
-                'linkedProjectIds' => $party->projects->pluck('id')->map(fn($id) => (string) $id)->toArray(),
+                'linkedContactIds' => $party->contacts->pluck('id')->map(fn ($id) => (string) $id)->toArray(),
+                'linkedProjectIds' => $party->projects->pluck('id')->map(fn ($id) => (string) $id)->toArray(),
                 'createdAt' => $party->created_at->toISOString(),
                 'lastActivity' => $party->last_activity?->toISOString() ?? $party->updated_at->toISOString(),
             ]);

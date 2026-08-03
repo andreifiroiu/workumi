@@ -4,15 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use App\Models\Folder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DocumentsController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $team = $request->user()->currentTeam;
+
+        if (! $team) {
+            return redirect()->route('account.teams.index');
+        }
 
         // Get team-scoped folders (not project-specific)
         $folders = Folder::forTeam($team->id)
@@ -48,7 +54,7 @@ class DocumentsController extends Controller
     /**
      * Format folders for frontend consumption.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, Folder>  $folders
+     * @param  Collection<int, Folder>  $folders
      * @return array<int, array<string, mixed>>
      */
     private function formatFolders($folders): array
@@ -78,7 +84,7 @@ class DocumentsController extends Controller
     /**
      * Format documents for frontend consumption.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int, Document>  $documents
+     * @param  Collection<int, Document>  $documents
      * @return array<int, array<string, mixed>>
      */
     private function formatDocuments($documents): array

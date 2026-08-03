@@ -84,10 +84,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('client-communications/preview/{message}', [ClientCommsController::class, 'preview'])
         ->name('client-communications.preview');
 
-    Route::get('settings', function () {
-        return Inertia::render('settings/index');
-    })->name('settings.index');
-
     // Redirect dashboard to today
     Route::redirect('dashboard', '/today')->name('dashboard');
 });

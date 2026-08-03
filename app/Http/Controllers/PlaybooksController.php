@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Playbook;
 use App\Models\WorkOrder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PlaybooksController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
         $team = $user->currentTeam;
+
+        if (! $team) {
+            return redirect()->route('account.teams.index');
+        }
 
         // Fetch all playbooks for the team
         $playbooks = Playbook::forTeam($team->id)
@@ -34,7 +39,7 @@ class PlaybooksController extends Controller
                     'createdByName' => $playbook->created_by_name,
                     'lastModified' => $playbook->updated_at->toISOString(),
                     'aiGenerated' => $playbook->ai_generated,
-                    'usedByWorkOrders' => $playbook->workOrders->pluck('id')->map(fn($id) => (string) $id)->toArray(),
+                    'usedByWorkOrders' => $playbook->workOrders->pluck('id')->map(fn ($id) => (string) $id)->toArray(),
                 ];
             });
 

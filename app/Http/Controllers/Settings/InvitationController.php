@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invitation;
 use Illuminate\Http\Request;
-use Jurager\Teams\Models\Invitation;
 
 class InvitationController extends Controller
 {
