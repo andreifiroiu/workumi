@@ -254,6 +254,38 @@ class WorkOrder extends Model
     }
 
     /**
+     * Scope to filter work orders visible to a specific user.
+     *
+     * A work order inherits its project's privacy: inside a private project it
+     * is limited to the people who can see the project, plus anyone with a role
+     * on the work order itself.
+     */
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->whereHas('project', fn (Builder $project) => $project->visibleTo($userId))
+                ->orWhere(fn (Builder $workOrder) => $workOrder->whereUserHasAnyRole($userId));
+        });
+    }
+
+    /**
+     * Every field that puts a user on this work order. Broader than
+     * scopeWhereUserHasRaciRole, which is about RACI reporting rather than access.
+     */
+    public function scopeWhereUserHasAnyRole(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->where('assigned_to_id', $userId)
+                ->orWhere('created_by_id', $userId)
+                ->orWhere('accountable_id', $userId)
+                ->orWhere('responsible_id', $userId)
+                ->orWhere('reviewer_id', $userId)
+                ->orWhereJsonContains('consulted_ids', $userId)
+                ->orWhereJsonContains('informed_ids', $userId);
+        });
+    }
+
+    /**
      * Scope to filter work orders where the user has any RACI role.
      */
     public function scopeWhereUserHasRaciRole(Builder $query, int $userId, bool $excludeInformed = true): Builder

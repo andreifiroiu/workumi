@@ -32,7 +32,8 @@ class DeliverableController extends Controller
             'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $query = Deliverable::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+        $query = Deliverable::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))->visibleTo($access->userId)
+            ->visibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title', 'project:id,name'])
             ->orderBy('created_at', 'desc');
 
@@ -52,7 +53,7 @@ class DeliverableController extends Controller
     public function show(TeamAccess $access, int $deliverable): DeliverableResource
     {
         return new DeliverableResource(
-            Deliverable::forTeams($access->teamIds)
+            Deliverable::forTeams($access->teamIds)->visibleTo($access->userId)
                 ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title,project_id', 'project:id,name'])
                 ->findOrFail($deliverable)
         );

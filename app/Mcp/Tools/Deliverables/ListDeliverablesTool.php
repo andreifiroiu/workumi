@@ -28,7 +28,8 @@ class ListDeliverablesTool extends Tool
             'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $query = Deliverable::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+        $query = Deliverable::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))->visibleTo($access->userId)
+            ->visibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title', 'project:id,name'])
             ->orderBy('created_at', 'desc');
 

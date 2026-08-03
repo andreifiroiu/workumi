@@ -27,7 +27,7 @@ class UpdateWorkOrderTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $workOrder = WorkOrder::forTeams($access->teamIds)->findOrFail($identified['id']);
+        $workOrder = WorkOrder::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],

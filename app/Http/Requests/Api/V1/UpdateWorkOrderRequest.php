@@ -42,7 +42,7 @@ class UpdateWorkOrderRequest extends FormRequest
 
     public function workOrder(): WorkOrder
     {
-        return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)
+        return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->route('work_order'));
     }
 }

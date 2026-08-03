@@ -162,6 +162,24 @@ class Task extends Model
         return $query->whereIn('team_id', $teamIds);
     }
 
+    /**
+     * Scope to filter tasks visible to a specific user.
+     *
+     * A task follows its work order, so a task inside a private project is
+     * hidden unless the user can see that work order — or is on the task itself.
+     */
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId))
+                ->orWhere(function (Builder $task) use ($userId) {
+                    $task->where('assigned_to_id', $userId)
+                        ->orWhere('reviewer_id', $userId)
+                        ->orWhere('created_by_id', $userId);
+                });
+        });
+    }
+
     public function scopeAssignedTo($query, int $userId)
     {
         return $query->where('assigned_to_id', $userId);

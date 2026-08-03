@@ -102,4 +102,15 @@ class Deliverable extends Model
     {
         return $query->whereIn('team_id', $teamIds);
     }
+
+    /**
+     * Scope to filter deliverables visible to a specific user.
+     *
+     * Deliverables carry no assignment of their own, so they follow their work
+     * order exactly.
+     */
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId));
+    }
 }

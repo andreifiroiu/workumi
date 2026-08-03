@@ -28,7 +28,7 @@ class CreateTaskTool extends Tool
             'work_order_id' => ['required', 'integer'],
         ]);
 
-        $workOrder = WorkOrder::forTeams($access->teamIds)->findOrFail($identified['work_order_id']);
+        $workOrder = WorkOrder::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['work_order_id']);
 
         $validated = $request->validate([
             'work_order_id' => ['required', 'integer'],
