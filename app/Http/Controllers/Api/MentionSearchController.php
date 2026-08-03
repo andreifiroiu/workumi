@@ -42,7 +42,7 @@ class MentionSearchController extends Controller
 
         // Search work items (projects, work orders, tasks)
         if ($type === 'work_item' || $type === 'all') {
-            $results['workItems'] = $this->searchWorkItems($query, $team->id);
+            $results['workItems'] = $this->searchWorkItems($query, $team->id, $user->id);
         }
 
         return response()->json($results);
@@ -84,13 +84,14 @@ class MentionSearchController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function searchWorkItems(string $query, int $teamId): array
+    private function searchWorkItems(string $query, int $teamId, int $userId): array
     {
         $workItems = [];
         $perTypeLimit = (int) ceil(self::RESULTS_LIMIT / 3);
 
         // Search projects
         $projects = Project::forTeam($teamId)
+            ->visibleTo($userId)
             ->where('name', 'LIKE', "%{$query}%")
             ->limit($perTypeLimit)
             ->get();
@@ -106,6 +107,7 @@ class MentionSearchController extends Controller
 
         // Search work orders (uses 'title' field, not 'name')
         $workOrders = WorkOrder::forTeam($teamId)
+            ->visibleTo($userId)
             ->where('title', 'LIKE', "%{$query}%")
             ->limit($perTypeLimit)
             ->get();
@@ -121,6 +123,7 @@ class MentionSearchController extends Controller
 
         // Search tasks
         $tasks = Task::forTeam($teamId)
+            ->visibleTo($userId)
             ->where('title', 'LIKE', "%{$query}%")
             ->limit($perTypeLimit)
             ->get();

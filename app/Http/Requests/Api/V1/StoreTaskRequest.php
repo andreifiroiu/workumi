@@ -45,42 +45,39 @@ class StoreTaskRequest extends FormRequest
      */
     public function workOrder(): WorkOrder
     {
-        return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)
-            ->inProjectsVisibleTo($this->teamAccess()->userId)
+        return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)
             ->findOrFail($this->input('work_order_id'));
     }
 
-    private function assigneeRule(): \Closure
-    {
-        return function (string $attribute, mixed $value, \Closure $fail): void {
-            $workOrder = WorkOrder::forTeams($this->teamAccess()->teamIds)
-                ->inProjectsVisibleTo($this->teamAccess()->userId)
-                ->find($this->input('work_order_id'));
-
-            if ($workOrder === null) {
-                return;
-            }
-
-            TeamMembership::rule($workOrder->team_id)($attribute, $value, $fail);
-        };
-    }
-
     /**
-     * The parent work order must sit in a project the caller can see, so a
-     * private project cannot be written into sideways. Refused as a 422 like any
-     * other bad reference rather than passing validation and then 404ing.
+     * A plain `exists` rule cannot express work order visibility, and letting an
+     * invisible work order pass validation only to 404 later would report the
+     * same refusal two different ways.
      */
     private function visibleWorkOrderRule(): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
             $exists = WorkOrder::forTeams($this->teamAccess()->teamIds)
-                ->inProjectsVisibleTo($this->teamAccess()->userId)
+                ->visibleTo($this->teamAccess()->userId)
                 ->whereKey($value)
                 ->exists();
 
             if (! $exists) {
                 $fail('The selected work order is invalid.');
             }
+        };
+    }
+
+    private function assigneeRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $workOrder = WorkOrder::forTeams($this->teamAccess()->teamIds)->visibleTo($this->teamAccess()->userId)->find($this->input('work_order_id'));
+
+            if ($workOrder === null) {
+                return;
+            }
+
+            TeamMembership::rule($workOrder->team_id)($attribute, $value, $fail);
         };
     }
 }

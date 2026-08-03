@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Models\Deliverable;
 use App\Models\Party;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
+use App\Models\WorkOrder;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Private projects are limited to their owner, the people with a RACI role on
- * them and their explicit members, exactly as Project::scopeVisibleTo enforces
- * for the web app.
- *
- * Work orders, tasks and deliverables inherit that privacy: WorkOrderPolicy and
- * TaskPolicy consult the parent project, so these surfaces must too rather than
- * offering a more permissive way in. Parties hang off the team, not a project,
- * so they stay team-scoped.
+ * Private projects are limited to the people with a RACI role on them, exactly
+ * as Project::scopeVisibleTo enforces for the web app. Work orders, tasks,
+ * deliverables and parties carry no such rule in the app, so they must stay
+ * team-scoped only here too.
  */
 beforeEach(function () {
     $this->owner = User::factory()->create();
@@ -139,22 +138,130 @@ test('MCP: someone with a RACI role on the private project still reaches it', fu
     expect($names)->toContain('Secret Project');
 });
 
-test('work orders in a private project inherit its privacy, matching the app', function () {
-    // WorkOrderPolicy now consults the parent project's privacy, so the API has
-    // to as well - it must never be more permissive than the app it fronts.
-    $workOrder = as_token($this->ownerToken)->postJson('/api/v1/work-orders', [
-        'project_id' => $this->private->id,
-        'title' => 'Inside A Private Project',
-    ])->json('data.id');
+test('a work order in a private project is hidden from a teammate with no role', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
 
-    as_token($this->outsiderToken)
-        ->getJson('/api/v1/work-orders/'.$workOrder)
+    // The project owner reaches it because they can see the project.
+    as_token($this->ownerToken)->getJson('/api/v1/work-orders/'.$workOrder->id)->assertOk();
+
+    as_token($this->outsiderToken)->getJson('/api/v1/work-orders/'.$workOrder->id)->assertNotFound();
+
+    $list = as_token($this->outsiderToken)->getJson('/api/v1/work-orders');
+    expect(array_column($list->json('data'), 'title'))->not->toContain('Hidden Work Order');
+});
+
+test('being assigned the work order grants access without any project role', function () {
+    // This is what separates the chosen rule from a pure project cascade.
+    $assignee = User::factory()->create();
+    $this->team->addUser($assignee, 'member');
+
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Assigned To Me', 'assigned_to_id' => $assignee->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    $other = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Not Mine', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    $token = $assignee->createToken('a')->plainTextToken;
+
+    as_token($token)->getJson('/api/v1/work-orders/'.$workOrder->id)->assertOk();
+    as_token($token)->getJson('/api/v1/work-orders/'.$other->id)->assertNotFound();
+
+    // Still cannot see the project itself — access is to the work order only.
+    as_token($token)->getJson('/api/v1/projects/'.$this->private->id)->assertNotFound();
+});
+
+test('tasks and deliverables follow their work order', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $workOrder->id,
+        'project_id' => $this->private->id, 'title' => 'Hidden Task',
+        'assigned_to_id' => $this->owner->id, 'status' => 'todo',
+    ]);
+
+    $deliverable = Deliverable::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $workOrder->id,
+        'project_id' => $this->private->id, 'title' => 'Hidden Deliverable',
+    ]);
+
+    as_token($this->outsiderToken)->getJson('/api/v1/tasks/'.$task->id)->assertNotFound();
+    as_token($this->outsiderToken)->getJson('/api/v1/deliverables/'.$deliverable->id)->assertNotFound();
+
+    as_token($this->ownerToken)->getJson('/api/v1/tasks/'.$task->id)->assertOk();
+    as_token($this->ownerToken)->getJson('/api/v1/deliverables/'.$deliverable->id)->assertOk();
+});
+
+test('a task assignee sees their own task inside an otherwise hidden work order', function () {
+    $assignee = User::factory()->create();
+    $this->team->addUser($assignee, 'member');
+
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id, 'work_order_id' => $workOrder->id,
+        'project_id' => $this->private->id, 'title' => 'My Task',
+        'assigned_to_id' => $assignee->id, 'status' => 'todo',
+    ]);
+
+    $token = $assignee->createToken('t')->plainTextToken;
+
+    as_token($token)->getJson('/api/v1/tasks/'.$task->id)->assertOk();
+    as_token($token)->getJson('/api/v1/work-orders/'.$workOrder->id)->assertNotFound();
+});
+
+test('MCP applies the same work order and task rules', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->private->id,
+        'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    callProjectTool('get-work-order-tool', ['id' => $workOrder->id], $this->outsiderToken)
         ->assertNotFound();
 
-    // An explicit member of the project reaches it, just like on the web.
-    $this->private->members()->attach($this->outsider, ['added_by_id' => $this->owner->id]);
+    callProjectTool('update-work-order-tool', ['id' => $workOrder->id, 'title' => 'Hijacked'], $this->outsiderToken)
+        ->assertNotFound();
 
-    as_token($this->outsiderToken)
-        ->getJson('/api/v1/work-orders/'.$workOrder)
-        ->assertOk();
+    callProjectTool('create-task-tool', ['work_order_id' => $workOrder->id, 'title' => 'Nope'], $this->outsiderToken)
+        ->assertNotFound();
+
+    $list = callProjectTool('list-work-orders-tool', [], $this->outsiderToken);
+    $titles = array_column(json_decode($list->json('result.content.0.text'), true)['data'], 'title');
+    expect($titles)->not->toContain('Hidden Work Order')
+        ->and($workOrder->fresh()->title)->toBe('Hidden Work Order');
+});
+
+test('work orders in a non-private project remain visible to the whole team', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id, 'project_id' => $this->open->id,
+        'title' => 'Open Work Order', 'assigned_to_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
+        'consulted_ids' => [], 'informed_ids' => [],
+    ]);
+
+    as_token($this->outsiderToken)->getJson('/api/v1/work-orders/'.$workOrder->id)->assertOk();
 });

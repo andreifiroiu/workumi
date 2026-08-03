@@ -2,40 +2,36 @@
 
 namespace App\Policies;
 
-use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkOrder;
 
 class WorkOrderPolicy
 {
+    /**
+     * A work order inherits its project's privacy: inside a private project it
+     * is limited to the people who can see the project, plus anyone with a role
+     * on the work order itself.
+     */
     public function view(User $user, WorkOrder $workOrder): bool
     {
-        return $this->canAccess($user, $workOrder);
+        return $this->belongsToCurrentTeam($user, $workOrder)
+            && $workOrder->isVisibleTo($user->id);
     }
 
     public function update(User $user, WorkOrder $workOrder): bool
     {
-        return $this->canAccess($user, $workOrder);
+        return $this->belongsToCurrentTeam($user, $workOrder)
+            && $workOrder->isVisibleTo($user->id);
     }
 
     public function delete(User $user, WorkOrder $workOrder): bool
     {
-        return $this->canAccess($user, $workOrder);
+        return $this->belongsToCurrentTeam($user, $workOrder)
+            && $workOrder->isVisibleTo($user->id);
     }
 
-    /**
-     * A work order inherits the privacy of the project that contains it.
-     */
-    private function canAccess(User $user, WorkOrder $workOrder): bool
+    private function belongsToCurrentTeam(User $user, WorkOrder $workOrder): bool
     {
-        if ($user->currentTeam?->id !== $workOrder->team_id) {
-            return false;
-        }
-
-        // Fall back to a trashed lookup: the default relation returns null for a soft-deleted
-        // project, which would drop the privacy check entirely.
-        $project = $workOrder->project ?: $workOrder->project()->withTrashed()->first();
-
-        return ! $project instanceof Project || $project->isVisibleTo($user->id);
+        return $user->currentTeam?->id === $workOrder->team_id;
     }
 }

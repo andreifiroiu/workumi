@@ -27,9 +27,7 @@ class UpdateTaskTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $task = Task::forTeams($access->teamIds)
-            ->inProjectsVisibleTo($access->userId)
-            ->findOrFail($identified['id']);
+        $task = Task::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],

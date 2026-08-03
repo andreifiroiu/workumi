@@ -108,6 +108,35 @@ test('the API and the web agree about work orders inside a private project', fun
         ->assertNotFound();
 });
 
+test('an explicit project member reaches the work orders and tasks inside it', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->private->id,
+        'created_by_id' => $this->owner->id,
+        'accountable_id' => $this->owner->id,
+    ]);
+
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->private->id,
+        'work_order_id' => $workOrder->id,
+    ]);
+
+    // Membership grants the project, and work orders and tasks cascade from it:
+    // WorkOrder::visibleTo reaches the project, Task::visibleTo reaches the work order.
+    $this->private->members()->attach($this->outsider, ['added_by_id' => $this->owner->id]);
+
+    $this->withToken($this->outsiderToken)
+        ->getJson('/api/v1/work-orders/'.$workOrder->id)
+        ->assertOk();
+
+    app('auth')->forgetGuards();
+
+    $this->withToken($this->outsiderToken)
+        ->getJson('/api/v1/tasks/'.$task->id)
+        ->assertOk();
+});
+
 test('the API and the web agree about tasks inside a private project', function () {
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id,

@@ -2,40 +2,36 @@
 
 namespace App\Policies;
 
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 
 class TaskPolicy
 {
+    /**
+     * A task follows its work order, so a task inside a private project is
+     * limited to the people who can see that work order — or who are on the
+     * task itself.
+     */
     public function view(User $user, Task $task): bool
     {
-        return $this->canAccess($user, $task);
+        return $this->belongsToCurrentTeam($user, $task)
+            && $task->isVisibleTo($user->id);
     }
 
     public function update(User $user, Task $task): bool
     {
-        return $this->canAccess($user, $task);
+        return $this->belongsToCurrentTeam($user, $task)
+            && $task->isVisibleTo($user->id);
     }
 
     public function delete(User $user, Task $task): bool
     {
-        return $this->canAccess($user, $task);
+        return $this->belongsToCurrentTeam($user, $task)
+            && $task->isVisibleTo($user->id);
     }
 
-    /**
-     * A task inherits the privacy of the project that contains it.
-     */
-    private function canAccess(User $user, Task $task): bool
+    private function belongsToCurrentTeam(User $user, Task $task): bool
     {
-        if ($user->currentTeam?->id !== $task->team_id) {
-            return false;
-        }
-
-        // Fall back to a trashed lookup: the default relation returns null for a soft-deleted
-        // project, which would drop the privacy check entirely.
-        $project = $task->project ?: $task->project()->withTrashed()->first();
-
-        return ! $project instanceof Project || $project->isVisibleTo($user->id);
+        return $user->currentTeam?->id === $task->team_id;
     }
 }

@@ -104,18 +104,23 @@ class Deliverable extends Model
     }
 
     /**
-     * Restrict to records whose project the given user is allowed to see.
+     * Scope to filter deliverables visible to a specific user.
      *
-     * Team membership alone is not enough: a private project is limited to its
-     * owner, its RACI holders and its explicit members, and everything inside it
-     * inherits that. withTrashed keeps a soft-deleted project's privacy applied
-     * rather than dropping the record from the result entirely.
+     * Deliverables carry no assignment of their own, so they follow their work
+     * order exactly.
      */
-    public function scopeInProjectsVisibleTo(Builder $query, int $userId): Builder
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
     {
-        return $query->whereHas(
-            'project',
-            fn (Builder $project) => $project->withTrashed()->visibleTo($userId)
-        );
+        return $query->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId));
+    }
+
+    /**
+     * Check if this deliverable is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        return (bool) $this->workOrder?->isVisibleTo($userId);
     }
 }

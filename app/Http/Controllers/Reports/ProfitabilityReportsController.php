@@ -35,7 +35,7 @@ class ProfitabilityReportsController extends Controller
             'date_to' => $request->input('date_to', now()->endOfMonth()->toDateString()),
         ];
 
-        $byProjectData = $this->getByProjectData($team->id, $filters);
+        $byProjectData = $this->getByProjectData($team->id, $user->id, $filters);
 
         return Inertia::render('reports/profitability/index', [
             'byProjectData' => $byProjectData,
@@ -56,7 +56,7 @@ class ProfitabilityReportsController extends Controller
             'date_to' => $request->input('date_to'),
         ];
 
-        $data = $this->getByProjectData($team->id, $filters);
+        $data = $this->getByProjectData($team->id, $user->id, $filters);
 
         return response()->json(['data' => $data]);
     }
@@ -74,7 +74,7 @@ class ProfitabilityReportsController extends Controller
             'date_to' => $request->input('date_to'),
         ];
 
-        $data = $this->getByWorkOrderData($team->id, $filters);
+        $data = $this->getByWorkOrderData($team->id, $user->id, $filters);
 
         return response()->json(['data' => $data]);
     }
@@ -120,10 +120,11 @@ class ProfitabilityReportsController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function getByProjectData(int $teamId, array $filters): array
+    private function getByProjectData(int $teamId, int $userId, array $filters): array
     {
         $projects = Project::query()
             ->forTeam($teamId)
+            ->visibleTo($userId)
             ->select('id', 'name', 'budget_cost', 'actual_cost', 'actual_revenue')
             ->get();
 
@@ -164,10 +165,11 @@ class ProfitabilityReportsController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    private function getByWorkOrderData(int $teamId, array $filters): array
+    private function getByWorkOrderData(int $teamId, int $userId, array $filters): array
     {
         $workOrders = WorkOrder::query()
             ->forTeam($teamId)
+            ->visibleTo($userId)
             ->with('project:id,name')
             ->select('id', 'project_id', 'title', 'budget_cost', 'actual_cost', 'actual_revenue')
             ->get();

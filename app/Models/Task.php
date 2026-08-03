@@ -163,19 +163,37 @@ class Task extends Model
     }
 
     /**
-     * Restrict to records whose project the given user is allowed to see.
+     * Scope to filter tasks visible to a specific user.
      *
-     * Team membership alone is not enough: a private project is limited to its
-     * owner, its RACI holders and its explicit members, and everything inside it
-     * inherits that. withTrashed keeps a soft-deleted project's privacy applied
-     * rather than dropping the record from the result entirely.
+     * A task follows its work order, so a task inside a private project is
+     * hidden unless the user can see that work order — or is on the task itself.
      */
-    public function scopeInProjectsVisibleTo(Builder $query, int $userId): Builder
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
     {
-        return $query->whereHas(
-            'project',
-            fn (Builder $project) => $project->withTrashed()->visibleTo($userId)
-        );
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId))
+                ->orWhere(function (Builder $task) use ($userId) {
+                    $task->where('assigned_to_id', $userId)
+                        ->orWhere('reviewer_id', $userId)
+                        ->orWhere('created_by_id', $userId);
+                });
+        });
+    }
+
+    /**
+     * Check if this task is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        if ($this->workOrder?->isVisibleTo($userId)) {
+            return true;
+        }
+
+        return $this->assigned_to_id === $userId
+            || $this->reviewer_id === $userId
+            || $this->created_by_id === $userId;
     }
 
     public function scopeAssignedTo($query, int $userId)

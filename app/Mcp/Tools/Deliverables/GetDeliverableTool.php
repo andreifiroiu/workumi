@@ -21,7 +21,7 @@ class GetDeliverableTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $deliverable = Deliverable::forTeams($access->teamIds)->inProjectsVisibleTo($access->userId)
+        $deliverable = Deliverable::forTeams($access->teamIds)->visibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title,project_id', 'project:id,name'])
             ->findOrFail($validated['id']);
 

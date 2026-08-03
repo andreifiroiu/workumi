@@ -21,7 +21,7 @@ class GetWorkOrderTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $workOrder = WorkOrder::forTeams($access->teamIds)->inProjectsVisibleTo($access->userId)
+        $workOrder = WorkOrder::forTeams($access->teamIds)->visibleTo($access->userId)
             ->with([
                 'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                 'project:id,name',

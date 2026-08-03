@@ -198,22 +198,6 @@ class WorkOrder extends Model
         return $query->whereIn('team_id', $teamIds);
     }
 
-    /**
-     * Restrict to records whose project the given user is allowed to see.
-     *
-     * Team membership alone is not enough: a private project is limited to its
-     * owner, its RACI holders and its explicit members, and everything inside it
-     * inherits that. withTrashed keeps a soft-deleted project's privacy applied
-     * rather than dropping the record from the result entirely.
-     */
-    public function scopeInProjectsVisibleTo(Builder $query, int $userId): Builder
-    {
-        return $query->whereHas(
-            'project',
-            fn (Builder $project) => $project->withTrashed()->visibleTo($userId)
-        );
-    }
-
     public function scopeAssignedTo(Builder $query, int $userId): Builder
     {
         return $query->where('assigned_to_id', $userId);
@@ -267,6 +251,66 @@ class WorkOrder extends Model
     public function scopeUngrouped(Builder $query): Builder
     {
         return $query->whereNull('work_order_list_id');
+    }
+
+    /**
+     * Scope to filter work orders visible to a specific user.
+     *
+     * A work order inherits its project's privacy: inside a private project it
+     * is limited to the people who can see the project, plus anyone with a role
+     * on the work order itself.
+     */
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->whereHas('project', fn (Builder $project) => $project->visibleTo($userId))
+                ->orWhere(fn (Builder $workOrder) => $workOrder->whereUserHasAnyRole($userId));
+        });
+    }
+
+    /**
+     * Check if this work order is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        if ($this->project?->isVisibleTo($userId)) {
+            return true;
+        }
+
+        return $this->hasUserInAnyRole($userId);
+    }
+
+    /**
+     * Whether the user sits in any of this work order's people fields.
+     */
+    public function hasUserInAnyRole(int $userId): bool
+    {
+        return $this->assigned_to_id === $userId
+            || $this->created_by_id === $userId
+            || $this->accountable_id === $userId
+            || $this->responsible_id === $userId
+            || $this->reviewer_id === $userId
+            || (is_array($this->consulted_ids) && in_array($userId, $this->consulted_ids, true))
+            || (is_array($this->informed_ids) && in_array($userId, $this->informed_ids, true));
+    }
+
+    /**
+     * Every field that puts a user on this work order. Broader than
+     * scopeWhereUserHasRaciRole, which is about RACI reporting rather than access.
+     */
+    public function scopeWhereUserHasAnyRole(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->where('assigned_to_id', $userId)
+                ->orWhere('created_by_id', $userId)
+                ->orWhere('accountable_id', $userId)
+                ->orWhere('responsible_id', $userId)
+                ->orWhere('reviewer_id', $userId)
+                ->orWhereJsonContains('consulted_ids', $userId)
+                ->orWhereJsonContains('informed_ids', $userId);
+        });
     }
 
     /**
