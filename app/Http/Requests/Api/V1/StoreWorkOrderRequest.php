@@ -50,6 +50,11 @@ class StoreWorkOrderRequest extends FormRequest
             ->findOrFail($this->input('project_id'));
     }
 
+    protected function targetTeamId(): int
+    {
+        return (int) $this->project()->team_id;
+    }
+
     /**
      * A plain `exists` rule cannot express project privacy, and letting an
      * invisible project pass validation only to 404 later would report the same

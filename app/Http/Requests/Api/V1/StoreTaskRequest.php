@@ -49,6 +49,11 @@ class StoreTaskRequest extends FormRequest
             ->findOrFail($this->input('work_order_id'));
     }
 
+    protected function targetTeamId(): int
+    {
+        return (int) $this->workOrder()->team_id;
+    }
+
     /**
      * A plain `exists` rule cannot express work order visibility, and letting an
      * invisible work order pass validation only to 404 later would report the

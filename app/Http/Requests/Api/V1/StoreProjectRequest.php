@@ -54,6 +54,11 @@ class StoreProjectRequest extends FormRequest
         );
     }
 
+    protected function targetTeamId(): int
+    {
+        return $this->teamId();
+    }
+
     /**
      * @return array<string, mixed>
      */
