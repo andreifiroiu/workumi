@@ -24,6 +24,10 @@ class WorkspaceSettingsController extends Controller
         $user = $request->user();
         $team = $user->currentTeam;
 
+        if (! $team) {
+            return redirect()->route('account.teams.index');
+        }
+
         // Get or create workspace settings
         $workspaceSettings = WorkspaceSettings::forTeam($team);
 

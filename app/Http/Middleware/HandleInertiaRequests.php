@@ -42,6 +42,9 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        $currentTeam = $user?->currentTeam;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -49,36 +52,39 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'availableLocales' => config('app.available_locales'),
             'auth' => [
-                'user' => $request->user() ? [
-                    ...$request->user()->toArray(),
-                    'timezone' => $request->user()->timezone ?? 'UTC',
-                    'language' => $request->user()->language ?? 'en',
+                'user' => $user ? [
+                    ...$user->toArray(),
+                    'timezone' => $user->timezone ?? 'UTC',
+                    'language' => $user->language ?? 'en',
                 ] : null,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
 
             // Real organization/team data
-            'currentOrganization' => $request->user() && $request->user()->current_team_id ? [
-                'id' => $request->user()->currentTeam->id,
-                'name' => $request->user()->currentTeam->name,
-                'slug' => $request->user()->currentTeam->slug ?? 'team-' . $request->user()->currentTeam->id,
-                'user_id' => $request->user()->currentTeam->user_id,
-                'created_at' => $request->user()->currentTeam->created_at->toISOString(),
-                'updated_at' => $request->user()->currentTeam->updated_at->toISOString(),
-            ] : null,
+            'currentOrganization' => $currentTeam ? $this->organizationPayload($currentTeam) : null,
 
-            'organizations' => $request->user() ? $request->user()->allTeams()->map(function ($team) {
-                return [
-                    'id' => $team->id,
-                    'name' => $team->name,
-                    'slug' => $team->slug ?? 'team-' . $team->id,
-                    'user_id' => $team->user_id,
-                    'created_at' => $team->created_at->toISOString(),
-                    'updated_at' => $team->updated_at->toISOString(),
-                ];
-            })->toArray() : [],
+            'organizations' => $user
+                ? $user->allTeams()->map(fn ($team) => $this->organizationPayload($team))->values()->all()
+                : [],
 
             'activeTimer' => fn () => $this->getActiveTimer($request),
+        ];
+    }
+
+    /**
+     * Serialize a team for the frontend organization switcher.
+     *
+     * @return array<string, mixed>
+     */
+    private function organizationPayload(object $team): array
+    {
+        return [
+            'id' => $team->id,
+            'name' => $team->name,
+            'slug' => $team->slug ?? 'team-'.$team->id,
+            'user_id' => $team->user_id,
+            'created_at' => $team->created_at?->toISOString(),
+            'updated_at' => $team->updated_at?->toISOString(),
         ];
     }
 

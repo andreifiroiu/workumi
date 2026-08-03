@@ -11,8 +11,8 @@ import { router, Link } from '@inertiajs/react';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 
 interface OrganizationSwitcherProps {
-    currentOrganization: Organization;
-    organizations: Organization[];
+    currentOrganization: Organization | null;
+    organizations?: Organization[] | null;
     className?: string;
 }
 
@@ -21,6 +21,8 @@ export function OrganizationSwitcher({
     organizations,
     className,
 }: OrganizationSwitcherProps) {
+    const availableOrganizations = organizations ?? [];
+
     const switchOrganization = (orgId: number) => {
         router.post(
             `/account/teams/${orgId}/switch`,
@@ -32,6 +34,26 @@ export function OrganizationSwitcher({
         );
     };
 
+    // A user can briefly have no current team (mid-onboarding, or after their team was removed).
+    // Render a neutral entry point rather than crashing the sidebar on every page.
+    if (!currentOrganization) {
+        return (
+            <Link
+                href="/account/teams"
+                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-sidebar-accent ${className || ''}`}
+            >
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Plus className="h-4 w-4" />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                    <p className="truncate font-medium text-muted-foreground">
+                        Create organization
+                    </p>
+                </div>
+            </Link>
+        );
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -40,7 +62,9 @@ export function OrganizationSwitcher({
                 >
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                         <span className="text-xs font-semibold">
-                            {currentOrganization.name.substring(0, 2).toUpperCase()}
+                            {currentOrganization.name
+                                .substring(0, 2)
+                                .toUpperCase()}
                         </span>
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -54,7 +78,7 @@ export function OrganizationSwitcher({
             <DropdownMenuContent className="w-64" align="start">
                 <DropdownMenuLabel>Organizations</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {organizations.map((org) => (
+                {availableOrganizations.map((org) => (
                     <DropdownMenuItem
                         key={org.id}
                         onClick={() => switchOrganization(org.id)}

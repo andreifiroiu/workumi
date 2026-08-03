@@ -3,7 +3,6 @@
 namespace App\Http\Responses;
 
 use Illuminate\Http\JsonResponse;
-use Jurager\Teams\Models\Invitation;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,29 +14,14 @@ class RegisterResponse implements RegisterResponseContract
      */
     public function toResponse($request): Response
     {
-        // Check if there's a pending invitation in session
-        $invitationId = session('pending_invitation_id');
+        // CreateNewUser already joined the user to the inviting team when an invitation was pending.
+        $joinedTeam = session()->pull('invitation_joined_team');
 
-        if ($invitationId) {
-            $invitation = Invitation::with(['team', 'role'])->find($invitationId);
+        session()->forget('pending_invitation_id');
 
-            if ($invitation && $invitation->email === $request->user()->email) {
-                // Accept the invitation
-                $invitation->team->inviteAccept($invitation->id);
-
-                // Switch user to the invited team
-                $request->user()->switchTeam($invitation->team);
-
-                // Clear the session
-                session()->forget('pending_invitation_id');
-
-                // Redirect to team settings with success message
-                return redirect()->route('settings.index', ['tab' => 'team'])
-                    ->with('status', "You've been added to {$invitation->team->name}!");
-            }
-
-            // Clear invalid invitation from session
-            session()->forget('pending_invitation_id');
+        if ($joinedTeam && ! $request->wantsJson()) {
+            return redirect()->route('settings.index', ['tab' => 'team'])
+                ->with('status', "You've been added to {$joinedTeam}!");
         }
 
         // Default Fortify behavior

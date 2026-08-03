@@ -10,7 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 
-export default function Register() {
+interface RegisterProps {
+    email?: string | null;
+}
+
+export default function Register({ email }: RegisterProps) {
     return (
         <AuthLayout
             title="Create an account"
@@ -53,6 +57,7 @@ export default function Register() {
                                     tabIndex={2}
                                     autoComplete="email"
                                     name="email"
+                                    defaultValue={email ?? undefined}
                                     placeholder="email@example.com"
                                 />
                                 <InputError message={errors.email} />

@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Teams\AcceptTeamInvitation;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Jurager\Teams\Models\Invitation;
 
 class InvitationAcceptController extends Controller
 {
+    public function __construct(private AcceptTeamInvitation $acceptTeamInvitation) {}
+
     /**
      * Show the invitation accept page.
      */
@@ -63,13 +66,17 @@ class InvitationAcceptController extends Controller
             ]);
         }
 
-        // Accept the invitation using the team's method
-        $invitation->team->inviteAccept($invitation->id);
+        $teamName = $invitation->team->name;
 
-        // Switch to the new team
-        $user->switchTeam($invitation->team);
+        if (! $this->acceptTeamInvitation->accept($user, $invitation)) {
+            return back()->withErrors([
+                'email' => 'We could not add you to this team. Please ask the team owner to send a new invitation.',
+            ]);
+        }
+
+        session()->forget('pending_invitation_id');
 
         return redirect()->route('settings.index', ['tab' => 'team'])
-            ->with('status', "You've been added to {$invitation->team->name}!");
+            ->with('status', "You've been added to {$teamName}!");
     }
 }

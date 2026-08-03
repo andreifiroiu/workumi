@@ -3,7 +3,7 @@ import { LucideIcon } from 'lucide-react';
 import { Organization } from './workumi';
 
 export interface Auth {
-    user: User;
+    user: User | null;
 }
 
 export interface BreadcrumbItem {
@@ -38,7 +38,7 @@ export interface SharedData {
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
-    currentOrganization: Organization;
+    currentOrganization: Organization | null;
     organizations: Organization[];
     locale: string;
     availableLocales: string[];

@@ -15,12 +15,14 @@ interface LoginProps {
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    email?: string | null;
 }
 
 export default function Login({
     status,
     canResetPassword,
     canRegister,
+    email,
 }: LoginProps) {
     return (
         <AuthLayout
@@ -47,6 +49,7 @@ export default function Login({
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
+                                    defaultValue={email ?? undefined}
                                     placeholder="email@example.com"
                                 />
                                 <InputError message={errors.email} />

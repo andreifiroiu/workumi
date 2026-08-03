@@ -2,42 +2,32 @@
 
 namespace App\Http\Responses;
 
+use App\Actions\Teams\AcceptTeamInvitation;
 use Illuminate\Http\JsonResponse;
-use Jurager\Teams\Models\Invitation;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoginResponse implements LoginResponseContract
+class LoginResponse implements LoginResponseContract, TwoFactorLoginResponseContract
 {
+    public function __construct(private AcceptTeamInvitation $acceptTeamInvitation) {}
+
     /**
      * Create an HTTP response that represents the object.
      */
     public function toResponse($request): Response
     {
-        // Check if there's a pending invitation in session
-        $invitationId = session('pending_invitation_id');
+        $invitationId = session()->pull('pending_invitation_id');
+        $user = $request->user();
 
-        if ($invitationId) {
-            $invitation = Invitation::with(['team', 'role'])->find($invitationId);
+        if ($invitationId && $user) {
+            $invitation = $this->acceptTeamInvitation->pendingFor($user->email, $invitationId);
 
-            if ($invitation && $invitation->email === $request->user()->email) {
-                // Accept the invitation
-                $invitation->team->inviteAccept($invitation->id);
-
-                // Switch user to the invited team
-                $request->user()->switchTeam($invitation->team);
-
-                // Clear the session
-                session()->forget('pending_invitation_id');
-
-                // Redirect to team settings with success message
+            if ($invitation && $this->acceptTeamInvitation->accept($user, $invitation)) {
                 return redirect()->route('settings.index', ['tab' => 'team'])
                     ->with('status', "You've been added to {$invitation->team->name}!");
             }
-
-            // Clear invalid invitation from session
-            session()->forget('pending_invitation_id');
         }
 
         // Default Fortify behavior

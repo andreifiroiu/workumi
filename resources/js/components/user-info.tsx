@@ -10,7 +10,7 @@ export function UserInfo({
     showOrganization = false,
 }: {
     user: User;
-    organization?: Organization;
+    organization?: Organization | null;
     showEmail?: boolean;
     showOrganization?: boolean;
 }) {
