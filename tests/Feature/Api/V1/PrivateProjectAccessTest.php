@@ -142,7 +142,7 @@ test('a work order in a private project is hidden from a teammate with no role',
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
@@ -163,14 +163,14 @@ test('being assigned the work order grants access without any project role', fun
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Assigned To Me', 'assigned_to_id' => $assignee->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
     $other = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Not Mine', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
@@ -187,7 +187,7 @@ test('tasks and deliverables follow their work order', function () {
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
@@ -216,7 +216,7 @@ test('a task assignee sees their own task inside an otherwise hidden work order'
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
@@ -236,7 +236,7 @@ test('MCP applies the same work order and task rules', function () {
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->private->id,
         'title' => 'Hidden Work Order', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 
@@ -259,7 +259,7 @@ test('work orders in a non-private project remain visible to the whole team', fu
     $workOrder = WorkOrder::factory()->create([
         'team_id' => $this->team->id, 'project_id' => $this->open->id,
         'title' => 'Open Work Order', 'assigned_to_id' => $this->owner->id,
-        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id,
+        'created_by_id' => $this->owner->id, 'accountable_id' => $this->owner->id, 'status' => 'active',
         'consulted_ids' => [], 'informed_ids' => [],
     ]);
 

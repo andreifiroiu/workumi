@@ -31,6 +31,7 @@ class WorkOrdersMissingAssigneeFlow extends AbstractReviewFlow
     public function query(Team $team, User $user): Builder
     {
         $query = WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNull('assigned_to_id')
             ->whereNotIn('status', self::EXCLUDED_STATUSES)
             ->notBacklog()

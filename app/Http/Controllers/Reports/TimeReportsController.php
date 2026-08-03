@@ -67,6 +67,7 @@ class TimeReportsController extends Controller
 
         $query = Project::query()
             ->forTeam($team->id)
+            ->visibleTo($user->id)
             ->with([
                 'workOrders' => function ($q) {
                     $q->with([
@@ -146,6 +147,7 @@ class TimeReportsController extends Controller
 
         $workOrders = WorkOrder::query()
             ->forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNotNull('estimated_hours')
             ->where('estimated_hours', '>', 0)
             ->select('id', 'title', 'estimated_hours', 'actual_hours')

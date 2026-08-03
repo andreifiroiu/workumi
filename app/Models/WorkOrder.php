@@ -269,6 +269,34 @@ class WorkOrder extends Model
     }
 
     /**
+     * Check if this work order is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        if ($this->project?->isVisibleTo($userId)) {
+            return true;
+        }
+
+        return $this->hasUserInAnyRole($userId);
+    }
+
+    /**
+     * Whether the user sits in any of this work order's people fields.
+     */
+    public function hasUserInAnyRole(int $userId): bool
+    {
+        return $this->assigned_to_id === $userId
+            || $this->created_by_id === $userId
+            || $this->accountable_id === $userId
+            || $this->responsible_id === $userId
+            || $this->reviewer_id === $userId
+            || (is_array($this->consulted_ids) && in_array($userId, $this->consulted_ids, true))
+            || (is_array($this->informed_ids) && in_array($userId, $this->informed_ids, true));
+    }
+
+    /**
      * Every field that puts a user on this work order. Broader than
      * scopeWhereUserHasRaciRole, which is about RACI reporting rather than access.
      */

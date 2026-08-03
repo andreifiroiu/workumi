@@ -45,6 +45,7 @@ class PlaybooksController extends Controller
 
         // Fetch work orders for context (simplified for reference)
         $workOrders = WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->with('project')
             ->get()
             ->map(function ($wo) {
