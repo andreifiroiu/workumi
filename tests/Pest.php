@@ -81,3 +81,19 @@ function createTeamUser(Team $team, string $roleCode = 'member', array $attribut
 
     return $user->refresh();
 }
+
+/**
+ * Create (or attach) a genuine member of the given team, with that team set as their current one.
+ *
+ * Users made with User::factory() alone are on no team at all, which most team-scoped endpoints
+ * now reject.
+ */
+function addTeamMember(Team $team, ?User $user = null, string $roleCode = 'member'): User
+{
+    $user ??= User::factory()->create();
+
+    $team->users()->attach($user, ['role_id' => $team->getRole($roleCode)->id]);
+    $user->forceFill(['current_team_id' => $team->id])->save();
+
+    return $user->refresh();
+}

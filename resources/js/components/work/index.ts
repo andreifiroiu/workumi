@@ -11,6 +11,8 @@ export { MyWorkView } from './my-work-view';
 export { PriorityBadge } from './priority-badge';
 export { ProgressBar } from './progress-bar';
 export { ProjectTeamSection } from './project-team-section';
+export { AddProjectMemberDialog } from './add-project-member-dialog';
+export { RemoveProjectMemberDialog } from './remove-project-member-dialog';
 export { ProjectTreeItem } from './project-tree-item';
 export { QuickAddBar } from './quick-add-bar';
 export { RoleBadge } from './role-badge';

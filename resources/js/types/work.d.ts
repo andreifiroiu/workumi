@@ -383,6 +383,8 @@ export interface ProjectDetailProps {
     messages: Message[];
     parties: Array<{ id: string; name: string }>;
     teamMembers: ProjectTeamMember[];
+    assignableUsers: ProjectAssignableUser[];
+    canManageMembers: boolean;
 }
 
 export interface WorkOrderDetailProps {
@@ -522,7 +524,15 @@ export interface TimeTrackerProps {
 // =============================================================================
 
 export interface TeamMemberRole {
-    role: 'owner' | 'accountable' | 'responsible' | 'assigned' | 'reviewer' | 'consulted' | 'informed';
+    role:
+        | 'owner'
+        | 'accountable'
+        | 'responsible'
+        | 'assigned'
+        | 'reviewer'
+        | 'consulted'
+        | 'informed'
+        | 'member';
     scope: 'project' | 'work_order' | 'task';
     scopeTitle: string;
 }
@@ -538,4 +548,18 @@ export interface ProjectTeamMember {
         tasksCount: number;
         totalEstimatedHours: number;
     };
+    /** Has an explicit membership row granting access, independent of any RACI role. */
+    isExplicitMember: boolean;
+    /** Whether the membership can be revoked from the project page. */
+    canRemove: boolean;
+}
+
+/** A team member who can be granted access to the project. */
+export interface ProjectAssignableUser {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+    /** Already reaches the project, via ownership, a RACI role or an existing membership. */
+    hasAccess: boolean;
 }

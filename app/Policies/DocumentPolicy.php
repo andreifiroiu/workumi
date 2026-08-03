@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\Deliverable;
 use App\Models\Document;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\WorkOrder;
 use App\Policies\Concerns\ChecksTeamAccess;
 
 class DocumentPolicy
@@ -118,8 +121,17 @@ class DocumentPolicy
             return true;
         }
 
-        // For other entity types (WorkOrder, Task, Deliverable), check team membership
-        // These entities have their own team_id property
+        // Work orders, tasks and deliverables carry their own visibility, inherited from the
+        // project that contains them. A bare team check here would hand back the documents of
+        // work the user has just been refused.
+        if ($documentable instanceof WorkOrder
+            || $documentable instanceof Task
+            || $documentable instanceof Deliverable
+        ) {
+            return $user->currentTeam?->id === $documentable->team_id
+                && $documentable->isVisibleTo($user->id);
+        }
+
         if (property_exists($documentable, 'team_id')) {
             return $user->currentTeam?->id === $documentable->team_id;
         }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Work\DeliverableVersionController;
 use App\Http\Controllers\Work\MessageController;
 use App\Http\Controllers\Work\PartyController;
 use App\Http\Controllers\Work\ProjectController;
+use App\Http\Controllers\Work\ProjectMemberController;
 use App\Http\Controllers\Work\TaskController;
 use App\Http\Controllers\Work\TaskTransitionController;
 use App\Http\Controllers\Work\TimeEntryController;
@@ -36,6 +37,11 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::post('/projects/{project}/files', [ProjectController::class, 'uploadFile'])->name('projects.files.upload');
     Route::delete('/projects/{project}/files/{document}', [ProjectController::class, 'deleteFile'])->name('projects.files.delete');
     Route::patch('/projects/{project}/raci', [ProjectRaciController::class, 'update'])->name('projects.raci');
+
+    // Explicit project members (access grants independent of RACI)
+    Route::post('/projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
+    Route::delete('/projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+
     Route::get('/projects/{project}/insights', [PMCopilotController::class, 'getProjectInsights'])->name('projects.insights');
 
     // Project-specific rate overrides

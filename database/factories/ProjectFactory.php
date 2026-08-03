@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Project>
+ * @extends Factory<Project>
  */
 class ProjectFactory extends Factory
 {
@@ -64,6 +64,13 @@ class ProjectFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => ProjectStatus::OnHold,
+        ]);
+    }
+
+    public function private(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_private' => true,
         ]);
     }
 }
