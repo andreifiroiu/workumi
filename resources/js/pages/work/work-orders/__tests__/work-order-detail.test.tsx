@@ -180,7 +180,10 @@ vi.mock('@/components/ui/status-badge', () => ({
 /**
  * Mock workflow components
  */
-vi.mock('@/components/workflow', () => ({
+vi.mock('@/components/workflow', async () => ({
+    // The assignment confirmation dialog and its helpers stay real so the
+    // page's RACI confirmation wiring is exercised, not stubbed out.
+    ...(await import('@/components/workflow/assignment-confirmation-dialog')),
     TransitionButton: ({ currentStatus, allowedTransitions, onTransition, isLoading }: {
         currentStatus: string;
         allowedTransitions: Array<{ value: string; label: string }>;
@@ -232,7 +235,7 @@ vi.mock('@/components/workflow', () => ({
             ))}
         </div>
     ),
-    RaciSelector: ({ value, users, disabled }: {
+    RaciSelector: ({ value, users, disabled, onConfirmationRequired }: {
         value: { responsible_id: number | null; accountable_id: number | null; consulted_ids: number[]; informed_ids: number[] };
         onChange: (v: typeof value) => void;
         users: Array<{ id: number; name: string }>;
@@ -252,10 +255,17 @@ vi.mock('@/components/workflow', () => ({
                 <button data-testid="raci-responsible-trigger" disabled={disabled}>
                     {users.find((u) => u.id === value.responsible_id)?.name || 'Select'}
                 </button>
+                <button
+                    data-testid="raci-responsible-clear"
+                    onClick={() =>
+                        onConfirmationRequired?.('responsible', value.responsible_id, null)
+                    }
+                >
+                    Clear responsible
+                </button>
             </div>
         </div>
     ),
-    AssignmentConfirmationDialog: () => null,
 }));
 
 /**
@@ -402,6 +412,74 @@ describe('WorkOrderDetail - RACI Selector', () => {
         const accountableTrigger = screen.getByTestId('raci-accountable-trigger');
         expect(accountableTrigger).toBeInTheDocument();
         expect(accountableTrigger).not.toBeDisabled();
+    });
+
+    it('opens the confirmation dialog when clearing an existing assignment', async () => {
+        const user = userEvent.setup();
+
+        render(
+            <WorkOrderDetail
+                workOrder={mockWorkOrder}
+                tasks={mockTasks}
+                deliverables={mockDeliverables}
+                documents={[]}
+                communicationThread={null}
+                messages={[]}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                raciValue={mockRaciValue}
+            />
+        );
+
+        await user.click(screen.getByTestId('raci-responsible-clear'));
+
+        expect(
+            await screen.findByRole('heading', { name: /remove responsible/i })
+        ).toBeInTheDocument();
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
+
+        // Close it: a Radix modal left open leaks pointer-events on <body>.
+        await user.click(screen.getByRole('button', { name: /cancel/i }));
+    });
+
+    it('sends a null assignment when clearing is confirmed', async () => {
+        const user = userEvent.setup();
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ confirmation_required: false }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        render(
+            <WorkOrderDetail
+                workOrder={mockWorkOrder}
+                tasks={mockTasks}
+                deliverables={mockDeliverables}
+                documents={[]}
+                communicationThread={null}
+                messages={[]}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                raciValue={mockRaciValue}
+            />
+        );
+
+        await user.click(screen.getByTestId('raci-responsible-clear'));
+        await user.click(await screen.findByRole('button', { name: /^confirm$/i }));
+
+        const raciCall = fetchMock.mock.calls.find(([url]) =>
+            String(url).endsWith('/raci')
+        );
+        expect(raciCall).toBeDefined();
+        expect(JSON.parse(raciCall![1].body)).toMatchObject({
+            accountable_id: 1,
+            responsible_id: null,
+            confirmed: true,
+        });
+
+        vi.unstubAllGlobals();
     });
 });
 

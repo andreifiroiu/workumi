@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -15,10 +15,10 @@ export interface AssignmentUser {
     avatar?: string;
 }
 
-/** Assignment change information */
+/** Assignment change information. A null user represents "no one assigned". */
 export interface AssignmentChange {
     role: AssignmentRole;
-    user: AssignmentUser;
+    user: AssignmentUser | null;
 }
 
 export interface AssignmentConfirmationDialogProps {
@@ -37,6 +37,32 @@ export interface AssignmentConfirmationDialogProps {
 }
 
 /**
+ * Resolves a RACI role and user id into the shape the dialog renders.
+ *
+ * A null userId means the slot is unassigned, which is a change worth
+ * confirming just like a replacement — it resolves to a null user rather than
+ * failing to resolve.
+ *
+ * Returns null only when the id cannot be matched to a known user.
+ */
+function resolveAssignmentChange(
+    role: string,
+    userId: number | null,
+    users: AssignmentUser[],
+): AssignmentChange | null {
+    const roleLabel = (role.charAt(0).toUpperCase() +
+        role.slice(1)) as AssignmentRole;
+
+    if (userId === null) {
+        return { role: roleLabel, user: null };
+    }
+
+    const user = users.find((u) => u.id === userId);
+
+    return user ? { role: roleLabel, user } : null;
+}
+
+/**
  * Gets initials from a user name.
  */
 function getInitials(name: string): string {
@@ -49,9 +75,23 @@ function getInitials(name: string): string {
 }
 
 /**
- * User display component with avatar and name.
+ * User display component with avatar and name. Renders an "Unassigned"
+ * placeholder when there is no user for the slot.
  */
-function UserDisplay({ user }: { user: AssignmentUser }) {
+function UserDisplay({ user }: { user: AssignmentUser | null }) {
+    if (!user) {
+        return (
+            <div className="flex items-center gap-3">
+                <Avatar className="size-10">
+                    <AvatarFallback className="text-muted-foreground text-sm">
+                        <UserX className="size-4" />
+                    </AvatarFallback>
+                </Avatar>
+                <span className="text-muted-foreground font-medium">Unassigned</span>
+            </div>
+        );
+    }
+
     return (
         <div className="flex items-center gap-3">
             <Avatar className="size-10">
@@ -77,6 +117,8 @@ function AssignmentConfirmationDialog({
     onCancel,
     isLoading = false,
 }: AssignmentConfirmationDialogProps) {
+    const isRemoval = newAssignment.user === null;
+
     return (
         <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => !open && onCancel()}>
             <DialogPrimitive.Portal>
@@ -116,7 +158,8 @@ function AssignmentConfirmationDialog({
                                 id="assignment-confirmation-title"
                                 className="text-lg font-semibold leading-none"
                             >
-                                Change {currentAssignment.role}?
+                                {isRemoval ? 'Remove' : 'Change'}{' '}
+                                {currentAssignment.role}?
                             </DialogPrimitive.Title>
                         </div>
 
@@ -125,7 +168,7 @@ function AssignmentConfirmationDialog({
                             id="assignment-confirmation-description"
                             className="text-muted-foreground text-sm"
                         >
-                            This will replace the current{' '}
+                            This will {isRemoval ? 'clear' : 'replace'} the current{' '}
                             <span className="font-medium text-foreground">
                                 {currentAssignment.role}
                             </span>{' '}
@@ -167,4 +210,4 @@ function AssignmentConfirmationDialog({
     );
 }
 
-export { AssignmentConfirmationDialog };
+export { AssignmentConfirmationDialog, resolveAssignmentChange };

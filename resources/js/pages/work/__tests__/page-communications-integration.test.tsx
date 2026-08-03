@@ -72,7 +72,8 @@ vi.mock('@/components/communications', () => ({
 }));
 
 // Mock workflow components
-vi.mock('@/components/workflow', () => ({
+vi.mock('@/components/workflow', async () => ({
+    ...(await import('@/components/workflow/assignment-confirmation-dialog')),
     TransitionButton: () => <button>Transition</button>,
     TransitionDialog: () => null,
     TransitionHistory: () => <div>History</div>,

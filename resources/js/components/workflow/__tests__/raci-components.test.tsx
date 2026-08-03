@@ -2,7 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { RaciSelector, type RaciValue, type RaciUser } from '../raci-selector';
-import { AssignmentConfirmationDialog } from '../assignment-confirmation-dialog';
+import {
+    AssignmentConfirmationDialog,
+    resolveAssignmentChange,
+} from '../assignment-confirmation-dialog';
+
+// Radix Select relies on these in jsdom.
+window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 const mockUsers: RaciUser[] = [
     { id: 1, name: 'Alice Johnson', avatar: undefined },
@@ -80,6 +88,81 @@ describe('RaciSelector', () => {
             })
         );
     });
+
+    it('requests confirmation with a null user when selecting None over an existing assignment', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        const onConfirmationRequired = vi.fn();
+        const initialValue: RaciValue = {
+            responsible_id: 2,
+            accountable_id: 1,
+            consulted_ids: [],
+            informed_ids: [],
+        };
+
+        render(
+            <RaciSelector
+                value={initialValue}
+                onChange={onChange}
+                users={mockUsers}
+                entityType="work_order"
+                onConfirmationRequired={onConfirmationRequired}
+            />
+        );
+
+        await user.click(screen.getByTestId('raci-responsible-trigger'));
+        await user.click(await screen.findByRole('option', { name: /none/i }));
+
+        expect(onConfirmationRequired).toHaveBeenCalledWith('responsible', 2, null);
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('clears the assignment directly when no confirmation handler is provided', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        const initialValue: RaciValue = {
+            responsible_id: 2,
+            accountable_id: 1,
+            consulted_ids: [],
+            informed_ids: [],
+        };
+
+        render(
+            <RaciSelector
+                value={initialValue}
+                onChange={onChange}
+                users={mockUsers}
+                entityType="work_order"
+            />
+        );
+
+        await user.click(screen.getByTestId('raci-responsible-trigger'));
+        await user.click(await screen.findByRole('option', { name: /none/i }));
+
+        expect(onChange).toHaveBeenCalledWith(
+            expect.objectContaining({ responsible_id: null })
+        );
+    });
+});
+
+describe('resolveAssignmentChange', () => {
+    it('resolves a null user id to an unassigned slot', () => {
+        expect(resolveAssignmentChange('responsible', null, mockUsers)).toEqual({
+            role: 'Responsible',
+            user: null,
+        });
+    });
+
+    it('resolves a known user id to that user', () => {
+        expect(resolveAssignmentChange('accountable', 2, mockUsers)).toEqual({
+            role: 'Accountable',
+            user: mockUsers[1],
+        });
+    });
+
+    it('returns null for an unknown user id', () => {
+        expect(resolveAssignmentChange('responsible', 999, mockUsers)).toBeNull();
+    });
 });
 
 describe('AssignmentConfirmationDialog', () => {
@@ -150,5 +233,33 @@ describe('AssignmentConfirmationDialog', () => {
 
         expect(onCancel).toHaveBeenCalled();
         expect(onConfirm).not.toHaveBeenCalled();
+    });
+
+    it('renders a removal when the new assignment has no user', async () => {
+        const user = userEvent.setup();
+        const onConfirm = vi.fn();
+
+        render(
+            <AssignmentConfirmationDialog
+                isOpen={true}
+                currentAssignment={{
+                    role: 'Responsible' as const,
+                    user: { id: 1, name: 'Alice Johnson' },
+                }}
+                newAssignment={{ role: 'Responsible' as const, user: null }}
+                onConfirm={onConfirm}
+                onCancel={vi.fn()}
+            />
+        );
+
+        expect(
+            screen.getByRole('heading', { name: /remove responsible/i })
+        ).toBeInTheDocument();
+        expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: /confirm/i }));
+
+        expect(onConfirm).toHaveBeenCalled();
     });
 });
