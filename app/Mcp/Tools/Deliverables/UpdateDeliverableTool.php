@@ -35,7 +35,9 @@ class UpdateDeliverableTool extends Tool
             'acceptance_criteria.*' => ['string'],
         ]);
 
-        $deliverable = Deliverable::forTeams($access->teamIds)->findOrFail($validated['id']);
+        $deliverable = Deliverable::forTeams($access->teamIds)
+            ->inProjectsVisibleTo($access->userId)
+            ->findOrFail($validated['id']);
 
         $deliverable->update(collect($validated)->except('id')->toArray());
 

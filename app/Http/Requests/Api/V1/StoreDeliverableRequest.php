@@ -27,7 +27,7 @@ class StoreDeliverableRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'work_order_id' => ['required', 'integer', Rule::exists('work_orders', 'id')->whereIn('team_id', $this->teamAccess()->teamIds)],
+            'work_order_id' => ['required', 'integer', $this->visibleWorkOrderRule()],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['nullable', 'string', Rule::in(['document', 'design', 'report', 'code', 'other'])],
@@ -45,6 +45,26 @@ class StoreDeliverableRequest extends FormRequest
     public function workOrder(): WorkOrder
     {
         return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)
+            ->inProjectsVisibleTo($this->teamAccess()->userId)
             ->findOrFail($this->input('work_order_id'));
+    }
+
+    /**
+     * The parent work order must sit in a project the caller can see, so a
+     * private project cannot be written into sideways. Refused as a 422 like any
+     * other bad reference rather than passing validation and then 404ing.
+     */
+    private function visibleWorkOrderRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $exists = WorkOrder::forTeams($this->teamAccess()->teamIds)
+                ->inProjectsVisibleTo($this->teamAccess()->userId)
+                ->whereKey($value)
+                ->exists();
+
+            if (! $exists) {
+                $fail('The selected work order is invalid.');
+            }
+        };
     }
 }

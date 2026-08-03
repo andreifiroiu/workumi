@@ -29,6 +29,7 @@ class ListDeliverablesTool extends Tool
         ]);
 
         $query = Deliverable::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->inProjectsVisibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title', 'project:id,name'])
             ->orderBy('created_at', 'desc');
 

@@ -28,7 +28,7 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'work_order_id' => ['required', 'integer', Rule::exists('work_orders', 'id')->whereIn('team_id', $this->teamAccess()->teamIds)],
+            'work_order_id' => ['required', 'integer', $this->visibleWorkOrderRule()],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', 'string', Rule::in(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested'])],
@@ -46,19 +46,41 @@ class StoreTaskRequest extends FormRequest
     public function workOrder(): WorkOrder
     {
         return $this->workOrder ??= WorkOrder::forTeams($this->teamAccess()->teamIds)
+            ->inProjectsVisibleTo($this->teamAccess()->userId)
             ->findOrFail($this->input('work_order_id'));
     }
 
     private function assigneeRule(): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail): void {
-            $workOrder = WorkOrder::forTeams($this->teamAccess()->teamIds)->find($this->input('work_order_id'));
+            $workOrder = WorkOrder::forTeams($this->teamAccess()->teamIds)
+                ->inProjectsVisibleTo($this->teamAccess()->userId)
+                ->find($this->input('work_order_id'));
 
             if ($workOrder === null) {
                 return;
             }
 
             TeamMembership::rule($workOrder->team_id)($attribute, $value, $fail);
+        };
+    }
+
+    /**
+     * The parent work order must sit in a project the caller can see, so a
+     * private project cannot be written into sideways. Refused as a 422 like any
+     * other bad reference rather than passing validation and then 404ing.
+     */
+    private function visibleWorkOrderRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail): void {
+            $exists = WorkOrder::forTeams($this->teamAccess()->teamIds)
+                ->inProjectsVisibleTo($this->teamAccess()->userId)
+                ->whereKey($value)
+                ->exists();
+
+            if (! $exists) {
+                $fail('The selected work order is invalid.');
+            }
         };
     }
 }

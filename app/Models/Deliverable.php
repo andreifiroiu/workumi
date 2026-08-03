@@ -102,4 +102,20 @@ class Deliverable extends Model
     {
         return $query->whereIn('team_id', $teamIds);
     }
+
+    /**
+     * Restrict to records whose project the given user is allowed to see.
+     *
+     * Team membership alone is not enough: a private project is limited to its
+     * owner, its RACI holders and its explicit members, and everything inside it
+     * inherits that. withTrashed keeps a soft-deleted project's privacy applied
+     * rather than dropping the record from the result entirely.
+     */
+    public function scopeInProjectsVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->whereHas(
+            'project',
+            fn (Builder $project) => $project->withTrashed()->visibleTo($userId)
+        );
+    }
 }

@@ -21,7 +21,7 @@ class GetTaskTool extends Tool
             'id' => ['required', 'integer'],
         ]);
 
-        $task = Task::forTeams($access->teamIds)
+        $task = Task::forTeams($access->teamIds)->inProjectsVisibleTo($access->userId)
             ->with([
                 'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                 'workOrder:id,title,project_id',

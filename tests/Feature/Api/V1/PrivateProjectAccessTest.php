@@ -9,10 +9,14 @@ use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
- * Private projects are limited to the people with a RACI role on them, exactly
- * as Project::scopeVisibleTo enforces for the web app. Work orders, tasks,
- * deliverables and parties carry no such rule in the app, so they must stay
- * team-scoped only here too.
+ * Private projects are limited to their owner, the people with a RACI role on
+ * them and their explicit members, exactly as Project::scopeVisibleTo enforces
+ * for the web app.
+ *
+ * Work orders, tasks and deliverables inherit that privacy: WorkOrderPolicy and
+ * TaskPolicy consult the parent project, so these surfaces must too rather than
+ * offering a more permissive way in. Parties hang off the team, not a project,
+ * so they stay team-scoped.
  */
 beforeEach(function () {
     $this->owner = User::factory()->create();
@@ -135,14 +139,20 @@ test('MCP: someone with a RACI role on the private project still reaches it', fu
     expect($names)->toContain('Secret Project');
 });
 
-test('work orders in a private project stay team-scoped, matching the app', function () {
-    // The app applies no visibility rule to work orders (WorkOrderPolicy is
-    // team-only and WorkController fetches them with forTeam alone), so the API
-    // must not invent one.
+test('work orders in a private project inherit its privacy, matching the app', function () {
+    // WorkOrderPolicy now consults the parent project's privacy, so the API has
+    // to as well - it must never be more permissive than the app it fronts.
     $workOrder = as_token($this->ownerToken)->postJson('/api/v1/work-orders', [
         'project_id' => $this->private->id,
         'title' => 'Inside A Private Project',
     ])->json('data.id');
+
+    as_token($this->outsiderToken)
+        ->getJson('/api/v1/work-orders/'.$workOrder)
+        ->assertNotFound();
+
+    // An explicit member of the project reaches it, just like on the web.
+    $this->private->members()->attach($this->outsider, ['added_by_id' => $this->owner->id]);
 
     as_token($this->outsiderToken)
         ->getJson('/api/v1/work-orders/'.$workOrder)

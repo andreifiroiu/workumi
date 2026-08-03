@@ -34,6 +34,7 @@ class WorkOrderController extends Controller
         ]);
 
         $query = WorkOrder::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->inProjectsVisibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'project:id,name', 'assignedTo:id,name'])
             ->orderBy('created_at', 'desc');
 
@@ -61,7 +62,7 @@ class WorkOrderController extends Controller
     public function show(TeamAccess $access, int $workOrder): WorkOrderResource
     {
         return new WorkOrderResource(
-            WorkOrder::forTeams($access->teamIds)
+            WorkOrder::forTeams($access->teamIds)->inProjectsVisibleTo($access->userId)
                 ->with([
                     'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                     'project:id,name',

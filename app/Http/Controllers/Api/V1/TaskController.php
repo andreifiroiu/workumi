@@ -35,6 +35,7 @@ class TaskController extends Controller
         ]);
 
         $query = Task::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->inProjectsVisibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'assignedTo:id,name', 'workOrder:id,title,project_id'])
             ->ordered()
             ->orderBy('id');
@@ -67,7 +68,7 @@ class TaskController extends Controller
     public function show(TeamAccess $access, int $task): TaskResource
     {
         return new TaskResource(
-            Task::forTeams($access->teamIds)
+            Task::forTeams($access->teamIds)->inProjectsVisibleTo($access->userId)
                 ->with([
                     'team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']),
                     'workOrder:id,title,project_id',

@@ -30,6 +30,7 @@ class ListWorkOrdersTool extends Tool
         ]);
 
         $query = WorkOrder::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))
+            ->inProjectsVisibleTo($access->userId)
             ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'project:id,name', 'assignedTo:id,name'])
             ->orderBy('created_at', 'desc');
 
