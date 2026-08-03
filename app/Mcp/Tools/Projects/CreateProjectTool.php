@@ -29,6 +29,8 @@ class CreateProjectTool extends Tool
 
         $teamId = $access->resolve(isset($identified['team_id']) ? (int) $identified['team_id'] : null);
 
+        $this->authorizeTeamWrite($request, $teamId);
+
         $validated = $request->validate([
             'team_id' => ['nullable', 'integer'],
             'name' => ['required', 'string', 'max:255'],

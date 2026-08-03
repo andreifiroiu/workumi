@@ -30,6 +30,8 @@ class CreateDeliverableTool extends Tool
 
         $workOrder = WorkOrder::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['work_order_id']);
 
+        $this->authorizeTeamWrite($request, (int) $workOrder->team_id);
+
         $validated = $request->validate([
             'work_order_id' => ['required', 'integer'],
             'title' => ['required', 'string', 'max:255'],

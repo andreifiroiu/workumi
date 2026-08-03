@@ -37,6 +37,8 @@ class UpdateDeliverableTool extends Tool
 
         $deliverable = Deliverable::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($validated['id']);
 
+        $this->authorizeTeamWrite($request, (int) $deliverable->team_id);
+
         $deliverable->update(collect($validated)->except('id')->toArray());
 
         return Response::json(
