@@ -46,5 +46,11 @@ jobs:
       - name: Generate Application Key
         run: php artisan key:generate
 
+      # Passport signs its tokens with an RSA keypair kept in storage/, which is
+      # gitignored and so never present in a fresh checkout. The pair is ephemeral:
+      # it only signs tokens that live and die inside this run.
+      - name: Generate Passport Keys
+        run: php artisan passport:keys --force
+
       - name: Tests
         run: ./vendor/bin/pest
