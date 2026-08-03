@@ -52,6 +52,7 @@ import { TaskKanbanBoard } from '@/components/work/task-kanban';
 import {
     AssignmentConfirmationDialog,
     RaciSelector,
+    resolveAssignmentChange,
     TransitionButton,
     TransitionDialog,
     TransitionHistory,
@@ -1126,7 +1127,11 @@ export default function WorkOrderDetail({
                             'X-XSRF-TOKEN': getCsrfToken(),
                         },
                         body: JSON.stringify({
-                            accountable_id: newValue.accountable_id,
+                            // accountable_id is required server-side, so omit it
+                            // rather than sending null when nobody is assigned
+                            ...(newValue.accountable_id !== null && {
+                                accountable_id: newValue.accountable_id,
+                            }),
                             responsible_id: newValue.responsible_id,
                             consulted_ids: newValue.consulted_ids,
                             informed_ids: newValue.informed_ids,
@@ -1550,23 +1555,23 @@ export default function WorkOrderDetail({
     );
 
     // Helper functions for assignment confirmation dialog
-    const getCurrentAssignmentForDialog = (): AssignmentChange | null => {
-        if (!pendingAssignmentChange) return null;
-        const { role, currentUserId } = pendingAssignmentChange;
-        const user = raciUsers.find((u) => u.id === currentUserId);
-        if (!user) return null;
-        const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-        return { role: roleLabel as AssignmentChange['role'], user };
-    };
+    const getCurrentAssignmentForDialog = (): AssignmentChange | null =>
+        pendingAssignmentChange
+            ? resolveAssignmentChange(
+                  pendingAssignmentChange.role,
+                  pendingAssignmentChange.currentUserId,
+                  raciUsers,
+              )
+            : null;
 
-    const getNewAssignmentForDialog = (): AssignmentChange | null => {
-        if (!pendingAssignmentChange) return null;
-        const { role, newUserId } = pendingAssignmentChange;
-        const user = raciUsers.find((u) => u.id === newUserId);
-        if (!user) return null;
-        const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-        return { role: roleLabel as AssignmentChange['role'], user };
-    };
+    const getNewAssignmentForDialog = (): AssignmentChange | null =>
+        pendingAssignmentChange
+            ? resolveAssignmentChange(
+                  pendingAssignmentChange.role,
+                  pendingAssignmentChange.newUserId,
+                  raciUsers,
+              )
+            : null;
 
     const nonArchivedTasks = tasks.filter((t) => t.status !== 'archived');
     const completedTasks = nonArchivedTasks.filter(

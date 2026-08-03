@@ -17,6 +17,7 @@ vi.mock('@inertiajs/react', () => ({
     ),
     router: {
         post: vi.fn(),
+        patch: vi.fn(),
     },
 }));
 
@@ -460,7 +461,7 @@ describe('My Work Integration Tests', () => {
     });
 
     describe('Subtab preference persistence', () => {
-        it('persists subtab selection via router.post', () => {
+        it('persists subtab selection via router.patch', () => {
             render(
                 <MyWorkView
                     workOrders={mockWorkOrders}
