@@ -113,4 +113,14 @@ class Deliverable extends Model
     {
         return $query->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId));
     }
+
+    /**
+     * Check if this deliverable is visible to a specific user.
+     *
+     * The PHP counterpart of scopeVisibleTo, for authorizing a single record.
+     */
+    public function isVisibleTo(int $userId): bool
+    {
+        return (bool) $this->workOrder?->isVisibleTo($userId);
+    }
 }

@@ -156,6 +156,8 @@ class WorkOrderListController extends Controller
 
         $workOrder = WorkOrder::findOrFail($validated['workOrderId']);
 
+        $this->authorize('update', $workOrder);
+
         // Verify work order belongs to same project
         if ($workOrder->project_id !== $workOrderList->project_id) {
             abort(403);
