@@ -35,6 +35,7 @@ class WorkOrdersOverdueFlow extends AbstractReviewFlow
     public function query(Team $team, User $user): Builder
     {
         $query = WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<', Carbon::today())
             ->whereNotIn('status', self::EXCLUDED_STATUSES)

@@ -46,9 +46,9 @@ class WorkController extends Controller
 
         $props = [
             'projects' => $this->getProjects($team, $user),
-            'workOrders' => $this->getWorkOrders($team),
-            'tasks' => $this->getTasks($team),
-            'deliverables' => $this->getDeliverables($team),
+            'workOrders' => $this->getWorkOrders($team, $user),
+            'tasks' => $this->getTasks($team, $user),
+            'deliverables' => $this->getDeliverables($team, $user),
             'parties' => $this->getParties($team),
             'teamMembers' => $this->getTeamMembers($team),
             'communicationThreads' => $this->getCommunicationThreads($team),
@@ -312,9 +312,10 @@ class WorkController extends Controller
             ->all();
     }
 
-    private function getWorkOrders(Team $team): array
+    private function getWorkOrders(Team $team, User $user): array
     {
         return WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->notArchived()
             ->notDelivered()
             ->notBacklog()
@@ -348,9 +349,10 @@ class WorkController extends Controller
             ->all();
     }
 
-    private function getTasks(Team $team): array
+    private function getTasks(Team $team, User $user): array
     {
         return Task::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Cancelled, TaskStatus::Archived])
             ->with(['workOrder', 'project', 'assignedTo'])
             ->orderBy('due_date')
@@ -376,9 +378,10 @@ class WorkController extends Controller
             ->all();
     }
 
-    private function getDeliverables(Team $team): array
+    private function getDeliverables(Team $team, User $user): array
     {
         return Deliverable::forTeam($team->id)
+            ->visibleTo($user->id)
             ->with(['workOrder', 'project'])
             ->orderBy('created_date', 'desc')
             ->get()

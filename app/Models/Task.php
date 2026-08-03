@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BlockerReason;
 use App\Enums\TaskStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -148,9 +149,35 @@ class Task extends Model
         return $this->morphOne(CommunicationThread::class, 'threadable');
     }
 
-    public function scopeForTeam($query, int $teamId)
+    public function scopeForTeam(Builder $query, int $teamId): Builder
     {
         return $query->where('team_id', $teamId);
+    }
+
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
+    }
+
+    /**
+     * Scope to filter tasks visible to a specific user.
+     *
+     * A task follows its work order, so a task inside a private project is
+     * hidden unless the user can see that work order — or is on the task itself.
+     */
+    public function scopeVisibleTo(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $q) use ($userId) {
+            $q->whereHas('workOrder', fn (Builder $workOrder) => $workOrder->visibleTo($userId))
+                ->orWhere(function (Builder $task) use ($userId) {
+                    $task->where('assigned_to_id', $userId)
+                        ->orWhere('reviewer_id', $userId)
+                        ->orWhere('created_by_id', $userId);
+                });
+        });
     }
 
     public function scopeAssignedTo($query, int $userId)

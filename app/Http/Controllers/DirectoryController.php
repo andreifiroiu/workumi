@@ -96,6 +96,7 @@ class DirectoryController extends Controller
 
         // Fetch projects for linking
         $projects = Project::where('team_id', $team->id)
+            ->visibleTo($user->id)
             ->select('id', 'name', 'party_id')
             ->orderBy('name')
             ->get()

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\Tasks;
 
 use App\Mcp\Concerns\RequiresWriteAbility;
-use App\Mcp\TeamContext;
 use App\Models\Task;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,14 +14,21 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Update an existing task. Only provided fields are updated. Checklist items replace the full list when provided. Returns the updated task.')]
+#[Description('Update an existing task in any team you belong to. Only provided fields are updated. Checklist items replace the full list when provided. Returns the updated task.')]
 class UpdateTaskTool extends Tool
 {
     use RequiresWriteAbility;
 
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $this->authorizeWrite($request);
+
+        $identified = $request->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $task = Task::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
+
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'title' => ['sometimes', 'string', 'max:255'],
@@ -29,7 +36,7 @@ class UpdateTaskTool extends Tool
             'status' => ['sometimes', 'string', Rule::in(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested', 'archived'])],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'estimated_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($context->teamId)],
+            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($task->team_id)],
             'is_blocked' => ['sometimes', 'boolean'],
             'blocker_reason' => ['sometimes', 'nullable', 'string', Rule::in(['waiting_on_external', 'missing_information', 'technical_issue', 'waiting_on_approval'])],
             'blocker_details' => ['sometimes', 'nullable', 'string'],
@@ -38,11 +45,9 @@ class UpdateTaskTool extends Tool
             'checklist_items.*.completed' => ['sometimes', 'boolean'],
         ]);
 
-        $task = Task::forTeam($context->teamId)->findOrFail($validated['id']);
-
         $task->update(collect($validated)->except('id')->toArray());
 
-        $freshTask = $task->fresh()->load(['workOrder:id,title', 'assignedTo:id,name']);
+        $freshTask = $task->fresh()->load(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title', 'assignedTo:id,name']);
         $data = $freshTask->toArray();
         $data['checklist_progress'] = $freshTask->checklist_progress;
 
@@ -58,7 +63,7 @@ class UpdateTaskTool extends Tool
             'status' => $schema->string()->enum(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested', 'archived'])->nullable()->description('New status'),
             'due_date' => $schema->string()->nullable()->description('New due date (YYYY-MM-DD)'),
             'estimated_hours' => $schema->number()->nullable()->description('New estimated hours'),
-            'assigned_to_id' => $schema->integer()->nullable()->description('New assigned user ID'),
+            'assigned_to_id' => $schema->integer()->nullable()->description('New assigned user ID (must belong to the task\'s team)'),
             'is_blocked' => $schema->boolean()->nullable()->description('Whether the task is blocked'),
             'blocker_reason' => $schema->string()->enum(['waiting_on_external', 'missing_information', 'technical_issue', 'waiting_on_approval'])->nullable()->description('Reason for blocker'),
             'blocker_details' => $schema->string()->nullable()->description('Blocker details'),

@@ -36,8 +36,8 @@ class TodayController extends Controller
             'dailySummary' => $this->getDailySummary($team, $user),
             'approvals' => $this->getApprovals($team),
             'tasks' => $this->getTasks($team, $user),
-            'blockers' => $this->getBlockers($team),
-            'upcomingDeadlines' => $this->getUpcomingDeadlines($team),
+            'blockers' => $this->getBlockers($team, $user),
+            'upcomingDeadlines' => $this->getUpcomingDeadlines($team, $user),
             'activities' => $this->getActivities($team),
             'metrics' => $this->getMetrics($team, $user),
             'reviewFlows' => $this->reviewFlows->summaries($team, $user),
@@ -57,6 +57,7 @@ class TodayController extends Controller
             ->count();
 
         $upcomingDeadlines = WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNotIn('status', [WorkOrderStatus::Delivered->value, WorkOrderStatus::Approved->value])
             ->notBacklog()
             ->whereBetween('due_date', [Carbon::today(), Carbon::today()->addDays(3)])
@@ -152,9 +153,10 @@ class TodayController extends Controller
             ->all();
     }
 
-    private function getBlockers(Team $team): array
+    private function getBlockers(Team $team, User $user): array
     {
         return Task::forTeam($team->id)
+            ->visibleTo($user->id)
             ->where('is_blocked', true)
             ->with(['workOrder.project', 'assignedTo'])
             ->orderBy('updated_at', 'desc')
@@ -176,9 +178,10 @@ class TodayController extends Controller
             ->all();
     }
 
-    private function getUpcomingDeadlines(Team $team): array
+    private function getUpcomingDeadlines(Team $team, User $user): array
     {
         return WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNotIn('status', [WorkOrderStatus::Delivered->value, WorkOrderStatus::Approved->value])
             ->notBacklog()
             ->where('due_date', '>=', Carbon::today())

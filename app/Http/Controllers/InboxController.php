@@ -78,13 +78,13 @@ class InboxController extends Controller
         ])->all();
 
         // Get projects and work orders for context
-        $projects = Project::forTeam($team->id)->get()->map(fn ($project) => [
+        $projects = Project::forTeam($team->id)->visibleTo($user->id)->get()->map(fn ($project) => [
             'id' => (string) $project->id,
             'name' => $project->name,
             'description' => $project->description,
         ])->all();
 
-        $workOrders = WorkOrder::forTeam($team->id)->get()->map(fn ($wo) => [
+        $workOrders = WorkOrder::forTeam($team->id)->visibleTo($user->id)->get()->map(fn ($wo) => [
             'id' => (string) $wo->id,
             'title' => $wo->title,
             'projectId' => (string) $wo->project_id,

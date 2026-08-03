@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\WorkOrders;
 
 use App\Mcp\Concerns\RequiresWriteAbility;
-use App\Mcp\TeamContext;
 use App\Models\WorkOrder;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,14 +14,20 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Update an existing work order. Only provided fields are updated. Returns the updated work order.')]
+#[Description('Update an existing work order in any team you belong to. Only provided fields are updated. Returns the updated work order.')]
 class UpdateWorkOrderTool extends Tool
 {
     use RequiresWriteAbility;
 
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $this->authorizeWrite($request);
+
+        $identified = $request->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $workOrder = WorkOrder::forTeams($access->teamIds)->visibleTo($access->userId)->findOrFail($identified['id']);
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],
@@ -31,16 +37,14 @@ class UpdateWorkOrderTool extends Tool
             'priority' => ['sometimes', 'string', Rule::in(['low', 'medium', 'high', 'urgent'])],
             'due_date' => ['sometimes', 'nullable', 'date'],
             'estimated_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($context->teamId)],
+            'assigned_to_id' => ['sometimes', 'nullable', 'integer', $this->teamMemberRule($workOrder->team_id)],
             'acceptance_criteria' => ['sometimes', 'nullable', 'array'],
             'acceptance_criteria.*' => ['string'],
         ]);
 
-        $workOrder = WorkOrder::forTeam($context->teamId)->findOrFail($validated['id']);
-
         $workOrder->update(collect($validated)->except('id')->toArray());
 
-        return Response::json($workOrder->fresh()->load(['project:id,name', 'assignedTo:id,name'])->toArray());
+        return Response::json($workOrder->fresh()->load(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'project:id,name', 'assignedTo:id,name'])->toArray());
     }
 
     public function schema(JsonSchema $schema): array
@@ -53,7 +57,7 @@ class UpdateWorkOrderTool extends Tool
             'priority' => $schema->string()->enum(['low', 'medium', 'high', 'urgent'])->nullable()->description('New priority'),
             'due_date' => $schema->string()->nullable()->description('New due date (YYYY-MM-DD)'),
             'estimated_hours' => $schema->number()->nullable()->description('New estimated hours'),
-            'assigned_to_id' => $schema->integer()->nullable()->description('New assigned user ID'),
+            'assigned_to_id' => $schema->integer()->nullable()->description('New assigned user ID (must belong to the work order\'s team)'),
             'acceptance_criteria' => $schema->array($schema->string())->nullable()->description('Acceptance criteria (replaces existing)'),
         ];
     }

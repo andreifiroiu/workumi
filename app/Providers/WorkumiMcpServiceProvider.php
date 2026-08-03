@@ -6,7 +6,7 @@ namespace App\Providers;
 
 use App\Console\Commands\WorkumiMcpCommand;
 use App\Http\Middleware\EnsureMcpScope;
-use App\Http\Middleware\ResolveMcpTeamContext;
+use App\Http\Middleware\ResolveTeamAccess;
 use App\Mcp\Servers\WorkumiServer;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Mcp\Facades\Mcp;
@@ -27,7 +27,7 @@ class WorkumiMcpServiceProvider extends ServiceProvider
         // it validates its own tokens (and silently ignores OAuth JWTs) without
         // the Passport guard reporting an OAuthServerException on every request.
         Mcp::web('/mcp', WorkumiServer::class)
-            ->middleware(['auth:sanctum,api', EnsureMcpScope::class, ResolveMcpTeamContext::class]);
+            ->middleware(['auth:sanctum,api', EnsureMcpScope::class, ResolveTeamAccess::class]);
 
         if ($this->app->runningInConsole()) {
             $this->commands([WorkumiMcpCommand::class]);

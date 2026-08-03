@@ -173,7 +173,8 @@ vi.mock('@/components/ui/status-badge', () => ({
 /**
  * Mock workflow components
  */
-vi.mock('@/components/workflow', () => ({
+vi.mock('@/components/workflow', async () => ({
+    ...(await import('@/components/workflow/assignment-confirmation-dialog')),
     TransitionButton: () => <div data-testid="transition-button" />,
     TransitionDialog: () => null,
     TransitionHistory: () => <div data-testid="transition-history" />,
@@ -188,6 +189,7 @@ vi.mock('@/components/work', () => ({
     StatusBadge: ({ status }: { status: string }) => <span data-status={status}>{status}</span>,
     PriorityBadge: ({ priority }: { priority: string }) => <span data-priority={priority}>{priority}</span>,
     ProgressBar: ({ progress }: { progress: number }) => <div data-progress={progress} />,
+    DatePresetButtons: () => null,
 }));
 
 /**
@@ -274,6 +276,17 @@ vi.mock('@/hooks/use-pm-copilot', () => ({
     }),
     useUpdatePMCopilotMode: () => ({
         updateMode: vi.fn().mockResolvedValue({ success: true }),
+        isLoading: false,
+        error: null,
+    }),
+    useDelegatePlan: () => ({
+        delegate: vi.fn().mockResolvedValue({ success: true, suggestions: [] }),
+        isLoading: false,
+        error: null,
+        suggestions: null,
+    }),
+    useConfirmAssignments: () => ({
+        confirm: vi.fn().mockResolvedValue({ success: true }),
         isLoading: false,
         error: null,
     }),

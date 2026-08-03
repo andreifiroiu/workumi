@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\WorkOrders;
 
 use App\Enums\WorkOrderStatus;
-use App\Mcp\TeamContext;
 use App\Models\WorkOrder;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,12 +14,13 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('List work orders for the team. Filter by project_id, status, or assigned_to_id. Returns id, title, status, priority, due_date, estimated_hours, and project info.')]
+#[Description('List work orders across every team you belong to, or pass team_id to narrow to one. Filter by project_id, status, or assigned_to_id. Returns id, title, status, priority, due_date, estimated_hours, team, and project info.')]
 class ListWorkOrdersTool extends Tool
 {
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $validated = $request->validate([
+            'team_id' => ['nullable', 'integer'],
             'project_id' => ['nullable', 'integer'],
             'status' => ['nullable', 'string', Rule::in(['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested', 'archived'])],
             'assigned_to_id' => ['nullable', 'integer'],
@@ -28,8 +29,9 @@ class ListWorkOrdersTool extends Tool
             'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $query = WorkOrder::forTeam($context->teamId)
-            ->with(['project:id,name', 'assignedTo:id,name'])
+        $query = WorkOrder::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))->visibleTo($access->userId)
+            ->visibleTo($access->userId)
+            ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'project:id,name', 'assignedTo:id,name'])
             ->orderBy('created_at', 'desc');
 
         if (isset($validated['project_id'])) {
@@ -50,7 +52,7 @@ class ListWorkOrdersTool extends Tool
         $offset = $validated['offset'] ?? 0;
 
         $workOrders = $query->offset($offset)->limit($limit)->get([
-            'id', 'title', 'status', 'priority', 'due_date',
+            'id', 'team_id', 'title', 'status', 'priority', 'due_date',
             'estimated_hours', 'actual_hours', 'project_id', 'assigned_to_id',
         ]);
 
@@ -60,6 +62,7 @@ class ListWorkOrdersTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
+            'team_id' => $schema->integer()->nullable()->description('Limit to one team (default: all teams you belong to)'),
             'project_id' => $schema->integer()->nullable()->description('Filter by project ID'),
             'status' => $schema->string()->enum(['draft', 'active', 'in_review', 'approved', 'delivered', 'blocked', 'cancelled', 'revision_requested', 'archived'])->nullable()->description('Filter by status'),
             'assigned_to_id' => $schema->integer()->nullable()->description('Filter by assigned user ID'),

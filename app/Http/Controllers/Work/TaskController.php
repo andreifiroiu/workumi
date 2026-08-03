@@ -119,6 +119,7 @@ class TaskController extends Controller
 
         // Sibling data for breadcrumb navigation
         $siblingWorkOrders = WorkOrder::where('project_id', $task->project_id)
+            ->visibleTo($request->user()->id)
             ->notArchived()
             ->select('id', 'title')
             ->orderBy('title')

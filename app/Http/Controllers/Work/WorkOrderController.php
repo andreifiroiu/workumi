@@ -110,6 +110,7 @@ class WorkOrderController extends Controller
             ->get();
 
         $siblingWorkOrders = WorkOrder::where('project_id', $workOrder->project_id)
+            ->visibleTo($request->user()->id)
             ->notArchived()
             ->select('id', 'title')
             ->orderBy('title')

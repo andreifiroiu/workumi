@@ -34,6 +34,7 @@ class WorkOrdersMissingDueDateFlow extends AbstractReviewFlow
     public function query(Team $team, User $user): Builder
     {
         $query = WorkOrder::forTeam($team->id)
+            ->visibleTo($user->id)
             ->whereNull('due_date')
             ->whereNotIn('status', self::EXCLUDED_STATUSES)
             ->notBacklog()

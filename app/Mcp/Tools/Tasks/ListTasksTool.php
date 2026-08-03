@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\Tasks;
 
 use App\Enums\TaskStatus;
-use App\Mcp\TeamContext;
 use App\Models\Task;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,12 +14,13 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('List tasks for the team. Filter by work_order_id, project_id, status, or assigned_to_id. Returns id, title, status, due_date, estimated_hours, and assignee.')]
+#[Description('List tasks across every team you belong to, or pass team_id to narrow to one. Filter by work_order_id, project_id, status, or assigned_to_id. Returns id, title, status, due_date, estimated_hours, team, and assignee.')]
 class ListTasksTool extends Tool
 {
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $validated = $request->validate([
+            'team_id' => ['nullable', 'integer'],
             'work_order_id' => ['nullable', 'integer'],
             'project_id' => ['nullable', 'integer'],
             'status' => ['nullable', 'string', Rule::in(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested', 'archived'])],
@@ -29,8 +30,9 @@ class ListTasksTool extends Tool
             'offset' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $query = Task::forTeam($context->teamId)
-            ->with(['assignedTo:id,name', 'workOrder:id,title,project_id'])
+        $query = Task::forTeams($access->filter(isset($validated['team_id']) ? (int) $validated['team_id'] : null))->visibleTo($access->userId)
+            ->visibleTo($access->userId)
+            ->with(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'assignedTo:id,name', 'workOrder:id,title,project_id'])
             ->ordered()
             ->orderBy('id');
 
@@ -56,7 +58,7 @@ class ListTasksTool extends Tool
         $offset = $validated['offset'] ?? 0;
 
         $tasks = $query->offset($offset)->limit($limit)->get([
-            'id', 'title', 'status', 'due_date', 'estimated_hours',
+            'id', 'team_id', 'title', 'status', 'due_date', 'estimated_hours',
             'actual_hours', 'work_order_id', 'project_id', 'assigned_to_id',
             'is_blocked', 'position_in_work_order',
         ]);
@@ -67,6 +69,7 @@ class ListTasksTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
+            'team_id' => $schema->integer()->nullable()->description('Limit to one team (default: all teams you belong to)'),
             'work_order_id' => $schema->integer()->nullable()->description('Filter by work order ID'),
             'project_id' => $schema->integer()->nullable()->description('Filter by project ID'),
             'status' => $schema->string()->enum(['todo', 'in_progress', 'in_review', 'approved', 'done', 'blocked', 'cancelled', 'revision_requested', 'archived'])->nullable()->description('Filter by status'),
