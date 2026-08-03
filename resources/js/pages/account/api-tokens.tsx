@@ -28,16 +28,24 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Check, Copy, Key, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+interface TeamOption {
+    id: number;
+    name: string;
+}
+
 interface PersonalAccessToken {
     id: number;
     name: string;
     abilities: string[];
+    /** null means every team the user belongs to, including future ones. */
+    teamIds: number[] | null;
     lastUsedAt: string | null;
     createdAt: string;
 }
 
 interface Props {
     tokens: PersonalAccessToken[];
+    availableTeams: TeamOption[];
     newToken: string | null;
 }
 
@@ -45,7 +53,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'API Tokens', href: '/account/api-tokens' },
 ];
 
-export default function ApiTokens({ tokens, newToken }: Props) {
+export default function ApiTokens({ tokens, availableTeams, newToken }: Props) {
     const [generateOpen, setGenerateOpen] = useState(false);
     const [revokeToken, setRevokeToken] = useState<PersonalAccessToken | null>(null);
 
@@ -57,7 +65,7 @@ export default function ApiTokens({ tokens, newToken }: Props) {
                 <div className="space-y-6">
                     <HeadingSmall
                         title="API Tokens"
-                        description="Personal access tokens let you authenticate to the Workumi MCP server and API from external tools like Claude Code or Claude.ai."
+                        description="Personal access tokens let you authenticate to the Workumi MCP server and API from external tools like Claude Code or Claude.ai. A token belongs to you, not to a single team."
                     />
 
                     {newToken && <NewTokenAlert token={newToken} />}
@@ -72,6 +80,7 @@ export default function ApiTokens({ tokens, newToken }: Props) {
                                 <TokenRow
                                     key={token.id}
                                     token={token}
+                                    availableTeams={availableTeams}
                                     onRevoke={() => setRevokeToken(token)}
                                 />
                             ))
@@ -92,6 +101,7 @@ export default function ApiTokens({ tokens, newToken }: Props) {
             <GenerateTokenDialog
                 open={generateOpen}
                 onOpenChange={setGenerateOpen}
+                availableTeams={availableTeams}
             />
 
             <RevokeTokenDialog
@@ -106,9 +116,11 @@ export default function ApiTokens({ tokens, newToken }: Props) {
 
 function TokenRow({
     token,
+    availableTeams,
     onRevoke,
 }: {
     token: PersonalAccessToken;
+    availableTeams: TeamOption[];
     onRevoke: () => void;
 }) {
     const createdAt = new Date(token.createdAt).toLocaleDateString(undefined, {
@@ -127,6 +139,17 @@ function TokenRow({
 
     const isReadOnly = !token.abilities.includes('*') && !token.abilities.includes('write');
 
+    const scope =
+        token.teamIds === null || token.teamIds.length === 0
+            ? 'All teams'
+            : token.teamIds
+                  .map(
+                      (id) =>
+                          availableTeams.find((team) => team.id === id)?.name ??
+                          `Team ${id}`,
+                  )
+                  .join(', ');
+
     return (
         <div className="flex items-center justify-between rounded-md border px-4 py-3">
             <div className="flex items-center gap-3">
@@ -139,6 +162,9 @@ function TokenRow({
                                 Read only
                             </span>
                         )}
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                            {scope}
+                        </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
                         Created {createdAt} · Last used {lastUsed}
@@ -197,16 +223,35 @@ function NewTokenAlert({ token }: { token: string }) {
 function GenerateTokenDialog({
     open,
     onOpenChange,
+    availableTeams,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    availableTeams: TeamOption[];
 }) {
-    const form = useForm({ name: '', access: 'full' as 'full' | 'read' });
+    const form = useForm({
+        name: '',
+        access: 'full' as 'full' | 'read',
+        // Empty means unrestricted — every team the user belongs to.
+        team_ids: [] as number[],
+    });
+
+    const [restrictTeams, setRestrictTeams] = useState(false);
+
+    const toggleTeam = (id: number) => {
+        form.setData(
+            'team_ids',
+            form.data.team_ids.includes(id)
+                ? form.data.team_ids.filter((teamId) => teamId !== id)
+                : [...form.data.team_ids, id],
+        );
+    };
 
     const handleOpenChange = (isOpen: boolean) => {
         if (!isOpen) {
             form.reset();
             form.clearErrors();
+            setRestrictTeams(false);
         }
         onOpenChange(isOpen);
     };
@@ -273,8 +318,67 @@ function GenerateTokenDialog({
                         <p className="text-xs text-muted-foreground">
                             {form.data.access === 'read'
                                 ? 'This token can only read data. Write operations will be rejected.'
-                                : 'This token can read and write all data in your team.'}
+                                : 'This token can read and write data.'}
                         </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Teams</Label>
+                        <div className="flex flex-col gap-2">
+                            <label className="flex cursor-pointer items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="team-scope"
+                                    checked={!restrictTeams}
+                                    onChange={() => {
+                                        setRestrictTeams(false);
+                                        form.setData('team_ids', []);
+                                    }}
+                                    className="accent-primary"
+                                />
+                                <span className="text-sm">All my teams</span>
+                            </label>
+                            <label className="flex cursor-pointer items-center gap-2">
+                                <input
+                                    type="radio"
+                                    name="team-scope"
+                                    checked={restrictTeams}
+                                    onChange={() => setRestrictTeams(true)}
+                                    className="accent-primary"
+                                />
+                                <span className="text-sm">Only specific teams</span>
+                            </label>
+                        </div>
+
+                        {restrictTeams && (
+                            <div className="flex flex-col gap-2 rounded-md border p-3">
+                                {availableTeams.map((team) => (
+                                    <label
+                                        key={team.id}
+                                        className="flex cursor-pointer items-center gap-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={form.data.team_ids.includes(team.id)}
+                                            onChange={() => toggleTeam(team.id)}
+                                            className="accent-primary"
+                                        />
+                                        <span className="text-sm">{team.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground">
+                            {restrictTeams
+                                ? 'The token will only reach the teams you tick here. Leaving all unticked is the same as choosing all teams.'
+                                : 'The token reaches every team you belong to, including teams you join later.'}
+                        </p>
+                        {form.errors.team_ids && (
+                            <p className="text-sm text-destructive">
+                                {form.errors.team_ids}
+                            </p>
+                        )}
                     </div>
 
                     <DialogFooter>

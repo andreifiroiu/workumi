@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Teams;
 
-use App\Mcp\TeamContext;
 use App\Models\Team;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('List all members of the current team, including the owner. Returns id, name, email, and role. Use the returned user IDs when assigning tasks or work orders.')]
+#[Description('List all members of a team, including the owner. Pass team_id when you belong to more than one team. Returns id, name, email, and role. Use the returned user IDs when assigning tasks or work orders.')]
 class ListTeamMembersTool extends Tool
 {
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $validated = $request->validate([
+            'team_id' => ['nullable', 'integer'],
             'search' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $team = Team::with(['users', 'owner'])->findOrFail($context->teamId);
+        $teamId = $access->resolve(isset($validated['team_id']) ? (int) $validated['team_id'] : null);
+
+        $team = Team::with(['users', 'owner'])->findOrFail($teamId);
 
         $members = $team->allUsers()->map(function ($user) use ($team) {
             $role = $user->id === $team->user_id
@@ -49,6 +52,7 @@ class ListTeamMembersTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
+            'team_id' => $schema->integer()->nullable()->description('The team to list members of. Required when you belong to more than one team.'),
             'search' => $schema->string()->nullable()->description('Filter by name or email (case-insensitive)'),
         ];
     }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\Projects;
 
 use App\Mcp\Concerns\RequiresWriteAbility;
-use App\Mcp\TeamContext;
 use App\Models\Project;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,23 +14,31 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Update an existing project. Only provided fields are updated. Returns the updated project.')]
+#[Description('Update an existing project in any team you belong to. Only provided fields are updated. Returns the updated project.')]
 class UpdateProjectTool extends Tool
 {
     use RequiresWriteAbility;
 
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $this->authorizeWrite($request);
+
+        $identified = $request->validate([
+            'id' => ['required', 'integer'],
+        ]);
+
+        $project = Project::forTeams($access->teamIds)->findOrFail($identified['id']);
 
         $validated = $request->validate([
             'id' => ['required', 'integer'],
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'status' => ['sometimes', 'string', Rule::in(['active', 'on_hold', 'completed', 'archived'])],
-            'start_date' => ['sometimes', 'nullable', 'date'],
+            'start_date' => ['sometimes', 'date'],
             'target_end_date' => ['sometimes', 'nullable', 'date'],
-            'party_id' => ['sometimes', 'nullable', 'integer', Rule::exists('parties', 'id')->where('team_id', $context->teamId)],
+            // Not nullable: projects.party_id is NOT NULL, so clearing it would
+            // fail at the database rather than in validation.
+            'party_id' => ['sometimes', 'integer', Rule::exists('parties', 'id')->where('team_id', $project->team_id)],
             'budget_hours' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'budget_cost' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'budget_type' => ['sometimes', 'nullable', 'string', Rule::in(['fixed_price', 'time_and_materials', 'monthly_subscription'])],
@@ -38,8 +46,6 @@ class UpdateProjectTool extends Tool
             'tags' => ['sometimes', 'nullable', 'array'],
             'tags.*' => ['string'],
         ]);
-
-        $project = Project::forTeam($context->teamId)->findOrFail($validated['id']);
 
         $project->update(collect($validated)->except('id')->toArray());
 
@@ -55,7 +61,7 @@ class UpdateProjectTool extends Tool
             'status' => $schema->string()->enum(['active', 'on_hold', 'completed', 'archived'])->nullable()->description('New status'),
             'start_date' => $schema->string()->nullable()->description('New start date (YYYY-MM-DD)'),
             'target_end_date' => $schema->string()->nullable()->description('New target end date (YYYY-MM-DD)'),
-            'party_id' => $schema->integer()->nullable()->description('New client/party ID'),
+            'party_id' => $schema->integer()->nullable()->description('New client/party ID (must belong to the same team as the project)'),
             'budget_hours' => $schema->number()->nullable()->description('New budget in hours'),
             'budget_cost' => $schema->number()->nullable()->description('New budget cost'),
             'budget_type' => $schema->string()->enum(['fixed_price', 'time_and_materials', 'monthly_subscription'])->nullable()->description('New budget type'),

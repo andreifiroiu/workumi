@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\DeliverableStatus;
 use App\Enums\DeliverableType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -89,8 +90,16 @@ class Deliverable extends Model
         );
     }
 
-    public function scopeForTeam($query, int $teamId)
+    public function scopeForTeam(Builder $query, int $teamId): Builder
     {
         return $query->where('team_id', $teamId);
+    }
+
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
     }
 }

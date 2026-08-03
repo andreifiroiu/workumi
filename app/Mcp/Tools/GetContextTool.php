@@ -4,32 +4,39 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
-use App\Mcp\TeamContext;
 use App\Models\Team;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Returns the current team context and authenticated user. Use this to discover the team name and your own user ID before making other calls. In stdio/CLI mode the user field will be null.')]
+#[Description('Returns the authenticated user and every team this token can reach. Use this first to discover your own user ID and which teams are available. The default team is the one used by create tools when you do not pass a team_id. In stdio/CLI mode the user field will be null.')]
 class GetContextTool extends Tool
 {
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
-        $team = Team::find($context->teamId);
         $user = $request->user();
 
-        return Response::json([
-            'team' => $team ? [
+        $teams = Team::query()
+            ->whereIn('id', $access->teamIds)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Team $team): array => [
                 'id' => $team->id,
                 'name' => $team->name,
-            ] : ['id' => $context->teamId, 'name' => null],
+                'is_default' => $team->id === $access->defaultTeamId,
+            ]);
+
+        return Response::json([
             'user' => $user ? [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
             ] : null,
+            'default_team_id' => $access->defaultTeamId,
+            'teams' => $teams->all(),
         ]);
     }
 

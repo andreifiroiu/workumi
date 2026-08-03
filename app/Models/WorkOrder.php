@@ -190,6 +190,14 @@ class WorkOrder extends Model
         return $query->where('team_id', $teamId);
     }
 
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
+    }
+
     public function scopeAssignedTo(Builder $query, int $userId): Builder
     {
         return $query->where('assigned_to_id', $userId);

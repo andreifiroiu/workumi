@@ -12,11 +12,17 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'language']);
+
+        // The `api` group only gets a throttle when a limiter is named; the
+        // limiter itself is defined in AppServiceProvider.
+        $middleware->throttleApi();
 
         $middleware->validateCsrfTokens(except: ['/mcp', 'webhooks/mailgun/inbound']);
 
@@ -31,5 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // API clients get JSON even without an Accept header; otherwise a failed
+        // validation redirects (302) and a missing record renders HTML.
+        $exceptions->shouldRenderJsonWhen(
+            fn ($request, $throwable) => $request->is('api/*') || $request->expectsJson()
+        );
     })->create();

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\Deliverables;
 
 use App\Mcp\Concerns\RequiresWriteAbility;
-use App\Mcp\TeamContext;
 use App\Models\Deliverable;
+use App\Support\TeamAccess;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -14,12 +14,12 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('Update an existing deliverable. Only the fields you provide will be changed. Returns the updated deliverable.')]
+#[Description('Update an existing deliverable in any team you belong to. Only the fields you provide will be changed. Returns the updated deliverable.')]
 class UpdateDeliverableTool extends Tool
 {
     use RequiresWriteAbility;
 
-    public function handle(Request $request, TeamContext $context): Response
+    public function handle(Request $request, TeamAccess $access): Response
     {
         $this->authorizeWrite($request);
 
@@ -35,12 +35,12 @@ class UpdateDeliverableTool extends Tool
             'acceptance_criteria.*' => ['string'],
         ]);
 
-        $deliverable = Deliverable::forTeam($context->teamId)->findOrFail($validated['id']);
+        $deliverable = Deliverable::forTeams($access->teamIds)->findOrFail($validated['id']);
 
         $deliverable->update(collect($validated)->except('id')->toArray());
 
         return Response::json(
-            $deliverable->fresh()->load(['workOrder:id,title', 'project:id,name'])->toArray()
+            $deliverable->fresh()->load(['team' => fn ($q) => $q->select('id', 'name')->without(['roles', 'groups']), 'workOrder:id,title', 'project:id,name'])->toArray()
         );
     }
 

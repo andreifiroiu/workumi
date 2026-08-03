@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\PartyType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -60,12 +61,20 @@ class Party extends Model
         return $this->belongsTo(Contact::class, 'primary_contact_id');
     }
 
-    public function scopeForTeam($query, int $teamId)
+    public function scopeForTeam(Builder $query, int $teamId): Builder
     {
         return $query->where('team_id', $teamId);
     }
 
-    public function scopeOfType($query, PartyType $type)
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
+    }
+
+    public function scopeOfType(Builder $query, PartyType $type): Builder
     {
         return $query->where('type', $type->value);
     }

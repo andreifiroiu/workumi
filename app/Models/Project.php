@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Enums\BudgetType;
 use App\Enums\ProjectStatus;
+use App\Enums\TaskStatus;
+use App\Enums\WorkOrderStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -133,6 +135,14 @@ class Project extends Model
         return $query->where('team_id', $teamId);
     }
 
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', ProjectStatus::Active);
@@ -247,7 +257,7 @@ class Project extends Model
     public function recalculateProgress(): void
     {
         $workOrders = $this->workOrders->filter(
-            fn ($wo) => $wo->status !== \App\Enums\WorkOrderStatus::Archived
+            fn ($wo) => $wo->status !== WorkOrderStatus::Archived
         );
 
         if ($workOrders->isEmpty()) {
@@ -262,7 +272,7 @@ class Project extends Model
 
         foreach ($workOrders as $workOrder) {
             $tasks = $workOrder->tasks->filter(
-                fn ($task) => $task->status !== \App\Enums\TaskStatus::Archived
+                fn ($task) => $task->status !== TaskStatus::Archived
             );
             $totalTasks += $tasks->count();
             $completedTasks += $tasks->where('status', 'done')->count();

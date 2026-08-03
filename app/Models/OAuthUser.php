@@ -19,6 +19,17 @@ class OAuthUser extends User
     protected $table = 'users';
 
     /**
+     * Rows in this table are referenced as `user_id` everywhere. Without this,
+     * Eloquent derives `o_auth_user_id` from the class name and relations that
+     * infer their foreign key — notably HasTeams::ownedTeams() and ownsTeam() —
+     * break for OAuth-authenticated users.
+     */
+    public function getForeignKey(): string
+    {
+        return 'user_id';
+    }
+
+    /**
      * OAuth is used purely as a translation layer to the underlying user; the
      * only granted scope is `mcp:use`. Scopes are not used for authorization,
      * so an OAuth-authenticated user has full (read/write) access to MCP tools.

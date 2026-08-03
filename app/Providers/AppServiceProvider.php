@@ -13,6 +13,7 @@ use App\Listeners\DispatcherMentionListener;
 use App\Listeners\TriggerPMCopilotOnWorkOrderCreated;
 use App\Listeners\WorkOrderStatusChangedListener;
 use App\Models\Document;
+use App\Models\PersonalAccessToken;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\Team;
@@ -25,10 +26,14 @@ use App\Observers\TaskObserver;
 use App\Observers\TeamObserver;
 use App\Observers\TimeEntryObserver;
 use App\Observers\WorkOrderObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
+use Laravel\Sanctum\Sanctum;
 
 // use OpenTelemetry\API\Globals;
 // use OpenTelemetry\API\Logs\LoggerProviderInterface;
@@ -62,6 +67,12 @@ class AppServiceProvider extends ServiceProvider
     {
         // Display Laravel MCP's authorization consent screen during the OAuth flow.
         Passport::authorizationView(fn ($parameters) => view('mcp.authorize', $parameters));
+
+        // Adds the optional per-token team restriction to Sanctum's token model.
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)
+            ->by($request->user()?->id ?: $request->ip()));
 
         // Authorize access to Log Viewer (opcodesio/log-viewer) in production.
         Gate::define('viewLogViewer', function (?User $user): bool {

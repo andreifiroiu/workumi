@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Mcp\Concerns;
 
+use App\Support\TeamMembership;
 use Closure;
-use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 
 trait RequiresWriteAbility
@@ -31,20 +31,6 @@ trait RequiresWriteAbility
      */
     protected function teamMemberRule(int $teamId): Closure
     {
-        return function (string $attribute, mixed $value, Closure $fail) use ($teamId): void {
-            $isMember = DB::table('team_user')
-                ->where('team_id', $teamId)
-                ->where('user_id', $value)
-                ->exists();
-
-            $isOwner = DB::table('teams')
-                ->where('id', $teamId)
-                ->where('user_id', $value)
-                ->exists();
-
-            if (! $isMember && ! $isOwner) {
-                $fail('The selected user does not belong to this team.');
-            }
-        };
+        return TeamMembership::rule($teamId);
     }
 }

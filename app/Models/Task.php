@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\BlockerReason;
 use App\Enums\TaskStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -148,9 +149,17 @@ class Task extends Model
         return $this->morphOne(CommunicationThread::class, 'threadable');
     }
 
-    public function scopeForTeam($query, int $teamId)
+    public function scopeForTeam(Builder $query, int $teamId): Builder
     {
         return $query->where('team_id', $teamId);
+    }
+
+    /**
+     * @param  list<int>  $teamIds
+     */
+    public function scopeForTeams(Builder $query, array $teamIds): Builder
+    {
+        return $query->whereIn('team_id', $teamIds);
     }
 
     public function scopeAssignedTo($query, int $userId)
