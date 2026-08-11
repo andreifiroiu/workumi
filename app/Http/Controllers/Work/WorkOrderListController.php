@@ -14,6 +14,7 @@ use App\Models\WorkOrderList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class WorkOrderListController extends Controller
 {
@@ -214,7 +215,13 @@ class WorkOrderListController extends Controller
         $this->authorize('update', $project);
 
         $validated = $request->validate([
-            'listId' => 'nullable|exists:work_order_lists,id',
+            // Scoped to the project: a bare `exists` would let a crafted request
+            // file these work orders under a list belonging to another project,
+            // or another team entirely.
+            'listId' => [
+                'nullable',
+                Rule::exists('work_order_lists', 'id')->where('project_id', $project->id),
+            ],
             'workOrderIds' => 'required|array',
             'workOrderIds.*' => 'exists:work_orders,id',
         ]);
