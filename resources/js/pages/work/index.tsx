@@ -1,3 +1,4 @@
+import { FormErrorSummary } from '@/components/form-error-summary';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +37,19 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Work', href: '/work' }];
+
+/**
+ * Keys with their own <InputError> in the create-work-order dialog. Anything
+ * else the server rejects — workOrderListId, for one, which the dialog sends but
+ * never shows — surfaces through FormErrorSummary instead of vanishing.
+ */
+const WORK_ORDER_FIELDS = [
+    'title',
+    'projectId',
+    'priority',
+    'dueDate',
+    'description',
+];
 
 export default function Work({
     projects,
@@ -484,6 +498,10 @@ export default function Work({
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
+                            <FormErrorSummary
+                                errors={workOrderForm.errors}
+                                rendered={WORK_ORDER_FIELDS}
+                            />
                             <div className="grid gap-2">
                                 <Label htmlFor="wo-title">Title</Label>
                                 <Input

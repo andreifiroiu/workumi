@@ -38,6 +38,7 @@ class UpdateTaskRequest extends FormRequest
             'blocker_reason' => ['sometimes', 'nullable', 'string', Rule::in(['waiting_on_external', 'missing_information', 'technical_issue', 'waiting_on_approval'])],
             'blocker_details' => ['sometimes', 'nullable', 'string'],
             'checklist_items' => ['sometimes', 'nullable', 'array'],
+            'checklist_items.*.id' => ['sometimes', 'string'],
             'checklist_items.*.text' => ['required_with:checklist_items', 'string'],
             'checklist_items.*.completed' => ['sometimes', 'boolean'],
         ];

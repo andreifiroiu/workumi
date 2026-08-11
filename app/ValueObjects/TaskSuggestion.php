@@ -8,6 +8,7 @@ use App\Enums\AIConfidence;
 use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\WorkOrder;
+use App\Support\ChecklistItems;
 
 /**
  * Immutable value object representing a suggested task from PM Copilot.
@@ -137,25 +138,7 @@ final readonly class TaskSuggestion
      */
     private function normalizeChecklistItems(): array
     {
-        $normalized = [];
-
-        foreach ($this->checklistItems as $index => $item) {
-            if (is_array($item)) {
-                $normalized[] = [
-                    'id' => $item['id'] ?? 'item-'.($index + 1),
-                    'text' => $item['text'] ?? '',
-                    'completed' => (bool) ($item['completed'] ?? false),
-                ];
-            } elseif (is_string($item)) {
-                $normalized[] = [
-                    'id' => 'item-'.($index + 1),
-                    'text' => $item,
-                    'completed' => false,
-                ];
-            }
-        }
-
-        return $normalized;
+        return ChecklistItems::normalize($this->checklistItems);
     }
 
     /**

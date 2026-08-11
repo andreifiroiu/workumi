@@ -41,7 +41,9 @@ class CreateTaskTool extends Tool
             'estimated_hours' => ['nullable', 'numeric', 'min:0'],
             'assigned_to_id' => ['nullable', 'integer', $this->teamMemberRule($workOrder->team_id)],
             'checklist_items' => ['nullable', 'array'],
+            'checklist_items.*.id' => ['sometimes', 'string'],
             'checklist_items.*.text' => ['required_with:checklist_items', 'string'],
+            'checklist_items.*.completed' => ['sometimes', 'boolean'],
         ]);
 
         $task = Task::create(array_merge($validated, [

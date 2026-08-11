@@ -6,14 +6,18 @@ namespace App\Models;
 
 use App\Enums\BlockerReason;
 use App\Enums\TaskStatus;
+use App\Support\ChecklistItems;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\JsonEncodingException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class Task extends Model
 {
@@ -221,6 +225,46 @@ class Task extends Model
         return $query->orderBy('position_in_work_order');
     }
 
+    /**
+     * Normalize on the way in, whichever surface is writing.
+     *
+     * Four code paths write this column and they disagreed on the shape; an item
+     * stored without an `id` is invisible to toggle, edit and delete, all of
+     * which match on it. Enforcing the shape here rather than in each caller's
+     * validation means malformed rows cannot be created at all.
+     *
+     * Takes `mixed` rather than `iterable` so a wrong type reports the column it
+     * came from instead of a TypeError naming a mutator the caller never called.
+     */
+    public function setChecklistItemsAttribute(mixed $value): void
+    {
+        if ($value !== null && ! is_iterable($value)) {
+            throw new InvalidArgumentException(
+                'checklist_items must be a list of items, '.get_debug_type($value).' given.'
+            );
+        }
+
+        $normalized = ChecklistItems::normalize($value);
+
+        if (is_countable($value) && count($value) !== count($normalized)) {
+            Log::warning('Dropped unusable checklist items', [
+                'task_id' => $this->id,
+                'submitted' => count($value),
+                'stored' => count($normalized),
+            ]);
+        }
+
+        $encoded = json_encode($normalized);
+
+        // Declaring a mutator bypasses the json cast, and with it the cast's own
+        // encode check — without this the column would silently be set to "0".
+        if ($encoded === false) {
+            throw JsonEncodingException::forAttribute($this, 'checklist_items', json_last_error_msg());
+        }
+
+        $this->attributes['checklist_items'] = $encoded;
+    }
+
     public function getChecklistProgressAttribute(): array
     {
         $items = $this->checklist_items ?? [];
@@ -234,19 +278,32 @@ class Task extends Model
         ];
     }
 
-    public function toggleChecklistItem(string $itemId, bool $completed): void
+    /**
+     * @return bool Whether an item with that id was found. An unknown id used to
+     *              save an unchanged array and report success, so the checkbox
+     *              silently sprang back with nothing to explain it.
+     */
+    public function toggleChecklistItem(string $itemId, bool $completed): bool
     {
         $items = $this->checklist_items ?? [];
+        $found = false;
 
         foreach ($items as $index => $item) {
-            if ($item['id'] === $itemId) {
+            if (($item['id'] ?? null) === $itemId) {
                 $items[$index]['completed'] = $completed;
+                $found = true;
                 break;
             }
         }
 
+        if (! $found) {
+            return false;
+        }
+
         $this->checklist_items = $items;
         $this->save();
+
+        return true;
     }
 
     public function recalculateActualHours(): void

@@ -15,6 +15,7 @@ use App\Models\Task;
 use App\Models\TimeEntry;
 use App\Models\WorkOrder;
 use App\Services\WorkflowTransitionService;
+use App\Support\ChecklistItems;
 use App\Support\TeamMembership;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,19 +36,6 @@ class TaskController extends Controller
 
         $workOrder = $request->workOrder();
 
-        // Format checklist items with IDs if not present
-        $checklistItems = collect($validated['checklistItems'] ?? [])->map(function ($item) {
-            if (is_string($item)) {
-                return [
-                    'id' => Str::uuid()->toString(),
-                    'text' => $item,
-                    'completed' => false,
-                ];
-            }
-
-            return $item;
-        })->all();
-
         Task::create([
             'team_id' => $request->teamId(),
             'work_order_id' => $validated['workOrderId'],
@@ -58,7 +46,7 @@ class TaskController extends Controller
             'status' => TaskStatus::Todo,
             'due_date' => $validated['dueDate'],
             'estimated_hours' => $validated['estimatedHours'] ?? 0,
-            'checklist_items' => $checklistItems,
+            'checklist_items' => $validated['checklistItems'] ?? [],
         ]);
 
         return back();
@@ -226,6 +214,7 @@ class TaskController extends Controller
             'dueDate' => 'sometimes|nullable|date',
             'estimatedHours' => 'nullable|numeric|min:0',
             'checklistItems' => 'nullable|array',
+            'checklistItems.*' => [ChecklistItems::rule()],
             'isBlocked' => 'sometimes|boolean',
             'reason' => 'nullable|string',
         ]);
@@ -414,7 +403,7 @@ class TaskController extends Controller
             'completed' => 'required|boolean',
         ]);
 
-        $task->toggleChecklistItem($itemId, $validated['completed']);
+        abort_unless($task->toggleChecklistItem($itemId, $validated['completed']), 404);
 
         return back();
     }
@@ -453,8 +442,15 @@ class TaskController extends Controller
             'text' => 'required|string|max:255',
         ]);
 
-        $checklistItems = collect($task->checklist_items ?? [])->map(function ($item) use ($itemId, $validated) {
-            if ($item['id'] === $itemId) {
+        $items = collect($task->checklist_items ?? []);
+
+        // Rows written before checklist items were normalized have no `id`, so
+        // reach it defensively; and an id that matches nothing is a 404 rather
+        // than a save that reports success and changes nothing.
+        abort_unless($items->contains(fn ($item) => ($item['id'] ?? null) === $itemId), 404);
+
+        $checklistItems = $items->map(function ($item) use ($itemId, $validated) {
+            if (($item['id'] ?? null) === $itemId) {
                 $item['text'] = $validated['text'];
             }
 
@@ -473,8 +469,12 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
-        $checklistItems = collect($task->checklist_items ?? [])
-            ->filter(fn ($item) => $item['id'] !== $itemId)
+        $items = collect($task->checklist_items ?? []);
+
+        abort_unless($items->contains(fn ($item) => ($item['id'] ?? null) === $itemId), 404);
+
+        $checklistItems = $items
+            ->filter(fn ($item) => ($item['id'] ?? null) !== $itemId)
             ->values()
             ->all();
 

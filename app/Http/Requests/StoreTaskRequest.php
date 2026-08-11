@@ -6,6 +6,7 @@ namespace App\Http\Requests;
 
 use App\Models\Task;
 use App\Models\WorkOrder;
+use App\Support\ChecklistItems;
 use App\Support\TeamMembership;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -39,6 +40,7 @@ class StoreTaskRequest extends FormRequest
             'dueDate' => ['required', 'date'],
             'estimatedHours' => ['nullable', 'numeric', 'min:0'],
             'checklistItems' => ['nullable', 'array'],
+            'checklistItems.*' => [ChecklistItems::rule()],
         ];
     }
 

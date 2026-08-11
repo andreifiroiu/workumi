@@ -36,7 +36,9 @@ class StoreTaskRequest extends FormRequest
             'estimated_hours' => ['nullable', 'numeric', 'min:0'],
             'assigned_to_id' => ['nullable', 'integer', $this->assigneeRule()],
             'checklist_items' => ['nullable', 'array'],
+            'checklist_items.*.id' => ['sometimes', 'string'],
             'checklist_items.*.text' => ['required_with:checklist_items', 'string'],
+            'checklist_items.*.completed' => ['sometimes', 'boolean'],
         ];
     }
 
