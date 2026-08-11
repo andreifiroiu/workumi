@@ -7,6 +7,7 @@ use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTaskRequest;
 use App\Jobs\ProcessDispatcherRouting;
 use App\Models\AIAgent;
 use App\Models\StatusTransition;
@@ -14,6 +15,7 @@ use App\Models\Task;
 use App\Models\TimeEntry;
 use App\Models\WorkOrder;
 use App\Services\WorkflowTransitionService;
+use App\Support\TeamMembership;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,23 +29,11 @@ class TaskController extends Controller
         private readonly WorkflowTransitionService $transitionService,
     ) {}
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreTaskRequest $request): RedirectResponse
     {
-        $this->authorize('create', Task::class);
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'workOrderId' => 'required|exists:work_orders,id',
-            'assignedToId' => 'nullable|exists:users,id',
-            'dueDate' => 'required|date',
-            'estimatedHours' => 'nullable|numeric|min:0',
-            'checklistItems' => 'nullable|array',
-        ]);
-
-        $user = $request->user();
-        $team = $user->currentTeam;
-        $workOrder = WorkOrder::findOrFail($validated['workOrderId']);
+        $workOrder = $request->workOrder();
 
         // Format checklist items with IDs if not present
         $checklistItems = collect($validated['checklistItems'] ?? [])->map(function ($item) {
@@ -59,7 +49,7 @@ class TaskController extends Controller
         })->all();
 
         Task::create([
-            'team_id' => $team->id,
+            'team_id' => $request->teamId(),
             'work_order_id' => $validated['workOrderId'],
             'project_id' => $workOrder->project_id,
             'assigned_to_id' => $validated['assignedToId'] ?? null,
@@ -231,7 +221,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'assignedToId' => 'nullable|exists:users,id',
+            'assignedToId' => ['nullable', 'integer', TeamMembership::rule((int) $task->team_id)],
             'assignedAgentId' => 'nullable|exists:ai_agents,id',
             'dueDate' => 'sometimes|nullable|date',
             'estimatedHours' => 'nullable|numeric|min:0',
@@ -506,7 +496,7 @@ class TaskController extends Controller
             'priority' => 'required|string|in:low,medium,high,urgent',
             'dueDate' => 'nullable|date',
             'estimatedHours' => 'nullable|numeric|min:0',
-            'assignedToId' => 'nullable|exists:users,id',
+            'assignedToId' => ['nullable', 'integer', TeamMembership::rule((int) $task->team_id)],
             'acceptanceCriteria' => 'nullable|array',
             'acceptanceCriteria.*' => 'string',
             'originalTaskAction' => 'required|string|in:cancel,delete,keep',

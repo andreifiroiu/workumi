@@ -42,6 +42,7 @@ import { workOrderStatusLabels } from '@/components/ui/status-badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
+    CreateTaskDialog,
     DatePresetButtons,
     PriorityBadge,
     ProgressBar,
@@ -71,7 +72,6 @@ import {
     useRejectSuggestion,
     useTriggerPMCopilot,
 } from '@/hooks/use-pm-copilot';
-import { useRecentAssignees } from '@/hooks/use-recent-assignees';
 import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { calculateDefaultDueDate } from '@/lib/date-utils';
@@ -679,18 +679,6 @@ export default function WorkOrderDetail({
     // The reason field is only relevant once the user actually edits the due date.
     const dueDateChanged = editForm.data.due_date !== (workOrder.dueDate || '');
 
-    const taskForm = useForm({
-        title: '',
-        workOrderId: workOrder.id,
-        description: '',
-        dueDate: calculateDefaultDueDate(workOrder.dueDate),
-        assignedToId: '' as string,
-        estimatedHours: '',
-    });
-
-    const { recentIds: recentAssigneeIds, recordAssignee } =
-        useRecentAssignees();
-
     const deliverableForm = useForm({
         title: '',
         workOrderId: workOrder.id,
@@ -801,31 +789,6 @@ export default function WorkOrderDetail({
                 setEditDialogOpen(false);
             },
         });
-    };
-
-    const handleCreateTask = (e: React.FormEvent) => {
-        e.preventDefault();
-        const assignedToId = taskForm.data.assignedToId;
-        taskForm.post('/work/tasks', {
-            preserveScroll: true,
-            onSuccess: () => {
-                recordAssignee(assignedToId);
-                taskForm.reset();
-                setCreateTaskDialogOpen(false);
-            },
-        });
-    };
-
-    const openCreateTaskDialog = () => {
-        taskForm.setData({
-            title: '',
-            workOrderId: workOrder.id,
-            description: '',
-            dueDate: calculateDefaultDueDate(workOrder.dueDate),
-            assignedToId: '',
-            estimatedHours: '',
-        });
-        setCreateTaskDialogOpen(true);
     };
 
     const handleCreateDeliverable = (e: React.FormEvent) => {
@@ -1942,7 +1905,9 @@ export default function WorkOrderDetail({
                                         )}
                                         <Button
                                             size="sm"
-                                            onClick={openCreateTaskDialog}
+                                            onClick={() =>
+                                                setCreateTaskDialogOpen(true)
+                                            }
                                         >
                                             <Plus className="mr-2 h-4 w-4" />
                                             Add Task
@@ -1954,7 +1919,11 @@ export default function WorkOrderDetail({
                                         <p className="mb-4 text-muted-foreground">
                                             No tasks yet
                                         </p>
-                                        <Button onClick={openCreateTaskDialog}>
+                                        <Button
+                                            onClick={() =>
+                                                setCreateTaskDialogOpen(true)
+                                            }
+                                        >
                                             Create Task
                                         </Button>
                                     </div>
@@ -2507,180 +2476,13 @@ export default function WorkOrderDetail({
                 </DialogContent>
             </Dialog>
 
-            {/* Create Task Dialog */}
-            <Dialog
+            <CreateTaskDialog
                 open={createTaskDialogOpen}
                 onOpenChange={setCreateTaskDialogOpen}
-            >
-                <DialogContent>
-                    <form onSubmit={handleCreateTask}>
-                        <DialogHeader>
-                            <DialogTitle>Create Task</DialogTitle>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                                <Label>Title</Label>
-                                <Input
-                                    value={taskForm.data.title}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'title',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Task title"
-                                />
-                                <InputError message={taskForm.errors.title} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Assign To</Label>
-                                <Select
-                                    value={
-                                        taskForm.data.assignedToId ||
-                                        'unassigned'
-                                    }
-                                    onValueChange={(value) =>
-                                        taskForm.setData(
-                                            'assignedToId',
-                                            value === 'unassigned' ? '' : value,
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select assignee" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="unassigned">
-                                            Unassigned
-                                        </SelectItem>
-                                        {teamMembers.map((member) => (
-                                            <SelectItem
-                                                key={member.id}
-                                                value={member.id}
-                                            >
-                                                <span className="flex items-center gap-2">
-                                                    <User className="h-3 w-3" />
-                                                    {member.name}
-                                                </span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {(() => {
-                                    const recentMembers = recentAssigneeIds
-                                        .map((id) =>
-                                            teamMembers.find(
-                                                (member) => member.id === id,
-                                            ),
-                                        )
-                                        .filter(
-                                            (member): member is TeamMember =>
-                                                Boolean(member),
-                                        )
-                                        .filter(
-                                            (member) =>
-                                                member.id !==
-                                                taskForm.data.assignedToId,
-                                        );
-
-                                    if (recentMembers.length === 0) {
-                                        return null;
-                                    }
-
-                                    return (
-                                        <div className="flex flex-wrap gap-1">
-                                            {recentMembers.map((member) => (
-                                                <Button
-                                                    key={member.id}
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-6 text-xs"
-                                                    onClick={() =>
-                                                        taskForm.setData(
-                                                            'assignedToId',
-                                                            member.id,
-                                                        )
-                                                    }
-                                                >
-                                                    <User className="mr-1 h-3 w-3" />
-                                                    {member.name}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Due Date</Label>
-                                <Input
-                                    type="date"
-                                    value={taskForm.data.dueDate}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'dueDate',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                <DatePresetButtons
-                                    onSelect={(date) =>
-                                        taskForm.setData('dueDate', date)
-                                    }
-                                />
-                                <InputError message={taskForm.errors.dueDate} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Estimated Hours</Label>
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.25"
-                                    value={taskForm.data.estimatedHours}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'estimatedHours',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="0"
-                                />
-                                <InputError
-                                    message={taskForm.errors.estimatedHours}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Description</Label>
-                                <Input
-                                    value={taskForm.data.description}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'description',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Brief description"
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCreateTaskDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={taskForm.processing}
-                            >
-                                Create
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                teamMembers={teamMembers}
+                initialWorkOrderId={workOrder.id}
+                defaultDueDate={calculateDefaultDueDate(workOrder.dueDate)}
+            />
 
             {/* Create Deliverable Dialog */}
             <Dialog

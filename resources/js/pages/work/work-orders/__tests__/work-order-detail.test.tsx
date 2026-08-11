@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Radix dropdown primitives rely on these in jsdom.
 window.HTMLElement.prototype.hasPointerCapture = vi.fn();
@@ -158,7 +158,9 @@ vi.mock('@inertiajs/react', () => ({
  * Mock the layout
  */
 vi.mock('@/layouts/app-layout', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
+    default: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="app-layout">{children}</div>
+    ),
 }));
 
 /**
@@ -184,7 +186,12 @@ vi.mock('@/components/workflow', async () => ({
     // The assignment confirmation dialog and its helpers stay real so the
     // page's RACI confirmation wiring is exercised, not stubbed out.
     ...(await import('@/components/workflow/assignment-confirmation-dialog')),
-    TransitionButton: ({ currentStatus, allowedTransitions, onTransition, isLoading }: {
+    TransitionButton: ({
+        currentStatus,
+        allowedTransitions,
+        onTransition,
+        isLoading,
+    }: {
         currentStatus: string;
         allowedTransitions: Array<{ value: string; label: string }>;
         onTransition: (status: string) => void;
@@ -193,27 +200,39 @@ vi.mock('@/components/workflow', async () => ({
         <div data-testid="transition-button">
             <span>Status: {currentStatus}</span>
             {allowedTransitions.map((t) => (
-                <button key={t.value} onClick={() => onTransition(t.value)} disabled={isLoading}>
+                <button
+                    key={t.value}
+                    onClick={() => onTransition(t.value)}
+                    disabled={isLoading}
+                >
                     {t.label}
                 </button>
             ))}
         </div>
     ),
-    TransitionDialog: ({ isOpen, targetStatus, onConfirm, onCancel }: {
+    TransitionDialog: ({
+        isOpen,
+        targetStatus,
+        onConfirm,
+        onCancel,
+    }: {
         isOpen: boolean;
         targetStatus: string;
         targetLabel: string;
         onConfirm: (comment?: string) => void;
         onCancel: () => void;
         isLoading: boolean;
-    }) => isOpen ? (
-        <div data-testid="transition-dialog">
-            <span>Transitioning to: {targetStatus}</span>
-            <button onClick={() => onConfirm()}>Confirm</button>
-            <button onClick={onCancel}>Cancel</button>
-        </div>
-    ) : null,
-    TransitionHistory: ({ transitions }: {
+    }) =>
+        isOpen ? (
+            <div data-testid="transition-dialog">
+                <span>Transitioning to: {targetStatus}</span>
+                <button onClick={() => onConfirm()}>Confirm</button>
+                <button onClick={onCancel}>Cancel</button>
+            </div>
+        ) : null,
+    TransitionHistory: ({
+        transitions,
+    }: {
         transitions: Array<{
             id: number;
             fromStatus: string;
@@ -228,37 +247,71 @@ vi.mock('@/components/workflow', async () => ({
         <div data-testid="transition-history">
             {transitions.map((t) => (
                 <div key={t.id} data-testid="transition-item">
-                    <span data-testid={`transition-user-${t.id}`}>{t.user.name}</span>
-                    <span>{t.fromStatus} to {t.toStatus}</span>
-                    {t.comment && <span data-testid={`transition-comment-${t.id}`}>{t.comment}</span>}
+                    <span data-testid={`transition-user-${t.id}`}>
+                        {t.user.name}
+                    </span>
+                    <span>
+                        {t.fromStatus} to {t.toStatus}
+                    </span>
+                    {t.comment && (
+                        <span data-testid={`transition-comment-${t.id}`}>
+                            {t.comment}
+                        </span>
+                    )}
                 </div>
             ))}
         </div>
     ),
-    RaciSelector: ({ value, users, disabled, onConfirmationRequired }: {
-        value: { responsible_id: number | null; accountable_id: number | null; consulted_ids: number[]; informed_ids: number[] };
+    RaciSelector: ({
+        value,
+        users,
+        disabled,
+        onConfirmationRequired,
+    }: {
+        value: {
+            responsible_id: number | null;
+            accountable_id: number | null;
+            consulted_ids: number[];
+            informed_ids: number[];
+        };
         onChange: (v: typeof value) => void;
         users: Array<{ id: number; name: string }>;
         entityType: string;
         disabled?: boolean;
-        onConfirmationRequired?: (role: string, current: number | null, next: number | null) => void;
+        onConfirmationRequired?: (
+            role: string,
+            current: number | null,
+            next: number | null,
+        ) => void;
     }) => (
         <div data-testid="raci-selector">
             <div>
                 <span>Accountable</span>
-                <button data-testid="raci-accountable-trigger" disabled={disabled}>
-                    {users.find((u) => u.id === value.accountable_id)?.name || 'Select'}
+                <button
+                    data-testid="raci-accountable-trigger"
+                    disabled={disabled}
+                >
+                    {users.find((u) => u.id === value.accountable_id)?.name ||
+                        'Select'}
                 </button>
             </div>
             <div>
                 <span>Responsible</span>
-                <button data-testid="raci-responsible-trigger" disabled={disabled}>
-                    {users.find((u) => u.id === value.responsible_id)?.name || 'Select'}
+                <button
+                    data-testid="raci-responsible-trigger"
+                    disabled={disabled}
+                >
+                    {users.find((u) => u.id === value.responsible_id)?.name ||
+                        'Select'}
                 </button>
                 <button
                     data-testid="raci-responsible-clear"
                     onClick={() =>
-                        onConfirmationRequired?.('responsible', value.responsible_id, null)
+                        onConfirmationRequired?.(
+                            'responsible',
+                            value.responsible_id,
+                            null,
+                        )
                     }
                 >
                     Clear responsible
@@ -272,6 +325,7 @@ vi.mock('@/components/workflow', async () => ({
  * Mock work components
  */
 vi.mock('@/components/work', () => ({
+    CreateTaskDialog: () => <div data-testid="create-task-dialog" />,
     StatusBadge: ({ status, type }: { status: string; type: string }) => {
         const labels: Record<string, string> = {
             draft: 'Draft',
@@ -283,10 +337,18 @@ vi.mock('@/components/work', () => ({
             blocked: 'Blocked',
             revision_requested: 'Revision Requested',
         };
-        return <span data-status={status} data-type={type}>{labels[status] || status}</span>;
+        return (
+            <span data-status={status} data-type={type}>
+                {labels[status] || status}
+            </span>
+        );
     },
-    PriorityBadge: ({ priority }: { priority: string }) => <span data-priority={priority}>{priority}</span>,
-    ProgressBar: ({ progress }: { progress: number }) => <div data-progress={progress} />,
+    PriorityBadge: ({ priority }: { priority: string }) => (
+        <span data-priority={priority}>{priority}</span>
+    ),
+    ProgressBar: ({ progress }: { progress: number }) => (
+        <div data-progress={progress} />
+    ),
     DatePresetButtons: () => null,
 }));
 
@@ -294,7 +356,13 @@ vi.mock('@/components/work', () => ({
  * Mock time tracking components
  */
 vi.mock('@/components/time-tracking', () => ({
-    HoursProgressIndicator: ({ actualHours, estimatedHours }: { actualHours: number; estimatedHours: number }) => (
+    HoursProgressIndicator: ({
+        actualHours,
+        estimatedHours,
+    }: {
+        actualHours: number;
+        estimatedHours: number;
+    }) => (
         <div data-actual={actualHours} data-estimated={estimatedHours}>
             {actualHours}/{estimatedHours}h
         </div>
@@ -304,8 +372,8 @@ vi.mock('@/components/time-tracking', () => ({
 /**
  * Import the component - must be after mocks
  */
-import WorkOrderDetail from '../[id]';
 import { router } from '@inertiajs/react';
+import WorkOrderDetail from '../[id]';
 
 describe('WorkOrderDetail - Status Display', () => {
     it('displays current status with badge', () => {
@@ -321,7 +389,7 @@ describe('WorkOrderDetail - Status Display', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         // Check that work order status badge is displayed with active status
@@ -350,11 +418,13 @@ describe('WorkOrderDetail - Status Display', () => {
                     statusTransitions={mockStatusTransitions}
                     allowedTransitions={mockAllowedTransitions}
                     raciValue={mockRaciValue}
-                />
+                />,
             );
 
             // Find the work order status badge specifically (not deliverable)
-            const statusBadge = screen.getByText(label, { selector: '[data-type="workOrder"]' });
+            const statusBadge = screen.getByText(label, {
+                selector: '[data-type="workOrder"]',
+            });
             expect(statusBadge).toBeInTheDocument();
             expect(statusBadge).toHaveAttribute('data-status', status);
             unmount();
@@ -376,7 +446,7 @@ describe('WorkOrderDetail - RACI Selector', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         // Check that RACI section is present
@@ -405,11 +475,13 @@ describe('WorkOrderDetail - RACI Selector', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         // The RACI selector should be interactive
-        const accountableTrigger = screen.getByTestId('raci-accountable-trigger');
+        const accountableTrigger = screen.getByTestId(
+            'raci-accountable-trigger',
+        );
         expect(accountableTrigger).toBeInTheDocument();
         expect(accountableTrigger).not.toBeDisabled();
     });
@@ -429,13 +501,13 @@ describe('WorkOrderDetail - RACI Selector', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         await user.click(screen.getByTestId('raci-responsible-clear'));
 
         expect(
-            await screen.findByRole('heading', { name: /remove responsible/i })
+            await screen.findByRole('heading', { name: /remove responsible/i }),
         ).toBeInTheDocument();
         expect(screen.getByText('Unassigned')).toBeInTheDocument();
 
@@ -463,14 +535,16 @@ describe('WorkOrderDetail - RACI Selector', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         await user.click(screen.getByTestId('raci-responsible-clear'));
-        await user.click(await screen.findByRole('button', { name: /^confirm$/i }));
+        await user.click(
+            await screen.findByRole('button', { name: /^confirm$/i }),
+        );
 
         const raciCall = fetchMock.mock.calls.find(([url]) =>
-            String(url).endsWith('/raci')
+            String(url).endsWith('/raci'),
         );
         expect(raciCall).toBeDefined();
         expect(JSON.parse(raciCall![1].body)).toMatchObject({
@@ -497,7 +571,7 @@ describe('WorkOrderDetail - Transition History', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         // Check that Activity/History section is displayed
@@ -518,7 +592,7 @@ describe('WorkOrderDetail - Transition History', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
         // Check that the transition user is shown using specific test id
@@ -540,7 +614,11 @@ describe('WorkOrderDetail - Transition History', () => {
                 toAssignedAgent: null,
                 fromDueDate: null,
                 toDueDate: null,
-                user: { id: 1, name: 'Reviewer User', email: 'reviewer@test.com' },
+                user: {
+                    id: 1,
+                    name: 'Reviewer User',
+                    email: 'reviewer@test.com',
+                },
                 createdAt: '2024-12-05T10:00:00Z',
                 comment: 'Please fix the formatting issues',
                 commentCategory: 'quality_issue' as const,
@@ -561,14 +639,20 @@ describe('WorkOrderDetail - Transition History', () => {
                 raciValue={mockRaciValue}
                 rejectionFeedback={{
                     comment: 'Please fix the formatting issues',
-                    user: { id: 1, name: 'Reviewer User', email: 'reviewer@test.com' },
+                    user: {
+                        id: 1,
+                        name: 'Reviewer User',
+                        email: 'reviewer@test.com',
+                    },
                     createdAt: '2024-12-05T10:00:00Z',
                 }}
-            />
+            />,
         );
 
         // Check that rejection feedback is displayed (there will be 2 instances - banner and history)
-        const feedbackElements = screen.getAllByText('Please fix the formatting issues');
+        const feedbackElements = screen.getAllByText(
+            'Please fix the formatting issues',
+        );
         expect(feedbackElements.length).toBeGreaterThanOrEqual(1);
 
         // Check that the rejection banner title is present
@@ -598,7 +682,7 @@ describe('WorkOrderDetail - Header Actions', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 raciValue={mockRaciValue}
-            />
+            />,
         );
 
     const openHeaderMenu = async () => {
@@ -614,12 +698,14 @@ describe('WorkOrderDetail - Header Actions', () => {
         renderPage();
 
         const user = await openHeaderMenu();
-        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+        await user.click(
+            await screen.findByText('Mark as Delivered & Archive'),
+        );
 
         expect(router.post).toHaveBeenCalledWith(
             '/work/work-orders/1/deliver-and-archive',
             {},
-            expect.objectContaining({ preserveScroll: true })
+            expect.objectContaining({ preserveScroll: true }),
         );
     });
 
@@ -628,7 +714,9 @@ describe('WorkOrderDetail - Header Actions', () => {
 
         await openHeaderMenu();
 
-        expect(screen.queryByText('Mark as Delivered & Archive')).not.toBeInTheDocument();
+        expect(
+            screen.queryByText('Mark as Delivered & Archive'),
+        ).not.toBeInTheDocument();
         expect(await screen.findByText('Unarchive')).toBeInTheDocument();
     });
 });

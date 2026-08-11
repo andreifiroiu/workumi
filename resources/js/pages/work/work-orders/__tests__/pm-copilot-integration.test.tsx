@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Mock data for tests
@@ -156,7 +156,9 @@ vi.mock('@inertiajs/react', () => ({
  * Mock the layout
  */
 vi.mock('@/layouts/app-layout', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
+    default: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="app-layout">{children}</div>
+    ),
 }));
 
 /**
@@ -186,9 +188,16 @@ vi.mock('@/components/workflow', async () => ({
  * Mock work components
  */
 vi.mock('@/components/work', () => ({
-    StatusBadge: ({ status }: { status: string }) => <span data-status={status}>{status}</span>,
-    PriorityBadge: ({ priority }: { priority: string }) => <span data-priority={priority}>{priority}</span>,
-    ProgressBar: ({ progress }: { progress: number }) => <div data-progress={progress} />,
+    CreateTaskDialog: () => <div data-testid="create-task-dialog" />,
+    StatusBadge: ({ status }: { status: string }) => (
+        <span data-status={status}>{status}</span>
+    ),
+    PriorityBadge: ({ priority }: { priority: string }) => (
+        <span data-priority={priority}>{priority}</span>
+    ),
+    ProgressBar: ({ progress }: { progress: number }) => (
+        <div data-progress={progress} />
+    ),
     DatePresetButtons: () => null,
 }));
 
@@ -203,7 +212,14 @@ vi.mock('@/components/time-tracking', () => ({
  * Mock PM Copilot components
  */
 vi.mock('@/components/pm-copilot', () => ({
-    PMCopilotTriggerButton: ({ onTrigger, isRunning }: { workOrderId: string; onTrigger: () => void; isRunning: boolean }) => (
+    PMCopilotTriggerButton: ({
+        onTrigger,
+        isRunning,
+    }: {
+        workOrderId: string;
+        onTrigger: () => void;
+        isRunning: boolean;
+    }) => (
         <button
             data-testid="pm-copilot-trigger-button"
             onClick={onTrigger}
@@ -212,7 +228,11 @@ vi.mock('@/components/pm-copilot', () => ({
             {isRunning ? 'Generating...' : 'Generate Plan'}
         </button>
     ),
-    PlanAlternativesPanel: ({ alternatives, onApprove, onReject }: {
+    PlanAlternativesPanel: ({
+        alternatives,
+        onApprove,
+        onReject,
+    }: {
         alternatives: typeof mockPMCopilotSuggestions.alternatives;
         onApprove: (id: string) => void;
         onReject: (id: string) => void;
@@ -221,13 +241,26 @@ vi.mock('@/components/pm-copilot', () => ({
             {alternatives.map((alt) => (
                 <div key={alt.id} data-testid={`alternative-${alt.id}`}>
                     <span>{alt.name}</span>
-                    <button onClick={() => onApprove(alt.id)} data-testid={`approve-${alt.id}`}>Approve</button>
-                    <button onClick={() => onReject(alt.id)} data-testid={`reject-${alt.id}`}>Reject</button>
+                    <button
+                        onClick={() => onApprove(alt.id)}
+                        data-testid={`approve-${alt.id}`}
+                    >
+                        Approve
+                    </button>
+                    <button
+                        onClick={() => onReject(alt.id)}
+                        data-testid={`reject-${alt.id}`}
+                    >
+                        Reject
+                    </button>
                 </div>
             ))}
         </div>
     ),
-    PMCopilotSettingsToggle: ({ currentMode, onChange }: {
+    PMCopilotSettingsToggle: ({
+        currentMode,
+        onChange,
+    }: {
         workOrderId: string;
         currentMode: string;
         onChange: (mode: string) => void;
@@ -235,7 +268,9 @@ vi.mock('@/components/pm-copilot', () => ({
         <div data-testid="pm-copilot-settings-toggle">
             <span data-testid="current-mode">{currentMode}</span>
             <button
-                onClick={() => onChange(currentMode === 'staged' ? 'full' : 'staged')}
+                onClick={() =>
+                    onChange(currentMode === 'staged' ? 'full' : 'staged')
+                }
                 data-testid="mode-toggle"
             >
                 Toggle Mode
@@ -316,11 +351,13 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         // Check that PM Copilot trigger button is rendered
-        expect(screen.getByTestId('pm-copilot-trigger-button')).toBeInTheDocument();
+        expect(
+            screen.getByTestId('pm-copilot-trigger-button'),
+        ).toBeInTheDocument();
         expect(screen.getByText('Generate Plan')).toBeInTheDocument();
     });
 
@@ -342,11 +379,13 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         // Check that settings toggle is rendered with current mode
-        expect(screen.getByTestId('pm-copilot-settings-toggle')).toBeInTheDocument();
+        expect(
+            screen.getByTestId('pm-copilot-settings-toggle'),
+        ).toBeInTheDocument();
         expect(screen.getByTestId('current-mode')).toHaveTextContent('full');
     });
 
@@ -371,11 +410,13 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         // Check that alternatives panel is rendered
-        expect(screen.getByTestId('plan-alternatives-panel')).toBeInTheDocument();
+        expect(
+            screen.getByTestId('plan-alternatives-panel'),
+        ).toBeInTheDocument();
         expect(screen.getByTestId('alternative-alt-1')).toBeInTheDocument();
         expect(screen.getByText('Comprehensive Plan')).toBeInTheDocument();
     });
@@ -400,7 +441,7 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         const triggerButton = screen.getByTestId('pm-copilot-trigger-button');
@@ -437,7 +478,7 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         // Find and click approve button for the alternative
@@ -470,7 +511,7 @@ describe('PM Copilot Integration - Work Order Detail Page', () => {
                     consulted_ids: [],
                     informed_ids: [],
                 }}
-            />
+            />,
         );
 
         // Find and click the mode toggle

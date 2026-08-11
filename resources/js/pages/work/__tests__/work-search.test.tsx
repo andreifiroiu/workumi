@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { Task, WorkOrder, WorkPageProps } from '@/types/work';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@inertiajs/react', () => ({
     Head: ({ title }: { title: string }) => <title>{title}</title>,
@@ -19,15 +19,20 @@ vi.mock('@inertiajs/react', () => ({
 }));
 
 vi.mock('@/layouts/app-layout', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
+    default: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="app-layout">{children}</div>
+    ),
 }));
 
 vi.mock('@/components/work', () => ({
+    CreateTaskDialog: () => <div data-testid="create-task-dialog" />,
     ViewTabs: () => <div data-testid="view-tabs" />,
     QuickAddBar: () => <div data-testid="quick-add" />,
-    ProjectTreeItem: ({ project }: { project: { id: string; name: string } }) => (
-        <div data-testid="project-item">{project.name}</div>
-    ),
+    ProjectTreeItem: ({
+        project,
+    }: {
+        project: { id: string; name: string };
+    }) => <div data-testid="project-item">{project.name}</div>,
     MyWorkView: () => <div data-testid="my-work" />,
     KanbanView: () => <div data-testid="kanban" />,
     CalendarView: () => <div data-testid="calendar" />,
@@ -146,7 +151,12 @@ describe('Work page universal search', () => {
     });
 
     it('matches by project name', () => {
-        renderWork({ projects: [makeProject({ id: 'a', name: 'Marketing Site' }), makeProject({ id: 'b', name: 'Mobile App' })] });
+        renderWork({
+            projects: [
+                makeProject({ id: 'a', name: 'Marketing Site' }),
+                makeProject({ id: 'b', name: 'Mobile App' }),
+            ],
+        });
 
         search('marketing');
 
@@ -159,7 +169,16 @@ describe('Work page universal search', () => {
                 makeProject({
                     id: 'a',
                     name: 'Acme Project',
-                    workOrderLists: [{ id: 'l1', name: 'Onboarding Sprint', description: null, color: null, position: 0, workOrders: [] }],
+                    workOrderLists: [
+                        {
+                            id: 'l1',
+                            name: 'Onboarding Sprint',
+                            description: null,
+                            color: null,
+                            position: 0,
+                            workOrders: [],
+                        },
+                    ],
                 }),
                 makeProject({ id: 'b', name: 'Other Project' }),
             ],
@@ -184,7 +203,17 @@ describe('Work page universal search', () => {
                             color: null,
                             position: 0,
                             workOrders: [
-                                { id: 'wo1', title: 'Build login screen', status: 'active', priority: 'medium', dueDate: null, assignedToName: '', tasksCount: 0, completedTasksCount: 0, positionInList: 0 },
+                                {
+                                    id: 'wo1',
+                                    title: 'Build login screen',
+                                    status: 'active',
+                                    priority: 'medium',
+                                    dueDate: null,
+                                    assignedToName: '',
+                                    tasksCount: 0,
+                                    completedTasksCount: 0,
+                                    positionInList: 0,
+                                },
                             ],
                         },
                     ],
@@ -205,7 +234,17 @@ describe('Work page universal search', () => {
                     id: 'a',
                     name: 'Acme Project',
                     ungroupedWorkOrders: [
-                        { id: 'wo1', title: 'Quarterly audit', status: 'active', priority: 'medium', dueDate: null, assignedToName: '', tasksCount: 0, completedTasksCount: 0, positionInList: 0 },
+                        {
+                            id: 'wo1',
+                            title: 'Quarterly audit',
+                            status: 'active',
+                            priority: 'medium',
+                            dueDate: null,
+                            assignedToName: '',
+                            tasksCount: 0,
+                            completedTasksCount: 0,
+                            positionInList: 0,
+                        },
                     ],
                 }),
                 makeProject({ id: 'b', name: 'Other Project' }),
@@ -219,8 +258,18 @@ describe('Work page universal search', () => {
 
     it('matches a project via the top-level work orders array (title and description)', () => {
         renderWork({
-            projects: [makeProject({ id: 'a', name: 'Acme Project' }), makeProject({ id: 'b', name: 'Other Project' })],
-            workOrders: [makeWorkOrder({ id: 'wo1', title: 'Redesign', description: 'database migration work', projectId: 'b' })],
+            projects: [
+                makeProject({ id: 'a', name: 'Acme Project' }),
+                makeProject({ id: 'b', name: 'Other Project' }),
+            ],
+            workOrders: [
+                makeWorkOrder({
+                    id: 'wo1',
+                    title: 'Redesign',
+                    description: 'database migration work',
+                    projectId: 'b',
+                }),
+            ],
         });
 
         search('migration');
@@ -230,8 +279,18 @@ describe('Work page universal search', () => {
 
     it('matches a project via a task title', () => {
         renderWork({
-            projects: [makeProject({ id: 'a', name: 'Acme Project' }), makeProject({ id: 'b', name: 'Other Project' })],
-            tasks: [makeTask({ id: 't1', title: 'Write release notes', description: null, projectId: 'a' })],
+            projects: [
+                makeProject({ id: 'a', name: 'Acme Project' }),
+                makeProject({ id: 'b', name: 'Other Project' }),
+            ],
+            tasks: [
+                makeTask({
+                    id: 't1',
+                    title: 'Write release notes',
+                    description: null,
+                    projectId: 'a',
+                }),
+            ],
         });
 
         search('release notes');
@@ -240,7 +299,12 @@ describe('Work page universal search', () => {
     });
 
     it('shows all projects when the query is empty', () => {
-        renderWork({ projects: [makeProject({ id: 'a', name: 'Acme Project' }), makeProject({ id: 'b', name: 'Other Project' })] });
+        renderWork({
+            projects: [
+                makeProject({ id: 'a', name: 'Acme Project' }),
+                makeProject({ id: 'b', name: 'Other Project' }),
+            ],
+        });
 
         expect(visibleProjects()).toEqual(['Acme Project', 'Other Project']);
     });

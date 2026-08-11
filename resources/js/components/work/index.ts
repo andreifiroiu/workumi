@@ -1,8 +1,10 @@
 // Work Section Components
+export { AddProjectMemberDialog } from './add-project-member-dialog';
 export { ArchiveProjectCard } from './archive-project-card';
 export { ArchiveView } from './archive-view';
 export { CalendarEvent } from './calendar-event';
 export { CalendarView } from './calendar-view';
+export { CreateTaskDialog } from './create-task-dialog';
 export { DatePresetButtons } from './date-preset-buttons';
 export { KanbanColumn } from './kanban-column';
 export { KanbanView } from './kanban-view';
@@ -11,10 +13,9 @@ export { MyWorkView } from './my-work-view';
 export { PriorityBadge } from './priority-badge';
 export { ProgressBar } from './progress-bar';
 export { ProjectTeamSection } from './project-team-section';
-export { AddProjectMemberDialog } from './add-project-member-dialog';
-export { RemoveProjectMemberDialog } from './remove-project-member-dialog';
 export { ProjectTreeItem } from './project-tree-item';
 export { QuickAddBar } from './quick-add-bar';
+export { RemoveProjectMemberDialog } from './remove-project-member-dialog';
 export { RoleBadge } from './role-badge';
 export { StatusBadge } from './status-badge';
 export { ViewTabs } from './view-tabs';
