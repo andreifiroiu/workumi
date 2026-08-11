@@ -1,18 +1,9 @@
-import { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import {
-    ChevronDown,
-    ChevronRight,
-    MoreVertical,
-    Plus,
-    Edit,
-    Trash2,
-    FolderOpen,
-    FolderSymlink,
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,16 +11,28 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { WorkOrderListItem } from './work-order-list-item';
-import { EditListDialog } from './edit-list-dialog';
-import { ConvertListToProjectDialog } from './convert-list-to-project-dialog';
-import type { WorkOrderList } from '@/types/work';
 import { cn } from '@/lib/utils';
+import type { MoveDestinationProject, WorkOrderList } from '@/types/work';
+import { useDroppable } from '@dnd-kit/core';
+import {
+    SortableContext,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { router } from '@inertiajs/react';
+import {
+    ChevronDown,
+    ChevronRight,
+    Edit,
+    FolderOpen,
+    FolderSymlink,
+    MoreVertical,
+    Plus,
+    Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
+import { ConvertListToProjectDialog } from './convert-list-to-project-dialog';
+import { EditListDialog } from './edit-list-dialog';
+import { WorkOrderListItem } from './work-order-list-item';
 
 interface WorkOrderListGroupProps {
     list: WorkOrderList;
@@ -39,15 +42,18 @@ interface WorkOrderListGroupProps {
     isDropTarget?: boolean;
     parties?: Array<{ id: string; name: string }>;
     projectPartyId?: string;
+    moveDestinations?: MoveDestinationProject[];
 }
 
 export function WorkOrderListGroup({
     list,
+    projectId,
     onCreateWorkOrder,
     isUngrouped = false,
     isDropTarget = false,
     parties = [],
     projectPartyId = '',
+    moveDestinations = [],
 }: WorkOrderListGroupProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -63,7 +69,7 @@ export function WorkOrderListGroup({
     const handleDelete = () => {
         if (
             confirm(
-                `Are you sure you want to delete "${list.name}"? Work orders in this list will become ungrouped.`
+                `Are you sure you want to delete "${list.name}"? Work orders in this list will become ungrouped.`,
             )
         ) {
             router.delete(`/work/work-order-lists/${list.id}`, {
@@ -78,15 +84,15 @@ export function WorkOrderListGroup({
                 ref={setNodeRef}
                 id={isUngrouped ? undefined : `list-${list.id}`}
                 className={cn(
-                    'border border-border rounded-lg overflow-hidden transition-colors scroll-mt-20',
-                    showDropHighlight && 'border-primary bg-primary/5'
+                    'scroll-mt-20 overflow-hidden rounded-lg border border-border transition-colors',
+                    showDropHighlight && 'border-primary bg-primary/5',
                 )}
             >
                 {/* Header */}
                 <div
                     className={cn(
                         'flex items-center gap-2 px-4 py-3',
-                        list.color ? '' : 'bg-muted/50'
+                        list.color ? '' : 'bg-muted/50',
                     )}
                     style={
                         list.color
@@ -106,7 +112,7 @@ export function WorkOrderListGroup({
 
                     {list.color && (
                         <div
-                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            className="h-3 w-3 flex-shrink-0 rounded-full"
                             style={{ backgroundColor: list.color }}
                         />
                     )}
@@ -115,7 +121,7 @@ export function WorkOrderListGroup({
                         <FolderOpen className="h-4 w-4 text-muted-foreground" />
                     )}
 
-                    <span className="font-medium flex-1">{list.name}</span>
+                    <span className="flex-1 font-medium">{list.name}</span>
                     <span className="text-sm text-muted-foreground">
                         {list.workOrders.length} work order
                         {list.workOrders.length !== 1 ? 's' : ''}
@@ -124,24 +130,30 @@ export function WorkOrderListGroup({
                     {!isUngrouped && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                >
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                                    <Edit className="h-4 w-4 mr-2" />
+                                <DropdownMenuItem
+                                    onClick={() => setEditDialogOpen(true)}
+                                >
+                                    <Edit className="mr-2 h-4 w-4" />
                                     Edit List
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={onCreateWorkOrder}>
-                                    <Plus className="h-4 w-4 mr-2" />
+                                    <Plus className="mr-2 h-4 w-4" />
                                     Add Work Order
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => setConvertDialogOpen(true)}
                                     disabled={list.workOrders.length === 0}
                                 >
-                                    <FolderSymlink className="h-4 w-4 mr-2" />
+                                    <FolderSymlink className="mr-2 h-4 w-4" />
                                     Convert to Project
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -149,7 +161,7 @@ export function WorkOrderListGroup({
                                     onClick={handleDelete}
                                     className="text-destructive"
                                 >
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <Trash2 className="mr-2 h-4 w-4" />
                                     Delete List
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -163,9 +175,9 @@ export function WorkOrderListGroup({
                         items={list.workOrders.map((wo) => wo.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className="p-2 space-y-2">
+                        <div className="space-y-2 p-2">
                             {list.workOrders.length === 0 ? (
-                                <div className="text-center py-6 text-muted-foreground text-sm">
+                                <div className="py-6 text-center text-sm text-muted-foreground">
                                     {isUngrouped
                                         ? 'No ungrouped work orders'
                                         : 'Drag work orders here or click to add'}
@@ -176,6 +188,8 @@ export function WorkOrderListGroup({
                                         key={workOrder.id}
                                         workOrder={workOrder}
                                         listId={isUngrouped ? null : list.id}
+                                        projectId={projectId}
+                                        moveDestinations={moveDestinations}
                                     />
                                 ))
                             )}

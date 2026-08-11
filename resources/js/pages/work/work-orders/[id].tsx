@@ -45,6 +45,8 @@ import { Textarea } from '@/components/ui/textarea';
 import {
     CreateTaskDialog,
     DatePresetButtons,
+    EditTaskDialog,
+    MoveWorkOrderDialog,
     PriorityBadge,
     ProgressBar,
     StatusBadge,
@@ -79,7 +81,7 @@ import { calculateDefaultDueDate } from '@/lib/date-utils';
 import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
 import type { BreadcrumbItem } from '@/types';
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
-import type { BudgetType } from '@/types/work';
+import type { BudgetType, MoveDestinationProject } from '@/types/work';
 import {
     closestCenter,
     DndContext,
@@ -108,6 +110,7 @@ import {
     Edit,
     ExternalLink,
     FileText,
+    FolderInput,
     GripVertical,
     History,
     LayoutGrid,
@@ -261,6 +264,7 @@ interface WorkOrderDetailProps {
     allowedTransitions?: TransitionOption[];
     raciValue?: RaciValue;
     rejectionFeedback?: RejectionFeedback | null;
+    moveDestinations?: MoveDestinationProject[];
     siblingProjects?: Array<{ id: string; name: string }>;
     siblingWorkOrders?: Array<{ id: string; title: string }>;
     siblingLists?: Array<{ id: string; name: string }>;
@@ -277,6 +281,7 @@ interface SortableTaskCardProps {
         currentStatus: string,
         e: React.MouseEvent,
     ) => void;
+    onEdit: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onStatusChange: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onPromote: (task: WorkOrderDetailProps['tasks'][0]) => void;
     onDelete: (task: WorkOrderDetailProps['tasks'][0]) => void;
@@ -290,6 +295,7 @@ function SortableTaskCard({
     task,
     completingTaskId,
     onQuickComplete,
+    onEdit,
     onStatusChange,
     onPromote,
     onDelete,
@@ -418,6 +424,16 @@ function SortableTaskCard({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(task);
+                            }}
+                        >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         {getStatusOptions(task.status).length > 0 && (
                             <>
                                 <DropdownMenuItem
@@ -497,12 +513,14 @@ export default function WorkOrderDetail({
     allowedTransitions = [],
     raciValue,
     rejectionFeedback = null,
+    moveDestinations = [],
     siblingProjects = [],
     siblingWorkOrders = [],
     siblingLists = [],
 }: WorkOrderDetailProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+    const [moveDialogOpen, setMoveDialogOpen] = useState(false);
     const [createDeliverableDialogOpen, setCreateDeliverableDialogOpen] =
         useState(false);
     const [editDeliverableDialogOpen, setEditDeliverableDialogOpen] =
@@ -562,6 +580,7 @@ export default function WorkOrderDetail({
     const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
     const [taskTransitionDialogOpen, setTaskTransitionDialogOpen] =
         useState(false);
+    const [taskEditDialogOpen, setTaskEditDialogOpen] = useState(false);
 
     // Task view mode state (list vs board)
     const [taskView, setTaskView] = useState<'list' | 'board'>('list');
@@ -1299,6 +1318,11 @@ export default function WorkOrderDetail({
     /**
      * Task context menu handlers
      */
+    const handleTaskEdit = useCallback((task: TaskType) => {
+        setSelectedTask(task);
+        setTaskEditDialogOpen(true);
+    }, []);
+
     const handleTaskStatusChange = useCallback((task: TaskType) => {
         setSelectedTask(task);
         setTaskTransitionDialogOpen(true);
@@ -1677,6 +1701,13 @@ export default function WorkOrderDetail({
                                         <Edit className="mr-2 h-4 w-4" />
                                         Edit
                                     </DropdownMenuItem>
+                                    {/* Offered for archived work orders too: misfiled work is worth correcting after it is put away. */}
+                                    <DropdownMenuItem
+                                        onClick={() => setMoveDialogOpen(true)}
+                                    >
+                                        <FolderInput className="mr-2 h-4 w-4" />
+                                        Move to Project…
+                                    </DropdownMenuItem>
                                     {workOrder.status !== 'archived' && (
                                         <DropdownMenuItem
                                             onClick={handleDeliverAndArchive}
@@ -1960,6 +1991,7 @@ export default function WorkOrderDetail({
                                                         onQuickComplete={
                                                             handleQuickTaskComplete
                                                         }
+                                                        onEdit={handleTaskEdit}
                                                         onStatusChange={
                                                             handleTaskStatusChange
                                                         }
@@ -2487,6 +2519,14 @@ export default function WorkOrderDetail({
                     </form>
                 </DialogContent>
             </Dialog>
+
+            <MoveWorkOrderDialog
+                open={moveDialogOpen}
+                onOpenChange={setMoveDialogOpen}
+                workOrder={{ id: workOrder.id, title: workOrder.title }}
+                currentProjectId={workOrder.projectId}
+                destinations={moveDestinations}
+            />
 
             <CreateTaskDialog
                 open={createTaskDialogOpen}
@@ -3030,6 +3070,21 @@ export default function WorkOrderDetail({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Edit Task Dialog */}
+            {selectedTask && (
+                <EditTaskDialog
+                    key={selectedTask.id}
+                    open={taskEditDialogOpen}
+                    onOpenChange={(open) => {
+                        setTaskEditDialogOpen(open);
+                        if (!open) setSelectedTask(null);
+                    }}
+                    task={selectedTask}
+                    teamMembers={teamMembers}
+                    availableAgents={availableAgents}
+                />
+            )}
 
             {/* Promote to Work Order Dialog */}
             {selectedTask && (

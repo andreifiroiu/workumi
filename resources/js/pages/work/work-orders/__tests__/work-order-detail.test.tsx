@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -326,6 +326,16 @@ vi.mock('@/components/workflow', async () => ({
  */
 vi.mock('@/components/work', () => ({
     CreateTaskDialog: () => <div data-testid="create-task-dialog" />,
+    MoveWorkOrderDialog: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="move-work-order-dialog" /> : null,
+    EditTaskDialog: ({
+        open,
+        task,
+    }: {
+        open: boolean;
+        task: { title: string };
+    }) =>
+        open ? <div data-testid="edit-task-dialog">{task.title}</div> : null,
     StatusBadge: ({ status, type }: { status: string; type: string }) => {
         const labels: Record<string, string> = {
             draft: 'Draft',
@@ -709,6 +719,26 @@ describe('WorkOrderDetail - Header Actions', () => {
         );
     });
 
+    it('opens the move dialog from the header menu', async () => {
+        renderPage();
+
+        const user = await openHeaderMenu();
+        await user.click(await screen.findByText('Move to Project…'));
+
+        expect(
+            screen.getByTestId('move-work-order-dialog'),
+        ).toBeInTheDocument();
+    });
+
+    it('offers the move action for archived work orders too', async () => {
+        // Misfiled work is worth correcting after it has been put away.
+        renderPage({ status: 'archived' });
+
+        await openHeaderMenu();
+
+        expect(await screen.findByText('Move to Project…')).toBeInTheDocument();
+    });
+
     it('hides Mark as Delivered & Archive for archived work orders', async () => {
         renderPage({ status: 'archived' });
 
@@ -718,5 +748,43 @@ describe('WorkOrderDetail - Header Actions', () => {
             screen.queryByText('Mark as Delivered & Archive'),
         ).not.toBeInTheDocument();
         expect(await screen.findByText('Unarchive')).toBeInTheDocument();
+    });
+});
+
+describe('WorkOrderDetail - Task Actions', () => {
+    const renderPage = () =>
+        render(
+            <WorkOrderDetail
+                workOrder={mockWorkOrder}
+                tasks={mockTasks}
+                deliverables={mockDeliverables}
+                documents={[]}
+                folders={[]}
+                communicationThread={null}
+                messages={[]}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                raciValue={mockRaciValue}
+            />,
+        );
+
+    it('opens the shared edit dialog from a task menu', async () => {
+        const user = userEvent.setup();
+        renderPage();
+
+        const card = screen
+            .getByRole('link', { name: /Task 1/ })
+            .closest('div.rounded-lg')!;
+        await user.click(
+            within(card as HTMLElement)
+                .getAllByRole('button')
+                .find((b) => b.getAttribute('aria-haspopup') === 'menu')!,
+        );
+        await user.click(await screen.findByText('Edit'));
+
+        expect(screen.getByTestId('edit-task-dialog')).toHaveTextContent(
+            'Task 1',
+        );
     });
 });

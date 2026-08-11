@@ -13,6 +13,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
+use App\Support\MoveDestinations;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -78,19 +79,16 @@ class ProjectController extends Controller
         $thread = $project->communicationThread;
         $messages = $thread ? $thread->messages()->with('author')->orderBy('created_at', 'desc')->get() : collect();
 
-        // Sibling projects for breadcrumb navigation
-        $siblingProjects = Project::forTeam($project->team_id)
-            ->notArchived()
-            ->visibleTo($user->id)
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        // The projects a work order here could move into are also exactly this
+        // project's breadcrumb siblings, so one query answers both.
+        $moveDestinations = MoveDestinations::forTeam((int) $project->team_id, (int) $user->id);
 
         return Inertia::render('work/projects/[id]', [
-            'siblingProjects' => $siblingProjects->map(fn (Project $p) => [
-                'id' => (string) $p->id,
-                'name' => $p->name,
-            ]),
+            'moveDestinations' => $moveDestinations,
+            'siblingProjects' => array_map(
+                fn (array $sibling) => ['id' => $sibling['id'], 'name' => $sibling['name']],
+                $moveDestinations,
+            ),
             'project' => [
                 'id' => (string) $project->id,
                 'name' => $project->name,

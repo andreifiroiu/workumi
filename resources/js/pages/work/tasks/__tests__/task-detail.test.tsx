@@ -1,16 +1,30 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock Inertia
 vi.mock('@inertiajs/react', () => ({
     Head: ({ title }: { title: string }) => <title>{title}</title>,
-    Link: ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    Link: ({
+        href,
+        children,
+        ...props
+    }: {
+        href: string;
+        children: React.ReactNode;
+    }) => (
         <a href={href} {...props}>
             {children}
         </a>
     ),
     useForm: vi.fn(() => ({
-        data: { title: '', description: '', status: '', assigned_to_id: '', due_date: '', estimated_hours: '' },
+        data: {
+            title: '',
+            description: '',
+            status: '',
+            assigned_to_id: '',
+            due_date: '',
+            estimated_hours: '',
+        },
         setData: vi.fn(),
         patch: vi.fn(),
         post: vi.fn(),
@@ -34,7 +48,11 @@ vi.mock('@inertiajs/react', () => ({
 // Mock the components we use
 vi.mock('@/components/ui/status-badge', () => ({
     StatusBadge: ({ status, variant }: { status: string; variant: string }) => (
-        <span data-testid="status-badge" data-status={status} data-variant={variant}>
+        <span
+            data-testid="status-badge"
+            data-status={status}
+            data-variant={variant}
+        >
             {status}
         </span>
     ),
@@ -60,9 +78,16 @@ vi.mock('@/components/workflow', () => ({
         allowedTransitions: { value: string; label: string }[];
         onTransition: (status: string) => void;
     }) => (
-        <div data-testid="transition-button" data-current-status={currentStatus}>
+        <div
+            data-testid="transition-button"
+            data-current-status={currentStatus}
+        >
             {allowedTransitions.map((t) => (
-                <button key={t.value} onClick={() => onTransition(t.value)} data-testid={`transition-${t.value}`}>
+                <button
+                    key={t.value}
+                    onClick={() => onTransition(t.value)}
+                    data-testid={`transition-${t.value}`}
+                >
                     {t.label}
                 </button>
             ))}
@@ -88,12 +113,20 @@ vi.mock('@/components/workflow', () => ({
 }));
 
 vi.mock('@/layouts/app-layout', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
+    default: ({ children }: { children: React.ReactNode }) => (
+        <div data-testid="app-layout">{children}</div>
+    ),
 }));
 
 vi.mock('@/components/work', () => ({
-    StatusBadge: ({ status }: { status: string }) => <span data-testid="work-status-badge">{status}</span>,
-    ProgressBar: ({ progress }: { progress: number }) => <div data-testid="progress-bar">{progress}%</div>,
+    EditTaskDialog: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="edit-task-dialog" /> : null,
+    StatusBadge: ({ status }: { status: string }) => (
+        <span data-testid="work-status-badge">{status}</span>
+    ),
+    ProgressBar: ({ progress }: { progress: number }) => (
+        <div data-testid="progress-bar">{progress}%</div>
+    ),
 }));
 
 vi.mock('@/components/time-tracking', () => ({
@@ -198,7 +231,7 @@ describe('TaskDetail - Task Group 15 Tests', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 rejectionFeedback={null}
-            />
+            />,
         );
 
         // Check that the status badge is present with correct status
@@ -217,13 +250,16 @@ describe('TaskDetail - Task Group 15 Tests', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 rejectionFeedback={null}
-            />
+            />,
         );
 
         // Check that transition button is present
         const transitionButton = screen.getByTestId('transition-button');
         expect(transitionButton).toBeInTheDocument();
-        expect(transitionButton).toHaveAttribute('data-current-status', 'in_progress');
+        expect(transitionButton).toHaveAttribute(
+            'data-current-status',
+            'in_progress',
+        );
 
         // Check that allowed transitions are shown
         expect(screen.getByTestId('transition-in_review')).toBeInTheDocument();
@@ -242,7 +278,7 @@ describe('TaskDetail - Task Group 15 Tests', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 rejectionFeedback={null}
-            />
+            />,
         );
 
         // Check that transition history is present
@@ -271,12 +307,16 @@ describe('TaskDetail - Task Group 15 Tests', () => {
                 statusTransitions={mockStatusTransitions}
                 allowedTransitions={mockAllowedTransitions}
                 rejectionFeedback={rejectionFeedback}
-            />
+            />,
         );
 
         // Check that rejection feedback banner is displayed
         expect(screen.getByText(/revision requested/i)).toBeInTheDocument();
-        expect(screen.getByText(/Please fix the formatting issues and add more details./i)).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                /Please fix the formatting issues and add more details./i,
+            ),
+        ).toBeInTheDocument();
         expect(screen.getByText(/Jane Smith/i)).toBeInTheDocument();
     });
 });

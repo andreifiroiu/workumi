@@ -38,6 +38,7 @@ import {
     ChevronRight,
     Edit,
     Folder,
+    FolderInput,
     FolderMinus,
     List,
     Lock,
@@ -48,21 +49,30 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { EditTaskDialog } from './edit-task-dialog';
 import { StatusBadge } from './status-badge';
 
 interface ProjectTreeItemProps {
     project: Project;
     workOrders: WorkOrder[];
     tasks: Task[];
+    /** Assignee options for the task edit dialog. */
+    teamMembers: Array<{ id: string; name: string }>;
+    availableAgents?: Array<{ id: string; name: string }>;
     onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
+    /** Opens the move dialog, which the page owns — see onCreateTask. */
+    onMoveWorkOrder?: (workOrder: WorkOrderInList, projectId: string) => void;
 }
 
 export function ProjectTreeItem({
     project,
     tasks,
+    teamMembers,
+    availableAgents,
     onCreateWorkOrder,
     onCreateTask,
+    onMoveWorkOrder,
 }: ProjectTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -210,8 +220,11 @@ export function ProjectTreeItem({
                             list={list}
                             projectId={project.id}
                             tasks={tasks}
+                            teamMembers={teamMembers}
+                            availableAgents={availableAgents}
                             onCreateWorkOrder={onCreateWorkOrder}
                             onCreateTask={onCreateTask}
+                            onMoveWorkOrder={onMoveWorkOrder}
                         />
                     ))}
 
@@ -220,7 +233,11 @@ export function ProjectTreeItem({
                         <UngroupedWorkOrdersTreeItem
                             workOrders={project.ungroupedWorkOrders}
                             tasks={tasks}
+                            projectId={project.id}
+                            teamMembers={teamMembers}
+                            availableAgents={availableAgents}
                             onCreateTask={onCreateTask}
+                            onMoveWorkOrder={onMoveWorkOrder}
                         />
                     )}
                 </div>
@@ -233,16 +250,22 @@ interface WorkOrderListTreeItemProps {
     list: WorkOrderList;
     projectId: string;
     tasks: Task[];
+    teamMembers: Array<{ id: string; name: string }>;
+    availableAgents?: Array<{ id: string; name: string }>;
     onCreateWorkOrder: (projectId: string, listId?: string) => void;
     onCreateTask: (workOrderId: string) => void;
+    onMoveWorkOrder?: (workOrder: WorkOrderInList, projectId: string) => void;
 }
 
 function WorkOrderListTreeItem({
     list,
     projectId,
     tasks,
+    teamMembers,
+    availableAgents,
     onCreateWorkOrder,
     onCreateTask,
+    onMoveWorkOrder,
 }: WorkOrderListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -370,7 +393,11 @@ function WorkOrderListTreeItem({
                             tasks={tasks.filter(
                                 (t) => t.workOrderId === workOrder.id,
                             )}
+                            projectId={projectId}
+                            teamMembers={teamMembers}
+                            availableAgents={availableAgents}
                             onCreateTask={onCreateTask}
+                            onMoveWorkOrder={onMoveWorkOrder}
                         />
                     ))}
                 </div>
@@ -382,13 +409,21 @@ function WorkOrderListTreeItem({
 interface UngroupedWorkOrdersTreeItemProps {
     workOrders: WorkOrderInList[];
     tasks: Task[];
+    projectId: string;
+    teamMembers: Array<{ id: string; name: string }>;
+    availableAgents?: Array<{ id: string; name: string }>;
     onCreateTask: (workOrderId: string) => void;
+    onMoveWorkOrder?: (workOrder: WorkOrderInList, projectId: string) => void;
 }
 
 function UngroupedWorkOrdersTreeItem({
     workOrders,
     tasks,
+    projectId,
+    teamMembers,
+    availableAgents,
     onCreateTask,
+    onMoveWorkOrder,
 }: UngroupedWorkOrdersTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -432,7 +467,11 @@ function UngroupedWorkOrdersTreeItem({
                             tasks={tasks.filter(
                                 (t) => t.workOrderId === workOrder.id,
                             )}
+                            projectId={projectId}
+                            teamMembers={teamMembers}
+                            availableAgents={availableAgents}
                             onCreateTask={onCreateTask}
+                            onMoveWorkOrder={onMoveWorkOrder}
                         />
                     ))}
                 </div>
@@ -444,14 +483,22 @@ function UngroupedWorkOrdersTreeItem({
 interface WorkOrderInListTreeItemProps {
     workOrder: WorkOrderInList;
     tasks: Task[];
+    projectId: string;
+    teamMembers: Array<{ id: string; name: string }>;
+    availableAgents?: Array<{ id: string; name: string }>;
     onCreateTask: (workOrderId: string) => void;
+    onMoveWorkOrder?: (workOrder: WorkOrderInList, projectId: string) => void;
     listId?: string | null;
 }
 
 function WorkOrderInListTreeItem({
     workOrder,
     tasks,
+    projectId,
+    teamMembers,
+    availableAgents,
     onCreateTask,
+    onMoveWorkOrder,
     listId,
 }: WorkOrderInListTreeItemProps) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -625,6 +672,16 @@ function WorkOrderInListTreeItem({
                                 Edit Work Order
                             </Link>
                         </DropdownMenuItem>
+                        {onMoveWorkOrder && (
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    onMoveWorkOrder(workOrder, projectId)
+                                }
+                            >
+                                <FolderInput className="mr-2 h-4 w-4" />
+                                Move to Project…
+                            </DropdownMenuItem>
+                        )}
                         {!isArchived && (
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
@@ -676,7 +733,9 @@ function WorkOrderInListTreeItem({
                         {listId && (
                             <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleRemoveFromList}>
+                                <DropdownMenuItem
+                                    onClick={handleRemoveFromList}
+                                >
                                     <FolderMinus className="mr-2 h-4 w-4" />
                                     Remove from List
                                 </DropdownMenuItem>
@@ -731,9 +790,7 @@ function WorkOrderInListTreeItem({
                             <DialogTitle>
                                 Cannot complete work order
                             </DialogTitle>
-                            <DialogDescription>
-                                {actionError}
-                            </DialogDescription>
+                            <DialogDescription>{actionError}</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
                             <Button onClick={() => setActionError(null)}>
@@ -748,7 +805,12 @@ function WorkOrderInListTreeItem({
             {isExpanded && tasks.length > 0 && (
                 <div className="ml-7">
                     {tasks.map((task) => (
-                        <TaskTreeItem key={task.id} task={task} />
+                        <TaskTreeItem
+                            key={task.id}
+                            task={task}
+                            teamMembers={teamMembers}
+                            availableAgents={availableAgents}
+                        />
                     ))}
                 </div>
             )}
@@ -758,10 +820,17 @@ function WorkOrderInListTreeItem({
 
 interface TaskTreeItemProps {
     task: Task;
+    teamMembers: Array<{ id: string; name: string }>;
+    availableAgents?: Array<{ id: string; name: string }>;
 }
 
-function TaskTreeItem({ task }: TaskTreeItemProps) {
+function TaskTreeItem({
+    task,
+    teamMembers,
+    availableAgents,
+}: TaskTreeItemProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
     const completedItems = task.checklistItems.filter(
         (item) => item.completed,
     ).length;
@@ -817,11 +886,9 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                        <Link href={`/work/tasks/${task.id}`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Task
-                        </Link>
+                    <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Task
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -833,6 +900,14 @@ function TaskTreeItem({ task }: TaskTreeItemProps) {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            <EditTaskDialog
+                open={editDialogOpen}
+                onOpenChange={setEditDialogOpen}
+                task={task}
+                teamMembers={teamMembers}
+                availableAgents={availableAgents}
+            />
 
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>

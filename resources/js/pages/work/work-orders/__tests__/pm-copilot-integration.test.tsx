@@ -189,6 +189,8 @@ vi.mock('@/components/workflow', async () => ({
  */
 vi.mock('@/components/work', () => ({
     CreateTaskDialog: () => <div data-testid="create-task-dialog" />,
+    MoveWorkOrderDialog: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="move-work-order-dialog" /> : null,
     StatusBadge: ({ status }: { status: string }) => (
         <span data-status={status}>{status}</span>
     ),

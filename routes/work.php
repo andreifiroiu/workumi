@@ -72,6 +72,7 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::post('/work-orders/{workOrder}/archive', [WorkOrderController::class, 'archive'])->name('work-orders.archive');
     Route::post('/work-orders/{workOrder}/deliver-and-archive', [WorkOrderController::class, 'deliverAndArchive'])->name('work-orders.deliver-and-archive');
     Route::post('/work-orders/{workOrder}/restore', [WorkOrderController::class, 'restore'])->name('work-orders.restore');
+    Route::post('/work-orders/{workOrder}/move', [WorkOrderController::class, 'move'])->name('work-orders.move');
     Route::post('/work-orders/{workOrder}/files', [WorkOrderController::class, 'uploadFile'])->name('work-orders.files.upload');
     Route::delete('/work-orders/{workOrder}/files/{document}', [WorkOrderController::class, 'deleteFile'])->name('work-orders.files.delete');
     Route::post('/work-orders/{workOrder}/notes', [WorkOrderController::class, 'storeNote'])->name('work-orders.notes.store');

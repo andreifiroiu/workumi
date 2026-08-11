@@ -414,3 +414,48 @@ test('user cannot convert a list from another team', function () {
     $this->assertDatabaseHas('work_order_lists', ['id' => $list->id, 'deleted_at' => null]);
     $this->assertDatabaseMissing('projects', ['name' => 'Hijacked']);
 });
+
+test('reordering rejects a list belonging to another project', function () {
+    // The work orders are already project-scoped, but an unscoped listId would
+    // still file them under a list owned by another project — or another team.
+    $foreignProject = Project::factory()->create([
+        'team_id' => $this->team->id,
+        'party_id' => $this->project->party_id,
+        'owner_id' => $this->user->id,
+    ]);
+    $foreignList = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $foreignProject->id,
+    ]);
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'accountable_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)->post(
+        "/work/projects/{$this->project->id}/work-orders/reorder",
+        ['listId' => $foreignList->id, 'workOrderIds' => [$workOrder->id]]
+    )->assertSessionHasErrors('listId');
+
+    expect($workOrder->refresh()->work_order_list_id)->not->toBe($foreignList->id);
+});
+
+test('reordering accepts a list from the same project', function () {
+    $list = WorkOrderList::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+    ]);
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'accountable_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)->post(
+        "/work/projects/{$this->project->id}/work-orders/reorder",
+        ['listId' => $list->id, 'workOrderIds' => [$workOrder->id]]
+    )->assertSessionHasNoErrors();
+
+    expect($workOrder->refresh()->work_order_list_id)->toBe($list->id);
+});

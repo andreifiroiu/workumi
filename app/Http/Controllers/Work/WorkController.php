@@ -8,6 +8,7 @@ use App\Enums\ProjectStatus;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\AIAgent;
 use App\Models\CommunicationThread;
 use App\Models\Deliverable;
 use App\Models\Party;
@@ -17,6 +18,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\UserPreference;
 use App\Models\WorkOrder;
+use App\Support\MoveDestinations;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,6 +38,8 @@ class WorkController extends Controller
                 'deliverables' => [],
                 'parties' => [],
                 'teamMembers' => [],
+                'availableAgents' => [],
+                'moveDestinations' => [],
                 'communicationThreads' => [],
                 'currentView' => 'all_projects',
                 'currentUserId' => (string) $user->id,
@@ -51,6 +55,11 @@ class WorkController extends Controller
             'deliverables' => $this->getDeliverables($team, $user),
             'parties' => $this->getParties($team),
             'teamMembers' => $this->getTeamMembers($team),
+            'availableAgents' => $this->getAvailableAgents($team),
+            // Sent rather than derived from `projects` above: that list is not
+            // archive-filtered, so deriving would let a client-side filter
+            // decide where work may be moved.
+            'moveDestinations' => MoveDestinations::forTeam($team->id, $user->id),
             'communicationThreads' => $this->getCommunicationThreads($team),
             'currentView' => $currentView,
             'currentUserId' => (string) $user->id,
@@ -354,7 +363,7 @@ class WorkController extends Controller
         return Task::forTeam($team->id)
             ->visibleTo($user->id)
             ->whereNotIn('status', [TaskStatus::Done, TaskStatus::Cancelled, TaskStatus::Archived])
-            ->with(['workOrder', 'project', 'assignedTo'])
+            ->with(['workOrder', 'project', 'assignedTo', 'assignedAgent'])
             ->orderBy('due_date')
             ->get()
             ->map(fn (Task $task) => [
@@ -367,6 +376,11 @@ class WorkController extends Controller
                 'projectName' => $task->project?->name ?? 'Unknown',
                 'assignedToId' => $task->assigned_to_id ? (string) $task->assigned_to_id : null,
                 'assignedToName' => $task->assignedTo?->name ?? 'Unassigned',
+                // The edit dialog reads the assignment back before writing it, so
+                // omitting the agent would show an agent-assigned task as
+                // unassigned and clear the agent on the next save.
+                'assignedAgentId' => $task->assigned_agent_id ? (string) $task->assigned_agent_id : null,
+                'assignedAgentName' => $task->assignedAgent?->name,
                 'status' => $task->status->value,
                 'dueDate' => $task->due_date?->format('Y-m-d'),
                 'estimatedHours' => (float) $task->estimated_hours,
@@ -434,6 +448,25 @@ class WorkController extends Controller
                 'role' => 'Team Member',
                 'avatarUrl' => $user->avatar,
                 'skills' => [],
+            ])
+            ->all();
+    }
+
+    /**
+     * AI agents the team has enabled, for the task edit dialog's assignee picker.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    private function getAvailableAgents(Team $team): array
+    {
+        return AIAgent::whereHas(
+            'configurations',
+            fn ($query) => $query->where('team_id', $team->id)->where('enabled', true)
+        )
+            ->get()
+            ->map(fn (AIAgent $agent) => [
+                'id' => (string) $agent->id,
+                'name' => $agent->name,
             ])
             ->all();
     }

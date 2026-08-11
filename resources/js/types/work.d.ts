@@ -2,7 +2,10 @@
 // Work Section Types
 // =============================================================================
 
-export type BudgetType = 'fixed_price' | 'time_and_materials' | 'monthly_subscription';
+export type BudgetType =
+    | 'fixed_price'
+    | 'time_and_materials'
+    | 'monthly_subscription';
 
 export interface Party {
     id: string;
@@ -55,7 +58,14 @@ export interface WorkOrder {
     projectName: string;
     assignedToId: string | null;
     assignedToName: string;
-    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived' | 'backlog';
+    status:
+        | 'draft'
+        | 'active'
+        | 'in_review'
+        | 'approved'
+        | 'delivered'
+        | 'archived'
+        | 'backlog';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     dueDate: string | null;
     estimatedHours: number;
@@ -83,7 +93,14 @@ export interface WorkOrder {
 export interface WorkOrderInList {
     id: string;
     title: string;
-    status: 'draft' | 'active' | 'in_review' | 'approved' | 'delivered' | 'archived' | 'backlog';
+    status:
+        | 'draft'
+        | 'active'
+        | 'in_review'
+        | 'approved'
+        | 'delivered'
+        | 'archived'
+        | 'backlog';
     priority: 'low' | 'medium' | 'high' | 'urgent';
     dueDate: string | null;
     assignedToName: string;
@@ -99,6 +116,14 @@ export interface WorkOrderList {
     color: string | null;
     position: number;
     workOrders: WorkOrderInList[];
+}
+
+/** A project a work order can be moved into, with the lists inside it. */
+export interface MoveDestinationProject {
+    id: string;
+    name: string;
+    isPrivate: boolean;
+    lists: Array<{ id: string; name: string }>;
 }
 
 export interface ChecklistItem {
@@ -136,9 +161,18 @@ export type RaciRole = 'accountable' | 'responsible' | 'consulted' | 'informed';
 
 export type MyWorkSubtab = 'tasks' | 'work_orders' | 'projects' | 'all';
 
-export type DueDateRange = 'this_week' | 'next_7_days' | 'next_30_days' | 'overdue' | 'custom';
+export type DueDateRange =
+    | 'this_week'
+    | 'next_7_days'
+    | 'next_30_days'
+    | 'overdue'
+    | 'custom';
 
-export type SortBy = 'due_date' | 'priority' | 'recently_updated' | 'alphabetical';
+export type SortBy =
+    | 'due_date'
+    | 'priority'
+    | 'recently_updated'
+    | 'alphabetical';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -325,7 +359,12 @@ export interface TimeEntriesFilters {
 // View Types
 // =============================================================================
 
-export type WorkView = 'all_projects' | 'my_work' | 'by_status' | 'calendar' | 'archive';
+export type WorkView =
+    | 'all_projects'
+    | 'my_work'
+    | 'by_status'
+    | 'calendar'
+    | 'archive';
 
 export interface QuickAddData {
     type: 'project' | 'workOrder' | 'task';
@@ -344,6 +383,8 @@ export interface WorkPageProps {
     deliverables: Deliverable[];
     parties: Party[];
     teamMembers: TeamMember[];
+    availableAgents?: Array<{ id: string; name: string }>;
+    moveDestinations?: MoveDestinationProject[];
     communicationThreads: CommunicationThread[];
     currentView: WorkView;
     currentUserId: string;
@@ -478,7 +519,10 @@ export interface MyWorkViewProps {
     currentUserId: string;
     onViewWorkOrder: (workOrderId: string) => void;
     onViewTask: (taskId: string) => void;
-    onUpdateWorkOrderStatus: (workOrderId: string, status: WorkOrder['status']) => void;
+    onUpdateWorkOrderStatus: (
+        workOrderId: string,
+        status: WorkOrder['status'],
+    ) => void;
     onUpdateTaskStatus: (taskId: string, status: Task['status']) => void;
 }
 
@@ -486,7 +530,10 @@ export interface KanbanViewProps {
     workOrders: WorkOrder[];
     onViewWorkOrder: (workOrderId: string) => void;
     onCreateWorkOrder: (data: QuickAddData) => void;
-    onUpdateWorkOrderStatus: (workOrderId: string, status: WorkOrder['status']) => void;
+    onUpdateWorkOrderStatus: (
+        workOrderId: string,
+        status: WorkOrder['status'],
+    ) => void;
 }
 
 export interface CalendarViewProps {
