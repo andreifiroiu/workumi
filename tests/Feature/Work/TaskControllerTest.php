@@ -3,7 +3,6 @@
 use App\Models\Party;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\Team;
 use App\Models\User;
 use App\Models\WorkOrder;
 
@@ -44,6 +43,143 @@ test('user can create a task', function () {
     ]);
 });
 
+test('creating a task assigns it to the chosen team member', function () {
+    $member = addTeamMember($this->team);
+
+    $this->actingAs($this->user)->post('/work/tasks', [
+        'title' => 'Assigned Task',
+        'workOrderId' => $this->workOrder->id,
+        'dueDate' => '2026-01-15',
+        'assignedToId' => $member->id,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('tasks', [
+        'title' => 'Assigned Task',
+        'assigned_to_id' => $member->id,
+    ]);
+});
+
+test('creating a task can assign it to the team owner', function () {
+    // Owners are never written to `team_user`, so a pivot-only membership check
+    // rejects the one person guaranteed to be on every team.
+    $this->actingAs($this->user)->post('/work/tasks', [
+        'title' => 'Owner Task',
+        'workOrderId' => $this->workOrder->id,
+        'dueDate' => '2026-01-15',
+        'assignedToId' => $this->user->id,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('tasks', [
+        'title' => 'Owner Task',
+        'assigned_to_id' => $this->user->id,
+    ]);
+});
+
+test('creating a task rejects an assignee from another team', function () {
+    $outsider = User::factory()->create();
+    $outsider->createTeam(['name' => 'Other Team']);
+
+    $this->actingAs($this->user)->post('/work/tasks', [
+        'title' => 'Cross Team Task',
+        'workOrderId' => $this->workOrder->id,
+        'dueDate' => '2026-01-15',
+        'assignedToId' => $outsider->id,
+    ])->assertSessionHasErrors('assignedToId');
+
+    $this->assertDatabaseMissing('tasks', ['title' => 'Cross Team Task']);
+});
+
+test('creating a task rejects a work order from another team', function () {
+    $otherUser = User::factory()->create();
+    $otherTeam = $otherUser->createTeam(['name' => 'Other Team']);
+    $otherParty = Party::factory()->create(['team_id' => $otherTeam->id]);
+    $otherProject = Project::factory()->create([
+        'team_id' => $otherTeam->id,
+        'party_id' => $otherParty->id,
+        'owner_id' => $otherUser->id,
+    ]);
+    $otherWorkOrder = WorkOrder::factory()->create([
+        'team_id' => $otherTeam->id,
+        'project_id' => $otherProject->id,
+        'created_by_id' => $otherUser->id,
+    ]);
+
+    $this->actingAs($this->user)->post('/work/tasks', [
+        'title' => 'Foreign Work Order Task',
+        'workOrderId' => $otherWorkOrder->id,
+        'dueDate' => '2026-01-15',
+    ])->assertSessionHasErrors('workOrderId');
+
+    $this->assertDatabaseMissing('tasks', ['title' => 'Foreign Work Order Task']);
+});
+
+test('creating a task rejects a work order inside a private project the user cannot see', function () {
+    $outsider = addTeamMember($this->team);
+
+    $privateProject = Project::factory()->private()->create([
+        'team_id' => $this->team->id,
+        'party_id' => $this->party->id,
+        'owner_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+    ]);
+    $privateWorkOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $privateProject->id,
+        'created_by_id' => $this->user->id,
+        'accountable_id' => $this->user->id,
+    ]);
+
+    // Same team, so a team check alone would let this through — only the
+    // visibility scope keeps a private project's work sealed off.
+    $this->actingAs($outsider)->post('/work/tasks', [
+        'title' => 'Private Project Task',
+        'workOrderId' => $privateWorkOrder->id,
+        'dueDate' => '2026-01-15',
+    ])->assertSessionHasErrors('workOrderId');
+
+    $this->assertDatabaseMissing('tasks', ['title' => 'Private Project Task']);
+});
+
+test('promoting a task rejects an assignee from another team', function () {
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+    ]);
+
+    $outsider = User::factory()->create();
+    $outsider->createTeam(['name' => 'Other Team']);
+
+    $this->actingAs($this->user)
+        ->post("/work/tasks/{$task->id}/promote", [
+            'title' => 'Promoted Work Order',
+            'priority' => 'medium',
+            'originalTaskAction' => 'keep',
+            'assignedToId' => $outsider->id,
+        ])
+        ->assertSessionHasErrors('assignedToId');
+
+    $this->assertDatabaseMissing('work_orders', ['title' => 'Promoted Work Order']);
+});
+
+test('updating a task rejects an assignee from another team', function () {
+    $task = Task::factory()->create([
+        'team_id' => $this->team->id,
+        'work_order_id' => $this->workOrder->id,
+        'project_id' => $this->project->id,
+        'assigned_to_id' => null,
+    ]);
+
+    $outsider = User::factory()->create();
+    $outsider->createTeam(['name' => 'Other Team']);
+
+    $this->actingAs($this->user)
+        ->patch("/work/tasks/{$task->id}", ['assignedToId' => $outsider->id])
+        ->assertSessionHasErrors('assignedToId');
+
+    expect($task->fresh()->assigned_to_id)->toBeNull();
+});
+
 test('user can view a task', function () {
     $task = Task::factory()->create([
         'team_id' => $this->team->id,
@@ -53,10 +189,9 @@ test('user can view a task', function () {
     $response = $this->actingAs($this->user)->get("/work/tasks/{$task->id}");
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) =>
-        $page->component('work/tasks/[id]')
-            ->has('task')
-            ->where('task.id', (string) $task->id)
+    $response->assertInertia(fn ($page) => $page->component('work/tasks/[id]')
+        ->has('task')
+        ->where('task.id', (string) $task->id)
     );
 });
 

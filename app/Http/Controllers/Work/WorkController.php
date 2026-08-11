@@ -418,10 +418,15 @@ class WorkController extends Controller
             ->all();
     }
 
+    /**
+     * `allUsers()` rather than `users()`: owners are deliberately kept out of the
+     * `team_user` pivot, so the pivot alone hides them from every people picker.
+     */
     private function getTeamMembers(Team $team): array
     {
-        return $team->users()
-            ->get()
+        return $team->allUsers()
+            ->unique('id')
+            ->values()
             ->map(fn (User $user) => [
                 'id' => (string) $user->id,
                 'name' => $user->name,

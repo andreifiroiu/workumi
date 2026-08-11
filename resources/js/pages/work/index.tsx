@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import {
     ArchiveView,
     CalendarView,
+    CreateTaskDialog,
     KanbanView,
     MyWorkView,
     ProjectTreeItem,
@@ -41,6 +42,7 @@ export default function Work({
     workOrders,
     tasks,
     parties,
+    teamMembers,
     currentView,
     currentUserId,
     myWorkData,
@@ -56,7 +58,9 @@ export default function Work({
         useState(false);
     const [, setSelectedProjectId] = useState<string | null>(null);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
-    const [, setSelectedWorkOrderId] = useState<string | null>(null);
+    const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<
+        string | undefined
+    >(undefined);
 
     const projectForm = useForm({
         name: '',
@@ -72,15 +76,6 @@ export default function Work({
         workOrderListId: '',
         description: '',
         priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-        dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0], // 1 week from now
-    });
-
-    const taskForm = useForm({
-        title: '',
-        workOrderId: '',
-        description: '',
         dueDate: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split('T')[0], // 1 week from now
@@ -111,7 +106,6 @@ export default function Work({
 
     const handleCreateTask = (workOrderId: string) => {
         setSelectedWorkOrderId(workOrderId);
-        taskForm.setData('workOrderId', workOrderId);
         setCreateTaskDialogOpen(true);
     };
 
@@ -139,18 +133,6 @@ export default function Work({
                 workOrderForm.reset();
                 setCreateWorkOrderDialogOpen(false);
                 setSelectedProjectId(null);
-            },
-        });
-    };
-
-    const handleSubmitTask = (e: React.FormEvent) => {
-        e.preventDefault();
-        taskForm.post('/work/tasks', {
-            preserveScroll: true,
-            onSuccess: () => {
-                taskForm.reset();
-                setCreateTaskDialogOpen(false);
-                setSelectedWorkOrderId(null);
             },
         });
     };
@@ -647,120 +629,13 @@ export default function Work({
                 </DialogContent>
             </Dialog>
 
-            {/* Create Task Dialog */}
-            <Dialog
+            <CreateTaskDialog
                 open={createTaskDialogOpen}
                 onOpenChange={setCreateTaskDialogOpen}
-            >
-                <DialogContent>
-                    <form onSubmit={handleSubmitTask}>
-                        <DialogHeader>
-                            <DialogTitle>Create Task</DialogTitle>
-                            <DialogDescription>
-                                Create a new task for tracking individual action
-                                items.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="task-title">Title</Label>
-                                <Input
-                                    id="task-title"
-                                    value={taskForm.data.title}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'title',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Task title"
-                                />
-                                <InputError message={taskForm.errors.title} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="task-wo">Work Order</Label>
-                                <Select
-                                    value={taskForm.data.workOrderId}
-                                    onValueChange={(value) =>
-                                        taskForm.setData('workOrderId', value)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a work order" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {workOrders
-                                            .filter(
-                                                (wo) =>
-                                                    wo.status !== 'delivered',
-                                            )
-                                            .map((wo) => (
-                                                <SelectItem
-                                                    key={wo.id}
-                                                    value={wo.id}
-                                                >
-                                                    {wo.title}
-                                                </SelectItem>
-                                            ))}
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={taskForm.errors.workOrderId}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="task-due-date">Due Date</Label>
-                                <Input
-                                    id="task-due-date"
-                                    type="date"
-                                    value={taskForm.data.dueDate}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'dueDate',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                <InputError message={taskForm.errors.dueDate} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="task-description">
-                                    Description (optional)
-                                </Label>
-                                <Input
-                                    id="task-description"
-                                    value={taskForm.data.description}
-                                    onChange={(e) =>
-                                        taskForm.setData(
-                                            'description',
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Brief description"
-                                />
-                                <InputError
-                                    message={taskForm.errors.description}
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCreateTaskDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={taskForm.processing}
-                            >
-                                Create Task
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                teamMembers={teamMembers}
+                workOrders={workOrders}
+                initialWorkOrderId={selectedWorkOrderId}
+            />
         </AppLayout>
     );
 }
