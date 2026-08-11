@@ -76,7 +76,9 @@ class InvitationAcceptController extends Controller
 
         session()->forget('pending_invitation_id');
 
-        return redirect()->route('settings.index', ['tab' => 'team'])
+        // The team settings tab is behind `team.admin`, so sending an invited member or viewer
+        // there answers them with a 403. The dashboard is reachable by every role.
+        return redirect()->route('dashboard')
             ->with('status', "You've been added to {$teamName}!");
     }
 }

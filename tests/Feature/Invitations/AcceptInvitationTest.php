@@ -94,7 +94,7 @@ test('registering with a pending invitation joins the inviting team instead of c
             'password_confirmation' => 'password',
         ]);
 
-    $response->assertRedirect(route('settings.index', ['tab' => 'team']));
+    $response->assertRedirect(route('dashboard'));
 
     $user = User::where('email', 'invited@example.com')->firstOrFail();
 
@@ -157,10 +157,76 @@ test('an existing user logging in with a pending invitation joins the team', fun
             'password' => 'password',
         ]);
 
-    $response->assertRedirect(route('settings.index', ['tab' => 'team']));
+    $response->assertRedirect(route('dashboard'));
 
     expect($user->fresh()->current_team_id)->toBe($team->id)
         ->and($team->fresh()->users->pluck('id')->all())->toContain($user->id);
+});
+
+test('an invited member can actually open the page they are redirected to after registering', function () {
+    $team = Team::factory()->create();
+    $invitation = invitationFor('invited@example.com', $team);
+
+    $response = $this->withSession(['pending_invitation_id' => $invitation->id])
+        ->post('/register', [
+            'name' => 'Invited Person',
+            'email' => 'invited@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+    $user = User::where('email', 'invited@example.com')->firstOrFail();
+
+    // The invited member cannot administer the team, so any admin-only landing page 403s on them.
+    expect($user->canAdministerTeam())->toBeFalse();
+
+    $this->followingRedirects()
+        ->actingAs($user)
+        ->get($response->headers->get('Location'))
+        ->assertOk();
+});
+
+test('an invited viewer can open the page they are redirected to after registering', function () {
+    $team = Team::factory()->create();
+    $invitation = invitationFor('invited@example.com', $team, 'viewer');
+
+    $response = $this->withSession(['pending_invitation_id' => $invitation->id])
+        ->post('/register', [
+            'name' => 'Invited Viewer',
+            'email' => 'invited@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+    $user = User::where('email', 'invited@example.com')->firstOrFail();
+
+    $this->followingRedirects()
+        ->actingAs($user)
+        ->get($response->headers->get('Location'))
+        ->assertOk();
+});
+
+test('an already logged in user accepting an invitation lands on a page they may open', function () {
+    $team = Team::factory()->create();
+    $user = User::factory()->create(['email' => 'invited@example.com']);
+    $personalTeam = $user->createTeam(['name' => 'Personal']);
+    $user->update(['current_team_id' => $personalTeam->id]);
+
+    $invitation = invitationFor('invited@example.com', $team);
+
+    $response = $this->actingAs($user)
+        ->post(URL::signedRoute('teams.invitations.accept.post', ['invitation' => $invitation]));
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('status', "You've been added to {$team->name}!");
+
+    expect($user->fresh()->current_team_id)->toBe($team->id)
+        ->and($user->canAdministerTeam())->toBeFalse();
+
+    $this->followingRedirects()
+        ->actingAs($user->fresh())
+        ->get($response->headers->get('Location'))
+        ->assertOk();
 });
 
 test('an invitation that cannot be accepted does not break the request', function () {
