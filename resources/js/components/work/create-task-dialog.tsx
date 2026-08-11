@@ -1,4 +1,5 @@
 import { store as storeTask } from '@/actions/App/Http/Controllers/Work/TaskController';
+import { FormErrorSummary } from '@/components/form-error-summary';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,14 +59,14 @@ const oneWeekFromNow = (): string =>
     formatLocalDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
 /** Every key that has its own <InputError> below. */
-const RENDERED_FIELDS = new Set([
+const RENDERED_FIELDS = [
     'title',
     'workOrderId',
     'assignedToId',
     'dueDate',
     'estimatedHours',
     'description',
-]);
+];
 
 /**
  * The single create-task form, shared by the Work overview and the work order
@@ -123,12 +124,6 @@ export function CreateTaskDialog({
         });
     };
 
-    // Anything the server rejected that has no field of its own — without this a
-    // rejection the form cannot show looks like a button that does nothing.
-    const unmappedErrors = Object.entries(form.errors)
-        .filter(([field]) => !RENDERED_FIELDS.has(field))
-        .map(([, message]) => message);
-
     const recentMembers = recentIds
         .map((id) => teamMembers.find((member) => member.id === id))
         .filter((member): member is CreateTaskDialogMember => Boolean(member))
@@ -146,9 +141,10 @@ export function CreateTaskDialog({
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        {unmappedErrors.map((message) => (
-                            <InputError key={message} message={message} />
-                        ))}
+                        <FormErrorSummary
+                            errors={form.errors}
+                            rendered={RENDERED_FIELDS}
+                        />
                         <div className="grid gap-2">
                             <Label htmlFor="task-title">Title</Label>
                             <Input

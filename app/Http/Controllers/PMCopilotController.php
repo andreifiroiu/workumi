@@ -8,6 +8,7 @@ use App\Agents\Workflows\PMCopilotWorkflow;
 use App\Http\Requests\ApproveSuggestionRequest;
 use App\Http\Requests\RejectSuggestionRequest;
 use App\Http\Requests\TriggerPMCopilotRequest;
+use App\Jobs\RunPMCopilotWorkflow;
 use App\Models\AgentWorkflowState;
 use App\Models\AIAgent;
 use App\Models\InboxItem;
@@ -18,11 +19,15 @@ use App\Models\WorkOrder;
 use App\Services\AgentOrchestrator;
 use App\Services\ProjectInsightsService;
 use App\Services\TaskDelegationService;
+use App\Support\TeamMembership;
 use App\ValueObjects\DeliverableSuggestion;
 use App\ValueObjects\TaskSuggestion;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Controller for PM Copilot AI agent functionality.
@@ -51,7 +56,8 @@ class PMCopilotController extends Controller
             'content_type' => $request->header('Content-Type'),
         ])->blue();
 
-        $this->authorize('view', $workOrder);
+        // Dispatches a billable LLM workflow and writes state: a write.
+        $this->authorize('update', $workOrder);
 
         try {
             // Create the workflow state
@@ -68,7 +74,7 @@ class PMCopilotController extends Controller
             ]);
 
             // Dispatch workflow execution to the queue to avoid HTTP timeouts
-            \App\Jobs\RunPMCopilotWorkflow::dispatch($workflowState);
+            RunPMCopilotWorkflow::dispatch($workflowState);
 
             StatusTransition::create([
                 'transitionable_type' => WorkOrder::class,
@@ -429,7 +435,8 @@ class PMCopilotController extends Controller
      */
     public function approveAlternative(WorkOrder $workOrder, string $alternativeId): JsonResponse
     {
-        $this->authorize('view', $workOrder);
+        // Creates deliverables and tasks: a write.
+        $this->authorize('update', $workOrder);
 
         $workflowState = AgentWorkflowState::query()
             ->where('workflow_class', PMCopilotWorkflow::class)
@@ -541,7 +548,8 @@ class PMCopilotController extends Controller
      */
     public function rejectAlternative(WorkOrder $workOrder, string $alternativeId): JsonResponse
     {
-        $this->authorize('view', $workOrder);
+        // Writes the workflow state: a write.
+        $this->authorize('update', $workOrder);
 
         $workflowState = AgentWorkflowState::query()
             ->where('workflow_class', PMCopilotWorkflow::class)
@@ -643,11 +651,12 @@ class PMCopilotController extends Controller
      */
     public function assignTask(Request $request, WorkOrder $workOrder, Task $task, TaskDelegationService $delegationService): JsonResponse
     {
-        $this->authorize('view', $workOrder);
+        // Assignment is a write: a viewer must not be able to reassign work.
+        $this->authorize('update', $workOrder);
 
         $validated = $request->validate([
             'assignee_type' => 'required|string|in:user,agent',
-            'assignee_id' => 'required|integer',
+            'assignee_id' => ['required', 'integer', $this->assigneeRule($request, $workOrder)],
         ]);
 
         // Verify task belongs to this work order
@@ -744,17 +753,21 @@ class PMCopilotController extends Controller
      */
     public function bulkAssignTasks(Request $request, WorkOrder $workOrder, TaskDelegationService $delegationService): JsonResponse
     {
-        $this->authorize('view', $workOrder);
+        // Assignment is a write: a viewer must not be able to reassign work.
+        $this->authorize('update', $workOrder);
 
         $validated = $request->validate([
             'assignments' => 'required|array|min:1',
             'assignments.*.task_id' => 'required|integer',
             'assignments.*.assignee_type' => 'required|string|in:user,agent',
-            'assignments.*.assignee_id' => 'required|integer',
+            'assignments.*.assignee_id' => ['required', 'integer', $this->assigneeRule($request, $workOrder)],
         ]);
 
         $team = $request->user()->currentTeam;
-        $taskIds = array_column($validated['assignments'], 'task_id');
+        // Unique: the count check below compares against rows fetched by id, so a
+        // repeated id would report "does not belong to this work order" about a
+        // task that plainly does.
+        $taskIds = array_unique(array_column($validated['assignments'], 'task_id'));
 
         // Verify all tasks belong to this work order
         $tasks = Task::query()
@@ -771,7 +784,7 @@ class PMCopilotController extends Controller
         }
 
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $tasks, $workOrder, $request) {
+            DB::transaction(function () use ($validated, $tasks, $workOrder, $request) {
                 foreach ($validated['assignments'] as $assignment) {
                     $task = $tasks->get($assignment['task_id']);
                     $oldAssignedToId = $task->assigned_to_id;
@@ -927,6 +940,49 @@ class PMCopilotController extends Controller
             'present_results' => 95,
             'completed' => 100,
             default => 10,
+        };
+    }
+
+    /**
+     * `assignee_id` names a user or an AI agent depending on its sibling
+     * `assignee_type`, so the rule has to read both. Either way it must belong to
+     * the work order's team: the id previously went into `assigned_to_id`
+     * unchecked, with no `exists` rule at all.
+     *
+     * Shared by the single and bulk endpoints — under `assignments.*` the sibling
+     * lives at the same index, so the attribute path is derived from `$attribute`.
+     */
+    private function assigneeRule(Request $request, WorkOrder $workOrder): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($request, $workOrder): void {
+            $typeAttribute = str_contains($attribute, '.')
+                ? Str::beforeLast($attribute, '.').'.assignee_type'
+                : 'assignee_type';
+
+            $type = $request->input($typeAttribute);
+
+            // Without a usable type there is no domain to check against. Say
+            // nothing rather than reporting a membership failure the rule never
+            // actually tested — the type's own rule reports the real problem.
+            if (! in_array($type, ['user', 'agent'], true)) {
+                return;
+            }
+
+            if ($type === 'agent') {
+                $available = AIAgent::whereKey($value)
+                    ->whereHas('configurations', fn ($query) => $query
+                        ->where('team_id', $workOrder->team_id)
+                        ->where('enabled', true))
+                    ->exists();
+
+                if (! $available) {
+                    $fail('The selected agent is not available to this team.');
+                }
+
+                return;
+            }
+
+            TeamMembership::rule((int) $workOrder->team_id)($attribute, $value, $fail);
         };
     }
 }

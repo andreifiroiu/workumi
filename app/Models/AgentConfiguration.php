@@ -7,11 +7,14 @@ namespace App\Models;
 use App\Enums\CreativityLevel;
 use App\Enums\RiskTolerance;
 use App\Enums\VerbosityLevel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AgentConfiguration extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'team_id',
         'ai_agent_id',

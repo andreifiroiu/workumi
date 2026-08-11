@@ -2,6 +2,7 @@ import { BudgetFieldsGroup } from '@/components/budget';
 import { DraftClientUpdateButton } from '@/components/client-comms';
 import { CommunicationsPanel } from '@/components/communications';
 import type { FolderNode } from '@/components/documents/folder-tree';
+import { FormErrorSummary } from '@/components/form-error-summary';
 import InputError from '@/components/input-error';
 import {
     PlanAlternativesPanel,
@@ -475,6 +476,13 @@ function SortableTaskCard({
         </div>
     );
 }
+
+/**
+ * Title is the only field in the edit dialog with its own <InputError>, so
+ * everything else the server can reject — priority, due date, estimated hours,
+ * the due-date reason — reaches the user through FormErrorSummary.
+ */
+const EDIT_WORK_ORDER_FIELDS = ['title'];
 
 export default function WorkOrderDetail({
     workOrder,
@@ -2322,6 +2330,10 @@ export default function WorkOrderDetail({
                             <DialogTitle>Edit Work Order</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
+                            <FormErrorSummary
+                                errors={editForm.errors}
+                                rendered={EDIT_WORK_ORDER_FIELDS}
+                            />
                             <div className="grid gap-2">
                                 <Label>Title</Label>
                                 <Input

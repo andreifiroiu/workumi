@@ -7,6 +7,8 @@ use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWorkOrderRequest;
+use App\Http\Requests\UpdateWorkOrderRequest;
 use App\Models\AIAgent;
 use App\Models\Document;
 use App\Models\Folder;
@@ -18,6 +20,7 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
 use App\Services\WorkItemCompletionService;
+use App\Support\TeamMembership;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,25 +31,12 @@ use Inertia\Response;
 
 class WorkOrderController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(StoreWorkOrderRequest $request): RedirectResponse
     {
-        $this->authorize('create', WorkOrder::class);
-
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'projectId' => 'required|exists:projects,id',
-            'assignedToId' => 'nullable|exists:users,id',
-            'priority' => 'required|string|in:low,medium,high,urgent',
-            'dueDate' => 'nullable|date',
-            'estimatedHours' => 'nullable|numeric|min:0',
-            'acceptanceCriteria' => 'nullable|array',
-            'workOrderListId' => 'nullable|exists:work_order_lists,id',
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
-        $team = $user->currentTeam;
-        $project = Project::findOrFail($validated['projectId']);
+        $project = $request->project();
 
         // Calculate position in list
         $listId = $validated['workOrderListId'] ?? null;
@@ -62,7 +52,7 @@ class WorkOrderController extends Controller
         }
 
         WorkOrder::create([
-            'team_id' => $team->id,
+            'team_id' => $request->teamId(),
             'project_id' => $validated['projectId'],
             'work_order_list_id' => $listId,
             'position_in_list' => $positionInList,
@@ -664,20 +654,9 @@ class WorkOrderController extends Controller
         return 'Cannot complete this work order: one or more tasks are in review, blocked, or awaiting revision and must be resolved first.';
     }
 
-    public function update(Request $request, WorkOrder $workOrder, WorkflowTransitionService $transitionService): RedirectResponse
+    public function update(UpdateWorkOrderRequest $request, WorkOrder $workOrder, WorkflowTransitionService $transitionService): RedirectResponse
     {
-        $this->authorize('update', $workOrder);
-
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'assignedToId' => 'nullable|exists:users,id',
-            'priority' => 'sometimes|required|string|in:low,medium,high,urgent',
-            'due_date' => 'nullable|date',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'acceptanceCriteria' => 'nullable|array',
-            'reason' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Capture current due date before update so we can log any change
         $oldDueDate = $workOrder->due_date;
@@ -806,8 +785,11 @@ class WorkOrderController extends Controller
     {
         $this->authorize('update', $workOrder);
 
+        // `responsible_id` is a RACI field, and WorkOrder::hasUserInAnyRole makes
+        // it an access grant — assigning an outsider would hand them a work order
+        // inside a private project.
         $validated = $request->validate([
-            'userId' => 'required|exists:users,id',
+            'userId' => ['required', 'integer', TeamMembership::rule((int) $workOrder->team_id)],
         ]);
 
         // Update the responsible assignment

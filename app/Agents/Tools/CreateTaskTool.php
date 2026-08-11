@@ -10,6 +10,7 @@ use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\WorkOrder;
+use App\Support\ChecklistItems;
 use Carbon\Carbon;
 use InvalidArgumentException;
 
@@ -227,25 +228,7 @@ class CreateTaskTool implements ToolInterface
      */
     private function normalizeChecklistItems(array $items): array
     {
-        $normalized = [];
-
-        foreach ($items as $index => $item) {
-            if (is_array($item)) {
-                $normalized[] = [
-                    'id' => $item['id'] ?? 'item-' . ($index + 1),
-                    'text' => $item['text'] ?? (string) ($item['label'] ?? ''),
-                    'completed' => (bool) ($item['completed'] ?? false),
-                ];
-            } elseif (is_string($item)) {
-                $normalized[] = [
-                    'id' => 'item-' . ($index + 1),
-                    'text' => $item,
-                    'completed' => false,
-                ];
-            }
-        }
-
-        return $normalized;
+        return ChecklistItems::normalize($items);
     }
 
     /**
