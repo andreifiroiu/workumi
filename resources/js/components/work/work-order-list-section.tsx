@@ -1,26 +1,28 @@
-import { useState, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import type {
+    MoveDestinationProject,
+    WorkOrderInList,
+    WorkOrderList,
+} from '@/types/work';
 import {
     DndContext,
-    DragOverlay,
-    rectIntersection,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-    DragStartEvent,
     DragEndEvent,
     DragOverEvent,
+    DragOverlay,
+    DragStartEvent,
+    KeyboardSensor,
+    PointerSensor,
+    rectIntersection,
+    useSensor,
+    useSensors,
 } from '@dnd-kit/core';
-import {
-    arrayMove,
-} from '@dnd-kit/sortable';
-import { Plus, Archive } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { arrayMove } from '@dnd-kit/sortable';
+import { router } from '@inertiajs/react';
+import { Archive, Plus } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { CreateListDialog } from './create-list-dialog';
 import { WorkOrderListGroup } from './work-order-list-group';
 import { WorkOrderListItem } from './work-order-list-item';
-import { CreateListDialog } from './create-list-dialog';
-import type { WorkOrderList, WorkOrderInList } from '@/types/work';
 
 interface WorkOrderListSectionProps {
     projectId: string;
@@ -31,6 +33,7 @@ interface WorkOrderListSectionProps {
     ungroupedWorkOrders: WorkOrderInList[];
     onCreateWorkOrder: (listId?: string) => void;
     onBulkArchiveDelivered?: () => void;
+    moveDestinations?: MoveDestinationProject[];
 }
 
 export function WorkOrderListSection({
@@ -42,6 +45,7 @@ export function WorkOrderListSection({
     ungroupedWorkOrders,
     onCreateWorkOrder,
     onBulkArchiveDelivered,
+    moveDestinations = [],
 }: WorkOrderListSectionProps) {
     const [createListDialogOpen, setCreateListDialogOpen] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
@@ -80,7 +84,7 @@ export function WorkOrderListSection({
                 distance: 8,
             },
         }),
-        useSensor(KeyboardSensor)
+        useSensor(KeyboardSensor),
     );
 
     const handleDragStart = (event: DragStartEvent) => {
@@ -134,7 +138,11 @@ export function WorkOrderListSection({
         // Update the visual highlight (for which container we're over)
         setOverContainerId(overContainer);
 
-        if (!activeContainer || !overContainer || activeContainer === overContainer) {
+        if (
+            !activeContainer ||
+            !overContainer ||
+            activeContainer === overContainer
+        ) {
             return;
         }
 
@@ -149,9 +157,14 @@ export function WorkOrderListSection({
             setLists((prevLists) =>
                 prevLists.map((l) =>
                     l.id === activeContainer
-                        ? { ...l, workOrders: l.workOrders.filter((wo) => wo.id !== activeId) }
-                        : l
-                )
+                        ? {
+                              ...l,
+                              workOrders: l.workOrders.filter(
+                                  (wo) => wo.id !== activeId,
+                              ),
+                          }
+                        : l,
+                ),
             );
         }
 
@@ -167,9 +180,10 @@ export function WorkOrderListSection({
                 prevLists.map((l) => {
                     if (l.id !== overContainer) return l;
                     // Prevent duplicates
-                    if (l.workOrders.some((wo) => wo.id === activeItem.id)) return l;
+                    if (l.workOrders.some((wo) => wo.id === activeItem.id))
+                        return l;
                     return { ...l, workOrders: [...l.workOrders, activeItem] };
-                })
+                }),
             );
         }
     };
@@ -203,28 +217,52 @@ export function WorkOrderListSection({
         // Same container reorder
         if (currentContainer === overContainer) {
             if (currentContainer === 'ungrouped') {
-                const oldIndex = ungrouped.findIndex((wo) => wo.id === activeId);
+                const oldIndex = ungrouped.findIndex(
+                    (wo) => wo.id === activeId,
+                );
                 const newIndex = ungrouped.findIndex((wo) => wo.id === overId);
-                if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+                if (
+                    oldIndex !== -1 &&
+                    newIndex !== -1 &&
+                    oldIndex !== newIndex
+                ) {
                     const newOrder = arrayMove(ungrouped, oldIndex, newIndex);
                     setUngrouped(newOrder);
-                    saveWorkOrdersOrder(null, newOrder.map((wo) => wo.id));
+                    saveWorkOrdersOrder(
+                        null,
+                        newOrder.map((wo) => wo.id),
+                    );
                 }
             } else {
                 const list = lists.find((l) => l.id === currentContainer);
                 if (list) {
-                    const oldIndex = list.workOrders.findIndex((wo) => wo.id === activeId);
-                    const newIndex = list.workOrders.findIndex((wo) => wo.id === overId);
-                    if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-                        const newOrder = arrayMove(list.workOrders, oldIndex, newIndex);
+                    const oldIndex = list.workOrders.findIndex(
+                        (wo) => wo.id === activeId,
+                    );
+                    const newIndex = list.workOrders.findIndex(
+                        (wo) => wo.id === overId,
+                    );
+                    if (
+                        oldIndex !== -1 &&
+                        newIndex !== -1 &&
+                        oldIndex !== newIndex
+                    ) {
+                        const newOrder = arrayMove(
+                            list.workOrders,
+                            oldIndex,
+                            newIndex,
+                        );
                         setLists((prev) =>
                             prev.map((l) =>
                                 l.id === currentContainer
                                     ? { ...l, workOrders: newOrder }
-                                    : l
-                            )
+                                    : l,
+                            ),
                         );
-                        saveWorkOrdersOrder(currentContainer, newOrder.map((wo) => wo.id));
+                        saveWorkOrdersOrder(
+                            currentContainer,
+                            newOrder.map((wo) => wo.id),
+                        );
                     }
                 }
             }
@@ -233,7 +271,10 @@ export function WorkOrderListSection({
         // Cross-container move - persist to backend
         if (originalContainer && originalContainer !== currentContainer) {
             // Save the work order to the new list
-            saveWorkOrderMove(activeId, currentContainer === 'ungrouped' ? null : currentContainer);
+            saveWorkOrderMove(
+                activeId,
+                currentContainer === 'ungrouped' ? null : currentContainer,
+            );
         }
     };
 
@@ -249,20 +290,23 @@ export function WorkOrderListSection({
         setUngrouped(ungroupedWorkOrders);
     };
 
-    const saveWorkOrderMove = (workOrderId: string, newListId: string | null) => {
+    const saveWorkOrderMove = (
+        workOrderId: string,
+        newListId: string | null,
+    ) => {
         if (newListId) {
             // Moving to a specific list
             router.post(
                 `/work/work-order-lists/${newListId}/move-work-order`,
                 { workOrderId },
-                { preserveScroll: true }
+                { preserveScroll: true },
             );
         } else {
             // Moving to ungrouped (remove from list)
             router.post(
                 `/work/work-orders/${workOrderId}/remove-from-list`,
                 {},
-                { preserveScroll: true }
+                { preserveScroll: true },
             );
         }
     };
@@ -286,14 +330,17 @@ export function WorkOrderListSection({
         return null;
     };
 
-    const saveWorkOrdersOrder = (listId: string | null, workOrderIds: string[]) => {
+    const saveWorkOrdersOrder = (
+        listId: string | null,
+        workOrderIds: string[],
+    ) => {
         router.post(
             `/work/projects/${projectId}/work-orders/reorder`,
             {
                 listId,
                 workOrderIds,
             },
-            { preserveScroll: true }
+            { preserveScroll: true },
         );
     };
 
@@ -301,33 +348,41 @@ export function WorkOrderListSection({
     const filterWOs = (wos: WorkOrderInList[]) =>
         showArchived ? wos : wos.filter((wo) => wo.status !== 'archived');
 
-    const filteredLists = lists.map((l) => ({ ...l, workOrders: filterWOs(l.workOrders) }));
+    const filteredLists = lists.map((l) => ({
+        ...l,
+        workOrders: filterWOs(l.workOrders),
+    }));
     const filteredUngrouped = filterWOs(ungrouped);
 
     const totalWorkOrders =
-        filteredLists.reduce((acc, l) => acc + l.workOrders.length, 0) + filteredUngrouped.length;
+        filteredLists.reduce((acc, l) => acc + l.workOrders.length, 0) +
+        filteredUngrouped.length;
 
     const hasDeliveredWOs =
-        lists.some((l) => l.workOrders.some((wo) => wo.status === 'delivered')) ||
-        ungrouped.some((wo) => wo.status === 'delivered');
+        lists.some((l) =>
+            l.workOrders.some((wo) => wo.status === 'delivered'),
+        ) || ungrouped.some((wo) => wo.status === 'delivered');
 
     const hasArchivedWOs =
-        lists.some((l) => l.workOrders.some((wo) => wo.status === 'archived')) ||
-        ungrouped.some((wo) => wo.status === 'archived');
+        lists.some((l) =>
+            l.workOrders.some((wo) => wo.status === 'archived'),
+        ) || ungrouped.some((wo) => wo.status === 'archived');
 
     return (
         <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-foreground">
                         Work Orders ({totalWorkOrders})
                     </h2>
                     {hasArchivedWOs && (
-                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
                             <input
                                 type="checkbox"
                                 checked={showArchived}
-                                onChange={(e) => setShowArchived(e.target.checked)}
+                                onChange={(e) =>
+                                    setShowArchived(e.target.checked)
+                                }
                                 className="rounded border-muted-foreground/50"
                             />
                             Show archived
@@ -341,7 +396,7 @@ export function WorkOrderListSection({
                             size="sm"
                             onClick={onBulkArchiveDelivered}
                         >
-                            <Archive className="h-4 w-4 mr-2" />
+                            <Archive className="mr-2 h-4 w-4" />
                             Archive delivered
                         </Button>
                     )}
@@ -350,22 +405,24 @@ export function WorkOrderListSection({
                         size="sm"
                         onClick={() => setCreateListDialogOpen(true)}
                     >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         Add List
                     </Button>
                     <Button size="sm" onClick={() => onCreateWorkOrder()}>
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="mr-2 h-4 w-4" />
                         Add Work Order
                     </Button>
                 </div>
             </div>
 
             {totalWorkOrders === 0 && lists.length === 0 ? (
-                <div className="text-center py-12 bg-muted/50 rounded-xl">
-                    <p className="text-muted-foreground mb-4">
+                <div className="rounded-xl bg-muted/50 py-12 text-center">
+                    <p className="mb-4 text-muted-foreground">
                         No work orders yet. Create one to get started.
                     </p>
-                    <Button onClick={() => onCreateWorkOrder()}>Create Work Order</Button>
+                    <Button onClick={() => onCreateWorkOrder()}>
+                        Create Work Order
+                    </Button>
                 </div>
             ) : (
                 <DndContext
@@ -382,10 +439,13 @@ export function WorkOrderListSection({
                                 key={list.id}
                                 list={list}
                                 projectId={projectId}
-                                onCreateWorkOrder={() => onCreateWorkOrder(list.id)}
+                                onCreateWorkOrder={() =>
+                                    onCreateWorkOrder(list.id)
+                                }
                                 isDropTarget={overContainerId === list.id}
                                 parties={parties}
                                 projectPartyId={projectPartyId}
+                                moveDestinations={moveDestinations}
                             />
                         ))}
 
@@ -403,6 +463,7 @@ export function WorkOrderListSection({
                             onCreateWorkOrder={() => onCreateWorkOrder()}
                             isUngrouped
                             isDropTarget={overContainerId === 'ungrouped'}
+                            moveDestinations={moveDestinations}
                         />
                     </div>
 

@@ -44,7 +44,11 @@ import {
 import { useProjectInsights } from '@/hooks/use-pm-copilot';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { BudgetType, ProjectDetailProps } from '@/types/work';
+import type {
+    BudgetType,
+    MoveDestinationProject,
+    ProjectDetailProps,
+} from '@/types/work';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     Archive,
@@ -67,6 +71,7 @@ import { ProjectDocumentsSection } from './components/project-documents-section'
 interface ProjectDetailPageProps extends ProjectDetailProps {
     folders: FolderNode[];
     siblingProjects: Array<{ id: string; name: string }>;
+    moveDestinations?: MoveDestinationProject[];
 }
 
 /**
@@ -94,6 +99,7 @@ export default function ProjectDetail({
     assignableUsers,
     canManageMembers,
     siblingProjects,
+    moveDestinations = [],
 }: ProjectDetailPageProps) {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createWorkOrderDialogOpen, setCreateWorkOrderDialogOpen] =
@@ -463,6 +469,7 @@ export default function ProjectDetail({
 
                     {/* Work Orders Section */}
                     <WorkOrderListSection
+                        moveDestinations={moveDestinations}
                         projectId={project.id}
                         projectName={project.name}
                         projectPartyId={project.partyId}

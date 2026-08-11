@@ -32,7 +32,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { taskStatusLabels } from '@/components/ui/status-badge';
-import { ProgressBar, StatusBadge } from '@/components/work';
+import { EditTaskDialog, ProgressBar, StatusBadge } from '@/components/work';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import {
     TimerConfirmationDialog,
@@ -42,13 +42,10 @@ import {
     type StatusTransition,
     type TransitionOption,
 } from '@/components/workflow';
-import { useRecentAssignees } from '@/hooks/use-recent-assignees';
 import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
-import { getPresetDate } from '@/lib/date-utils';
 import type { BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import {
     AlertTriangle,
     ArrowLeft,
@@ -204,29 +201,6 @@ export default function TaskDetail({
         },
     ];
 
-    // Determine the initial assignment value for the unified dropdown
-    // Format: 'user:{id}', 'agent:{id}', or 'unassigned' for no assignment
-    const getInitialAssignment = () => {
-        if (task.assignedToId) return `user:${task.assignedToId}`;
-        if (task.assignedAgentId) return `agent:${task.assignedAgentId}`;
-        return 'unassigned';
-    };
-
-    const editForm = useForm({
-        title: task.title,
-        description: task.description || '',
-        status: task.status,
-        assignment: getInitialAssignment(),
-        due_date: task.dueDate || '',
-        estimated_hours: task.estimatedHours.toString(),
-        reason: '',
-    });
-
-    // The reason field is only relevant once the user actually edits the due date.
-    const dueDateChanged = editForm.data.due_date !== (task.dueDate || '');
-    const { recentIds: recentAssigneeIds, recordAssignee } =
-        useRecentAssignees();
-
     const timeForm = useForm({
         hours: '',
         date: new Date().toISOString().split('T')[0],
@@ -271,44 +245,6 @@ export default function TaskDetail({
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
-
-    const handleUpdateTask = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Parse the unified assignment value into separate fields
-        const assignment = editForm.data.assignment;
-        let assignedToId: string | null = null;
-        let assignedAgentId: string | null = null;
-
-        if (assignment.startsWith('user:')) {
-            assignedToId = assignment.replace('user:', '');
-        } else if (assignment.startsWith('agent:')) {
-            assignedAgentId = assignment.replace('agent:', '');
-        }
-        // 'unassigned' value means both should be null (already set above)
-
-        // Manually construct the data to send
-        router.patch(
-            `/work/tasks/${task.id}`,
-            {
-                title: editForm.data.title,
-                description: editForm.data.description,
-                assignedToId,
-                assignedAgentId,
-                dueDate: editForm.data.due_date,
-                estimatedHours: editForm.data.estimated_hours,
-                reason: dueDateChanged ? editForm.data.reason || null : null,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    editForm.setData('reason', '');
-                    recordAssignee(assignedToId);
-                    setEditDialogOpen(false);
-                },
-            },
-        );
     };
 
     /**
@@ -1315,274 +1251,13 @@ export default function TaskDetail({
             />
 
             {/* Edit Dialog */}
-            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogContent>
-                    <form onSubmit={handleUpdateTask}>
-                        <DialogHeader>
-                            <DialogTitle>Edit Task</DialogTitle>
-                            <VisuallyHidden>
-                                <DialogDescription>
-                                    Update task details including title,
-                                    assignment, and due date
-                                </DialogDescription>
-                            </VisuallyHidden>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                                <Label>Title</Label>
-                                <Input
-                                    value={editForm.data.title}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'title',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                <InputError message={editForm.errors.title} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Assigned To</Label>
-                                    <Select
-                                        value={editForm.data.assignment}
-                                        onValueChange={(v) =>
-                                            editForm.setData('assignment', v)
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Unassigned" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="unassigned">
-                                                <span className="text-muted-foreground">
-                                                    Unassigned
-                                                </span>
-                                            </SelectItem>
-                                            <SelectGroup>
-                                                <SelectLabel className="flex items-center gap-2">
-                                                    <User className="h-3 w-3" />
-                                                    Team Members
-                                                </SelectLabel>
-                                                {teamMembers.map((m) => (
-                                                    <SelectItem
-                                                        key={`user:${m.id}`}
-                                                        value={`user:${m.id}`}
-                                                    >
-                                                        <span className="flex items-center gap-2">
-                                                            <User className="h-3 w-3" />
-                                                            {m.name}
-                                                        </span>
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                            {availableAgents.length > 0 && (
-                                                <SelectGroup>
-                                                    <SelectLabel className="flex items-center gap-2">
-                                                        <Bot className="h-3 w-3" />
-                                                        AI Agents
-                                                    </SelectLabel>
-                                                    {availableAgents.map(
-                                                        (agent) => (
-                                                            <SelectItem
-                                                                key={`agent:${agent.id}`}
-                                                                value={`agent:${agent.id}`}
-                                                            >
-                                                                <span className="flex items-center gap-2">
-                                                                    <Bot className="h-3 w-3" />
-                                                                    {agent.name}
-                                                                </span>
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                    {(() => {
-                                        const recentMembers = recentAssigneeIds
-                                            .map((id) =>
-                                                teamMembers.find(
-                                                    (member) =>
-                                                        member.id === id,
-                                                ),
-                                            )
-                                            .filter(
-                                                (
-                                                    member,
-                                                ): member is {
-                                                    id: string;
-                                                    name: string;
-                                                } => Boolean(member),
-                                            )
-                                            .filter(
-                                                (member) =>
-                                                    `user:${member.id}` !==
-                                                    editForm.data.assignment,
-                                            );
-
-                                        if (recentMembers.length === 0) {
-                                            return null;
-                                        }
-
-                                        return (
-                                            <div className="flex flex-wrap gap-1">
-                                                {recentMembers.map((member) => (
-                                                    <Button
-                                                        key={member.id}
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="h-6 text-xs"
-                                                        onClick={() =>
-                                                            editForm.setData(
-                                                                'assignment',
-                                                                `user:${member.id}`,
-                                                            )
-                                                        }
-                                                    >
-                                                        <User className="mr-1 h-3 w-3" />
-                                                        {member.name}
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label>Estimated Hours</Label>
-                                    <Input
-                                        type="number"
-                                        value={editForm.data.estimated_hours}
-                                        onChange={(e) =>
-                                            editForm.setData(
-                                                'estimated_hours',
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Due Date</Label>
-                                <Input
-                                    type="date"
-                                    value={editForm.data.due_date}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'due_date',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                                <div className="flex flex-wrap gap-1">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() =>
-                                            editForm.setData(
-                                                'due_date',
-                                                getPresetDate('today'),
-                                            )
-                                        }
-                                    >
-                                        Today
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() =>
-                                            editForm.setData(
-                                                'due_date',
-                                                getPresetDate('tomorrow'),
-                                            )
-                                        }
-                                    >
-                                        Tomorrow
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() =>
-                                            editForm.setData(
-                                                'due_date',
-                                                getPresetDate('nextMonday'),
-                                            )
-                                        }
-                                    >
-                                        Next Monday
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-6 text-xs"
-                                        onClick={() =>
-                                            editForm.setData(
-                                                'due_date',
-                                                getPresetDate('nextMonth'),
-                                            )
-                                        }
-                                    >
-                                        Next Month
-                                    </Button>
-                                </div>
-                            </div>
-                            {dueDateChanged && (
-                                <div className="grid gap-2">
-                                    <Label htmlFor="due-date-reason">
-                                        Reason for due date change (optional)
-                                    </Label>
-                                    <Input
-                                        id="due-date-reason"
-                                        placeholder="e.g. waiting on client assets"
-                                        value={editForm.data.reason}
-                                        onChange={(e) =>
-                                            editForm.setData(
-                                                'reason',
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
-                                </div>
-                            )}
-                            <div className="grid gap-2">
-                                <Label>Description</Label>
-                                <Input
-                                    value={editForm.data.description}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'description',
-                                            e.target.value,
-                                        )
-                                    }
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setEditDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={editForm.processing}
-                            >
-                                Save
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <EditTaskDialog
+                open={editDialogOpen}
+                onOpenChange={setEditDialogOpen}
+                task={task}
+                teamMembers={teamMembers}
+                availableAgents={availableAgents}
+            />
 
             {/* Log Time Dialog */}
             <Dialog

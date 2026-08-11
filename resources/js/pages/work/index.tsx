@@ -24,6 +24,7 @@ import {
     CalendarView,
     CreateTaskDialog,
     KanbanView,
+    MoveWorkOrderDialog,
     MyWorkView,
     ProjectTreeItem,
     QuickAddBar,
@@ -31,7 +32,12 @@ import {
 } from '@/components/work';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import type { QuickAddData, WorkPageProps, WorkView } from '@/types/work';
+import type {
+    QuickAddData,
+    WorkOrderInList,
+    WorkPageProps,
+    WorkView,
+} from '@/types/work';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
@@ -57,6 +63,8 @@ export default function Work({
     tasks,
     parties,
     teamMembers,
+    availableAgents = [],
+    moveDestinations = [],
     currentView,
     currentUserId,
     myWorkData,
@@ -72,6 +80,12 @@ export default function Work({
         useState(false);
     const [, setSelectedProjectId] = useState<string | null>(null);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+    // One dialog serves every row of the tree, so the row it was opened for
+    // travels with the open state.
+    const [movingWorkOrder, setMovingWorkOrder] = useState<{
+        workOrder: WorkOrderInList;
+        projectId: string;
+    } | null>(null);
     const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<
         string | undefined
     >(undefined);
@@ -121,6 +135,13 @@ export default function Work({
     const handleCreateTask = (workOrderId: string) => {
         setSelectedWorkOrderId(workOrderId);
         setCreateTaskDialogOpen(true);
+    };
+
+    const handleMoveWorkOrder = (
+        workOrder: WorkOrderInList,
+        projectId: string,
+    ) => {
+        setMovingWorkOrder({ workOrder, projectId });
     };
 
     const handleCreateWorkOrderFromKanban = () => {
@@ -281,10 +302,17 @@ export default function Work({
                                                 project={project}
                                                 workOrders={workOrders}
                                                 tasks={tasks}
+                                                teamMembers={teamMembers}
+                                                availableAgents={
+                                                    availableAgents
+                                                }
                                                 onCreateWorkOrder={
                                                     handleCreateWorkOrder
                                                 }
                                                 onCreateTask={handleCreateTask}
+                                                onMoveWorkOrder={
+                                                    handleMoveWorkOrder
+                                                }
                                             />
                                         ))
                                     )}
@@ -646,6 +674,21 @@ export default function Work({
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {movingWorkOrder && (
+                <MoveWorkOrderDialog
+                    open
+                    onOpenChange={(open) => {
+                        if (!open) setMovingWorkOrder(null);
+                    }}
+                    workOrder={{
+                        id: movingWorkOrder.workOrder.id,
+                        title: movingWorkOrder.workOrder.title,
+                    }}
+                    currentProjectId={movingWorkOrder.projectId}
+                    destinations={moveDestinations}
+                />
+            )}
 
             <CreateTaskDialog
                 open={createTaskDialogOpen}

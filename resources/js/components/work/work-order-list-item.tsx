@@ -25,7 +25,7 @@ import {
     type WorkOrderStatus,
 } from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
-import type { WorkOrderInList } from '@/types/work';
+import type { MoveDestinationProject, WorkOrderInList } from '@/types/work';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Link, router } from '@inertiajs/react';
@@ -34,6 +34,7 @@ import {
     Archive,
     ArchiveRestore,
     Edit,
+    FolderInput,
     FolderMinus,
     GripVertical,
     MoreVertical,
@@ -42,20 +43,30 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { MoveWorkOrderDialog } from './move-work-order-dialog';
 
 interface WorkOrderListItemProps {
     workOrder: WorkOrderInList;
     listId?: string | null;
     isDragOverlay?: boolean;
+    /** The project this row is rendered under, excluded from the move picker. */
+    projectId?: string;
+    moveDestinations?: MoveDestinationProject[];
 }
 
 export function WorkOrderListItem({
     workOrder,
     listId,
     isDragOverlay = false,
+    projectId = '',
+    moveDestinations = [],
 }: WorkOrderListItemProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [moveDialogOpen, setMoveDialogOpen] = useState(false);
     const [actionError, setActionError] = useState<string | null>(null);
+    const hasMoveDestination = moveDestinations.some(
+        (destination) => destination.id !== projectId,
+    );
     const {
         attributes,
         listeners,
@@ -257,6 +268,13 @@ export function WorkOrderListItem({
                             Edit Work Order
                         </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={() => setMoveDialogOpen(true)}
+                        disabled={!hasMoveDestination}
+                    >
+                        <FolderInput className="mr-2 h-4 w-4" />
+                        Move to Project…
+                    </DropdownMenuItem>
                     {!isArchived && (
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>
@@ -316,6 +334,14 @@ export function WorkOrderListItem({
                     )}
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            <MoveWorkOrderDialog
+                open={moveDialogOpen}
+                onOpenChange={setMoveDialogOpen}
+                workOrder={{ id: workOrder.id, title: workOrder.title }}
+                currentProjectId={projectId}
+                destinations={moveDestinations}
+            />
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

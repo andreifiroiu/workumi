@@ -7,9 +7,11 @@ use App\Enums\Priority;
 use App\Enums\TaskStatus;
 use App\Enums\WorkOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MoveWorkOrderRequest;
 use App\Http\Requests\StoreWorkOrderRequest;
 use App\Http\Requests\UpdateWorkOrderRequest;
 use App\Models\AIAgent;
+use App\Models\Deliverable;
 use App\Models\Document;
 use App\Models\Folder;
 use App\Models\Message;
@@ -20,6 +22,7 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Services\WorkflowTransitionService;
 use App\Services\WorkItemCompletionService;
+use App\Support\MoveDestinations;
 use App\Support\TeamMembership;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -38,18 +41,8 @@ class WorkOrderController extends Controller
         $user = $request->user();
         $project = $request->project();
 
-        // Calculate position in list
         $listId = $validated['workOrderListId'] ?? null;
-        $positionInList = 0;
-        if ($listId) {
-            $maxPosition = WorkOrder::where('work_order_list_id', $listId)->max('position_in_list') ?? 0;
-            $positionInList = $maxPosition + 100;
-        } else {
-            $maxPosition = WorkOrder::where('project_id', $validated['projectId'])
-                ->whereNull('work_order_list_id')
-                ->max('position_in_list') ?? 0;
-            $positionInList = $maxPosition + 100;
-        }
+        $positionInList = $this->nextPositionInList((int) $validated['projectId'], $listId ? (int) $listId : null);
 
         WorkOrder::create([
             'team_id' => $request->teamId(),
@@ -91,13 +84,12 @@ class WorkOrderController extends Controller
         // Get routing recommendations from metadata if dispatcher was enabled
         $routingRecommendations = $this->getRoutingRecommendations($workOrder);
 
-        // Sibling data for breadcrumb navigation
-        $siblingProjects = Project::forTeam($workOrder->project->team_id)
-            ->notArchived()
-            ->visibleTo($request->user()->id)
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        // The projects this work order could move into are also exactly its
+        // breadcrumb siblings, so one query answers both.
+        $moveDestinations = MoveDestinations::forTeam(
+            (int) $workOrder->team_id,
+            (int) $request->user()->id,
+        );
 
         $siblingWorkOrders = WorkOrder::where('project_id', $workOrder->project_id)
             ->visibleTo($request->user()->id)
@@ -112,10 +104,11 @@ class WorkOrderController extends Controller
             ->get();
 
         return Inertia::render('work/work-orders/[id]', [
-            'siblingProjects' => $siblingProjects->map(fn (Project $p) => [
-                'id' => (string) $p->id,
-                'name' => $p->name,
-            ]),
+            'moveDestinations' => $moveDestinations,
+            'siblingProjects' => array_map(
+                fn (array $project) => ['id' => $project['id'], 'name' => $project['name']],
+                $moveDestinations,
+            ),
             'siblingWorkOrders' => $siblingWorkOrders->map(fn (WorkOrder $wo) => [
                 'id' => (string) $wo->id,
                 'title' => $wo->title,
@@ -621,6 +614,98 @@ class WorkOrderController extends Controller
         $workOrder->project->recalculateProgress();
 
         return back();
+    }
+
+    /**
+     * Move a work order — and everything hanging off it — into another project.
+     */
+    public function move(MoveWorkOrderRequest $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $destination = $request->destinationProject();
+        $listId = $request->destinationListId();
+
+        // Read before the update, or the relation resolves to the destination.
+        // Null when the source project was soft-deleted out from under the work
+        // order — rescuing it is one of the better reasons to move something,
+        // so that case must not be the one that blows up.
+        $sourceProject = $workOrder->project;
+
+        // The action is reachable from three different menus, so landing on the
+        // work order's current home is a no-op rather than an error. Returning
+        // here also spares it a pointless trip to the end of its own list.
+        if ($destination->id === $sourceProject?->id && $listId === $workOrder->work_order_list_id) {
+            return back();
+        }
+
+        DB::transaction(function () use ($workOrder, $destination, $listId): void {
+            $workOrder->update([
+                'project_id' => $destination->id,
+                'work_order_list_id' => $listId,
+                'position_in_list' => $this->nextPositionInList((int) $destination->id, $listId),
+                // The party contact is derived from the parent project at
+                // creation and has no editor of its own, so it follows the
+                // project rather than labelling the work order with the
+                // previous client.
+                'party_contact_id' => $destination->party_id,
+            ]);
+
+            // Tasks and deliverables denormalize their work order's project_id,
+            // so they must follow it. Trashed rows included: a restored task
+            // must not come back pointing at a project its work order left.
+            Task::withTrashed()
+                ->where('work_order_id', $workOrder->id)
+                ->update(['project_id' => $destination->id]);
+
+            Deliverable::withTrashed()
+                ->where('work_order_id', $workOrder->id)
+                ->update(['project_id' => $destination->id]);
+
+            // Folders are project-scoped, and getWorkOrderFolders() only offers
+            // the current project's tree — a file left in one of the source
+            // project's folders would vanish from the work order while still
+            // showing under the project it no longer belongs to. Unfile it: at
+            // the work order root it stays visible and can be re-filed.
+            Document::withTrashed()
+                ->where('documentable_type', WorkOrder::class)
+                ->where('documentable_id', $workOrder->id)
+                ->whereIn('folder_id', Folder::query()
+                    ->whereNotNull('project_id')
+                    ->where('project_id', '!=', $destination->id)
+                    ->select('id'))
+                ->update(['folder_id' => null]);
+        });
+
+        // A move within one project changes nothing either roll-up is computed
+        // from, so the re-sums would be pure cost.
+        if ($destination->id !== $sourceProject?->id) {
+            $destination->refresh()->recalculateProgress();
+            $destination->recalculateActualHours();
+
+            // WorkOrder::recalculateActualCost() bubbles through $this->project,
+            // which is now the destination — so this is the one and only moment
+            // the source project's totals can be corrected.
+            $sourceProject?->refresh()->recalculateProgress();
+            $sourceProject?->recalculateActualHours();
+        }
+
+        return back();
+    }
+
+    /**
+     * The tail of a list, or of a project's ungrouped set.
+     *
+     * Positions are spaced by 100 so a later drag can drop a row between two
+     * others without renumbering everything around it.
+     */
+    private function nextPositionInList(int $projectId, ?int $listId): int
+    {
+        $maxPosition = $listId !== null
+            ? WorkOrder::where('work_order_list_id', $listId)->max('position_in_list')
+            : WorkOrder::where('project_id', $projectId)
+                ->whereNull('work_order_list_id')
+                ->max('position_in_list');
+
+        return (int) ($maxPosition ?? 0) + 100;
     }
 
     public function bulkArchiveDelivered(Request $request, Project $project, WorkItemCompletionService $completion): RedirectResponse

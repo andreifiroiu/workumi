@@ -1,8 +1,8 @@
+import type { WorkOrderInList } from '@/types/work';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkOrderListItem } from '../work-order-list-item';
-import type { WorkOrderInList } from '@/types/work';
 
 // Radix dropdown/submenu primitives rely on these in jsdom.
 window.HTMLElement.prototype.hasPointerCapture = vi.fn();
@@ -14,6 +14,12 @@ const routerMock = {
     patch: vi.fn(),
     delete: vi.fn(),
 };
+
+// The dialog has its own tests; here only the wiring matters.
+vi.mock('../move-work-order-dialog', () => ({
+    MoveWorkOrderDialog: ({ open }: { open: boolean }) =>
+        open ? <div data-testid="move-work-order-dialog" /> : null,
+}));
 
 vi.mock('@inertiajs/react', () => ({
     Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -72,19 +78,23 @@ describe('WorkOrderListItem dropdown actions', () => {
         await openMenu();
 
         expect(await screen.findByText('Change Status')).toBeInTheDocument();
-        expect(screen.getByText('Mark as Delivered & Archive')).toBeInTheDocument();
+        expect(
+            screen.getByText('Mark as Delivered & Archive'),
+        ).toBeInTheDocument();
     });
 
     it('posts to the deliver-and-archive endpoint', async () => {
         render(<WorkOrderListItem workOrder={workOrder} />);
 
         const user = await openMenu();
-        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+        await user.click(
+            await screen.findByText('Mark as Delivered & Archive'),
+        );
 
         expect(routerMock.post).toHaveBeenCalledWith(
             '/work/work-orders/wo-1/deliver-and-archive',
             {},
-            expect.objectContaining({ preserveScroll: true })
+            expect.objectContaining({ preserveScroll: true }),
         );
     });
 
@@ -92,25 +102,33 @@ describe('WorkOrderListItem dropdown actions', () => {
         render(<WorkOrderListItem workOrder={workOrder} />);
 
         const user = await openMenu();
-        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+        await user.click(
+            await screen.findByText('Mark as Delivered & Archive'),
+        );
 
         const { onError } = routerMock.post.mock.calls[0][2];
         act(() => onError({ tasks: 'Some tasks are still open.' }));
 
-        expect(await screen.findByText('Some tasks are still open.')).toBeInTheDocument();
+        expect(
+            await screen.findByText('Some tasks are still open.'),
+        ).toBeInTheDocument();
     });
 
     it('falls back to a generic message when the failure has no task error', async () => {
         render(<WorkOrderListItem workOrder={workOrder} />);
 
         const user = await openMenu();
-        await user.click(await screen.findByText('Mark as Delivered & Archive'));
+        await user.click(
+            await screen.findByText('Mark as Delivered & Archive'),
+        );
 
         const { onError } = routerMock.post.mock.calls[0][2];
         act(() => onError({}));
 
         expect(
-            await screen.findByText('Failed to deliver and archive work order.')
+            await screen.findByText(
+                'Failed to deliver and archive work order.',
+            ),
         ).toBeInTheDocument();
     });
 
@@ -121,18 +139,80 @@ describe('WorkOrderListItem dropdown actions', () => {
         await user.click(await screen.findByText('Change Status'));
 
         // Mirrors the statuses accepted by WorkOrderController@updateStatus.
-        for (const label of ['Draft', 'Active', 'In Review', 'Approved', 'Delivered']) {
-            expect(await screen.findByRole('menuitemradio', { name: label })).toBeInTheDocument();
+        for (const label of [
+            'Draft',
+            'Active',
+            'In Review',
+            'Approved',
+            'Delivered',
+        ]) {
+            expect(
+                await screen.findByRole('menuitemradio', { name: label }),
+            ).toBeInTheDocument();
         }
     });
 
     it('hides status actions for archived work orders', async () => {
-        render(<WorkOrderListItem workOrder={{ ...workOrder, status: 'archived' }} />);
+        render(
+            <WorkOrderListItem
+                workOrder={{ ...workOrder, status: 'archived' }}
+            />,
+        );
 
         await openMenu();
 
         expect(screen.queryByText('Change Status')).not.toBeInTheDocument();
-        expect(screen.queryByText('Mark as Delivered & Archive')).not.toBeInTheDocument();
+        expect(
+            screen.queryByText('Mark as Delivered & Archive'),
+        ).not.toBeInTheDocument();
         expect(await screen.findByText('Unarchive')).toBeInTheDocument();
+    });
+
+    it('opens the move dialog from the menu', async () => {
+        render(
+            <WorkOrderListItem
+                workOrder={workOrder}
+                projectId="1"
+                moveDestinations={[
+                    {
+                        id: '2',
+                        name: 'Brand Refresh',
+                        isPrivate: false,
+                        lists: [],
+                    },
+                ]}
+            />,
+        );
+
+        const user = await openMenu();
+        await user.click(await screen.findByText('Move to Project…'));
+
+        expect(
+            screen.getByTestId('move-work-order-dialog'),
+        ).toBeInTheDocument();
+    });
+
+    it('disables the move action when there is nowhere to move to', async () => {
+        // The only destination is the project the work order already sits in.
+        render(
+            <WorkOrderListItem
+                workOrder={workOrder}
+                projectId="1"
+                moveDestinations={[
+                    {
+                        id: '1',
+                        name: 'Current Project',
+                        isPrivate: false,
+                        lists: [],
+                    },
+                ]}
+            />,
+        );
+
+        await openMenu();
+
+        expect(
+            await screen.findByRole('menuitem', { name: /Move to Project/ }),
+        ).toHaveAttribute('aria-disabled', 'true');
     });
 });

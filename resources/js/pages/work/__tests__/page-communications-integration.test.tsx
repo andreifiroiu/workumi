@@ -1,5 +1,11 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import {
+    act,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock fetch for API calls
 const mockFetch = vi.fn();
@@ -11,8 +17,18 @@ Element.prototype.scrollIntoView = vi.fn();
 // Mock Inertia
 vi.mock('@inertiajs/react', () => ({
     Head: ({ title }: { title: string }) => <title>{title}</title>,
-    Link: ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
-        <a href={href} className={className}>{children}</a>
+    Link: ({
+        href,
+        children,
+        className,
+    }: {
+        href: string;
+        children: React.ReactNode;
+        className?: string;
+    }) => (
+        <a href={href} className={className}>
+            {children}
+        </a>
     ),
     router: {
         post: vi.fn(),
@@ -84,8 +100,11 @@ vi.mock('@/components/workflow', async () => ({
 
 // Mock work components
 vi.mock('@/components/work', () => ({
+    EditTaskDialog: () => null,
     StatusBadge: ({ status }: { status: string }) => <span>{status}</span>,
-    PriorityBadge: ({ priority }: { priority: string }) => <span>{priority}</span>,
+    PriorityBadge: ({ priority }: { priority: string }) => (
+        <span>{priority}</span>
+    ),
     ProgressBar: () => <div>Progress</div>,
     ProjectTeamSection: () => <div>Team Section</div>,
 }));
@@ -160,11 +179,13 @@ describe('Page Communications Integration', () => {
                 statusTransitions={[]}
                 allowedTransitions={[]}
                 rejectionFeedback={null}
-            />
+            />,
         );
 
         // Check that the communications button is present
-        const commButton = screen.getByRole('button', { name: /communications|messages/i });
+        const commButton = screen.getByRole('button', {
+            name: /communications|messages/i,
+        });
         expect(commButton).toBeInTheDocument();
 
         // Click to open the communications panel
@@ -174,7 +195,9 @@ describe('Page Communications Integration', () => {
 
         // Check that the CommunicationsPanel is rendered
         await waitFor(() => {
-            expect(screen.getByTestId('communications-panel')).toBeInTheDocument();
+            expect(
+                screen.getByTestId('communications-panel'),
+            ).toBeInTheDocument();
         });
 
         // Verify the panel receives the correct task type and ID
@@ -194,18 +217,22 @@ describe('Page Communications Integration', () => {
                 statusTransitions={[]}
                 allowedTransitions={[]}
                 rejectionFeedback={null}
-            />
+            />,
         );
 
         // Open the communications panel
-        const commButton = screen.getByRole('button', { name: /communications|messages/i });
+        const commButton = screen.getByRole('button', {
+            name: /communications|messages/i,
+        });
         await act(async () => {
             fireEvent.click(commButton);
         });
 
         // Verify the panel is rendered (the panel handles its own message updates)
         await waitFor(() => {
-            expect(screen.getByTestId('communications-panel')).toBeInTheDocument();
+            expect(
+                screen.getByTestId('communications-panel'),
+            ).toBeInTheDocument();
         });
     });
 });
