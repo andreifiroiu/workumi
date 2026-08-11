@@ -24,8 +24,10 @@ class LoginResponse implements LoginResponseContract, TwoFactorLoginResponseCont
         if ($invitationId && $user) {
             $invitation = $this->acceptTeamInvitation->pendingFor($user->email, $invitationId);
 
+            // Land invited users where an ordinary login lands. The team settings tab is behind
+            // `team.admin`, so sending an invited member or viewer there answers them with a 403.
             if ($invitation && $this->acceptTeamInvitation->accept($user, $invitation)) {
-                return redirect()->route('settings.index', ['tab' => 'team'])
+                return redirect()->intended(Fortify::redirects('login'))
                     ->with('status', "You've been added to {$invitation->team->name}!");
             }
         }
