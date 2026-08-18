@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\TaskStatus;
+use App\Models\InboxItem;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -98,5 +99,75 @@ test('tasks are ordered overdue first, then due today, then upcoming', function 
             ->where('tasks.0.title', 'Overdue task')
             ->where('tasks.1.title', 'Due today task')
             ->where('tasks.2.title', 'Upcoming task')
+        );
+});
+
+test('an approval carries the work order id its row links to', function () {
+    InboxItem::factory()->approval()->create([
+        'team_id' => $this->team->id,
+        'related_work_order_id' => $this->workOrder->id,
+        'related_project_id' => $this->project->id,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('today'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('approvals.0.workOrderId', (string) $this->workOrder->id)
+        );
+});
+
+test('approvals for a private project are hidden from team members who cannot open them', function () {
+    $privateProject = Project::factory()->private()->create([
+        'team_id' => $this->team->id,
+        'owner_id' => $this->user->id,
+    ]);
+    $privateWorkOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $privateProject->id,
+        'assigned_to_id' => $this->user->id,
+        'created_by_id' => $this->user->id,
+    ]);
+    InboxItem::factory()->approval()->create([
+        'team_id' => $this->team->id,
+        'title' => 'Approve the private plan',
+        'related_work_order_id' => $privateWorkOrder->id,
+        'related_project_id' => $privateProject->id,
+    ]);
+
+    $outsider = addTeamMember($this->team);
+
+    $this->actingAs($outsider)
+        ->get(route('today'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('approvals', 0)
+            ->where('metrics.approvalsPending', 0)
+        );
+
+    $this->actingAs($this->user)
+        ->get(route('today'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('approvals', 1)
+            ->where('approvals.0.title', 'Approve the private plan')
+            ->where('metrics.approvalsPending', 1)
+        );
+});
+
+test('an approval with no related work order or project stays visible to the team', function () {
+    InboxItem::factory()->approval()->create([
+        'team_id' => $this->team->id,
+        'title' => 'Team-wide approval',
+        'related_work_order_id' => null,
+        'related_project_id' => null,
+    ]);
+
+    $this->actingAs(addTeamMember($this->team))
+        ->get(route('today'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('approvals', 1)
+            ->where('approvals.0.workOrderId', '')
         );
 });

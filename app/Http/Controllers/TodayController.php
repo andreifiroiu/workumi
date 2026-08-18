@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Services\Review\ReviewFlowRegistry;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,7 +35,7 @@ class TodayController extends Controller
 
         return Inertia::render('today', [
             'dailySummary' => $this->getDailySummary($team, $user),
-            'approvals' => $this->getApprovals($team),
+            'approvals' => $this->getApprovals($team, $user),
             'tasks' => $this->getTasks($team, $user),
             'blockers' => $this->getBlockers($team, $user),
             'upcomingDeadlines' => $this->getUpcomingDeadlines($team, $user),
@@ -46,9 +47,7 @@ class TodayController extends Controller
 
     private function getDailySummary(Team $team, User $user): array
     {
-        $pendingApprovals = InboxItem::forTeam($team->id)
-            ->byType(InboxItemType::Approval)
-            ->count();
+        $pendingApprovals = $this->approvalsVisibleTo($team, $user)->count();
 
         $overdueTasks = Task::forTeam($team->id)
             ->assignedTo($user->id)
@@ -99,10 +98,33 @@ class TodayController extends Controller
         ];
     }
 
-    private function getApprovals(Team $team): array
+    /**
+     * Approvals the user is actually allowed to open.
+     *
+     * Every row links through to its work order's detail page, so an approval
+     * the user cannot view there must not be listed here either. Visibility
+     * delegates to the models' own scopes rather than repeating their rules.
+     */
+    private function approvalsVisibleTo(Team $team, User $user): Builder
     {
         return InboxItem::forTeam($team->id)
             ->byType(InboxItemType::Approval)
+            ->where(function (Builder $query) use ($user) {
+                $query
+                    ->whereHas('relatedWorkOrder', fn (Builder $workOrder) => $workOrder->visibleTo($user->id))
+                    ->orWhere(fn (Builder $withoutWorkOrder) => $withoutWorkOrder
+                        ->whereNull('related_work_order_id')
+                        ->where(fn (Builder $byProject) => $byProject
+                            ->whereNull('related_project_id')
+                            ->orWhereHas('relatedProject', fn (Builder $project) => $project->visibleTo($user->id))
+                        )
+                    );
+            });
+    }
+
+    private function getApprovals(Team $team, User $user): array
+    {
+        return $this->approvalsVisibleTo($team, $user)
             ->with(['relatedWorkOrder.project'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -239,9 +261,7 @@ class TodayController extends Controller
                 ->where('updated_at', '>=', $weekStart)
                 ->count(),
 
-            'approvalsPending' => InboxItem::forTeam($team->id)
-                ->byType(InboxItemType::Approval)
-                ->count(),
+            'approvalsPending' => $this->approvalsVisibleTo($team, $user)->count(),
 
             'hoursLoggedToday' => (float) TimeEntry::forTeam($team->id)
                 ->forUser($user->id)
