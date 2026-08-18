@@ -1,4 +1,5 @@
 import { CheckSquare, ChevronRight, Clock, AlertCircle } from 'lucide-react';
+import { Fragment } from 'react';
 import type { TodayTask } from '@/types/today';
 
 interface TasksCardProps {
@@ -98,9 +99,15 @@ export function TasksCard({ tasks, onViewTask }: TasksCardProps) {
                                     <p className="mb-2 line-clamp-1 text-sm text-slate-600 dark:text-slate-400">
                                         {task.description}
                                     </p>
-                                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-500">
-                                        <span>{task.projectTitle}</span>
-                                        <span>•</span>
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-500">
+                                        {[task.projectTitle, task.workOrderTitle]
+                                            .filter(Boolean)
+                                            .map((label, index) => (
+                                                <Fragment key={index}>
+                                                    <span className="truncate">{label}</span>
+                                                    <span>•</span>
+                                                </Fragment>
+                                            ))}
                                         <span className="flex items-center gap-1">
                                             <Clock className="h-3 w-3" />
                                             {task.estimatedHours}h
