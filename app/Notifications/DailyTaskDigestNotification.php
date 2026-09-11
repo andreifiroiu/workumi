@@ -28,11 +28,29 @@ class DailyTaskDigestNotification extends Notification implements ShouldQueue
     /**
      * @param  Collection<int, Task>  $tasks  The user's due/overdue tasks
      * @param  Collection<int, WorkOrder>  $workOrders  The user's due/overdue work orders
+     * @param  string|null  $runId  Id of the digest run that queued this notification
      */
     public function __construct(
         private readonly Collection $tasks,
         private readonly Collection $workOrders,
+        public readonly ?string $runId = null,
     ) {}
+
+    /**
+     * Describe this digest for the delivery log.
+     *
+     * @return array{run_id: string|null, task_count: int, work_order_count: int, task_ids: array<int, int>, work_order_ids: array<int, int>}
+     */
+    public function logContext(): array
+    {
+        return [
+            'run_id' => $this->runId,
+            'task_count' => $this->tasks->count(),
+            'work_order_count' => $this->workOrders->count(),
+            'task_ids' => $this->tasks->pluck('id')->all(),
+            'work_order_ids' => $this->workOrders->pluck('id')->all(),
+        ];
+    }
 
     /**
      * Get the notification's delivery channels.
