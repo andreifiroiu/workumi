@@ -10,6 +10,7 @@ use App\Events\WorkOrderStatusChanged;
 use App\Listeners\AgentTriggerListener;
 use App\Listeners\DeliverableStatusChangedListener;
 use App\Listeners\DispatcherMentionListener;
+use App\Listeners\LogDigestDelivery;
 use App\Listeners\TriggerPMCopilotOnWorkOrderCreated;
 use App\Listeners\WorkOrderStatusChangedListener;
 use App\Models\Document;
@@ -28,6 +29,8 @@ use App\Observers\TimeEntryObserver;
 use App\Observers\WorkOrderObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Events\NotificationFailed;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -93,6 +96,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(WorkOrderCreated::class, TriggerPMCopilotOnWorkOrderCreated::class);
         Event::listen(WorkOrderStatusChanged::class, WorkOrderStatusChangedListener::class);
         Event::listen(DeliverableStatusChanged::class, DeliverableStatusChangedListener::class);
+
+        // Record daily digest emails on the `digest` log channel once the mailer
+        // has actually accepted (or rejected) them in the queue worker.
+        Event::listen(NotificationSent::class, [LogDigestDelivery::class, 'recordSent']);
+        Event::listen(NotificationFailed::class, [LogDigestDelivery::class, 'recordFailed']);
 
         // Register AgentTriggerListener for status change events (agent chain triggers)
         Event::listen(WorkOrderStatusChanged::class, [AgentTriggerListener::class, 'handleWorkOrderStatusChanged']);

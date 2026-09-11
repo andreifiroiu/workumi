@@ -74,6 +74,42 @@ return [
             'replace_placeholders' => true,
         ],
 
+        /*
+        | Dedicated channel for daily task digest delivery. Kept out of the
+        | application log so "did today's digest go out, and to whom?" can be
+        | answered by reading one file (or one Log Viewer entry).
+        |
+        | It is a stack so deployments can fan digest records out to their own
+        | sinks (e.g. LOG_DIGEST_STACK=digest_file,otlp) and tests can silence
+        | it with LOG_DIGEST_STACK=null. Every name listed must be a real
+        | channel below: there is no "null" log *driver*, and an unresolvable
+        | one silently demotes writes to the emergency logger.
+        */
+        'digest' => [
+            'driver' => 'stack',
+            'channels' => explode(',', (string) env('LOG_DIGEST_STACK', 'digest_file')),
+            'ignore_exceptions' => false,
+        ],
+
+        /*
+        | A discard sink for the digest stack. Named rather than reusing the
+        | "null" channel because env() coerces the *string* "null" to PHP null,
+        | which would leave the stack empty and demote writes to the emergency
+        | logger instead of discarding them.
+        */
+        'digest_null' => [
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
+        ],
+
+        'digest_file' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/digest.log'),
+            'level' => env('LOG_DIGEST_LEVEL', 'info'),
+            'days' => env('LOG_DIGEST_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
         /*'discord' => [
             'driver'  => 'monolog',
             'level'   => env('LOG_DISCORD_LEVEL', 'error'),
