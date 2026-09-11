@@ -87,6 +87,12 @@ class HandleInertiaRequests extends Middleware
                 : [],
 
             'activeTimer' => fn () => $this->getActiveTimer($request),
+
+            // Quick capture reports what it created through the flash bag, since
+            // the store action redirects back rather than returning the record.
+            'flash' => [
+                'capture' => fn () => $request->session()->get('capture'),
+            ],
         ];
     }
 

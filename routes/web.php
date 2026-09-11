@@ -98,3 +98,4 @@ require __DIR__.'/inbox.php';
 require __DIR__.'/directory.php';
 require __DIR__.'/playbooks.php';
 require __DIR__.'/documents.php';
+require __DIR__.'/capture.php';

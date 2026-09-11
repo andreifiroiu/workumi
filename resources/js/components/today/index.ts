@@ -5,7 +5,6 @@ export { BlockerSheet } from './blocker-sheet';
 export { BlockersCard } from './blockers-card';
 export { DailySummaryCard } from './daily-summary-card';
 export { MetricsBar } from './metrics-bar';
-export { QuickCapture } from './quick-capture';
 export { ReviewPromptCard } from './review-prompt-card';
 export { TaskSheet } from './task-sheet';
 export { TasksCard } from './tasks-card';

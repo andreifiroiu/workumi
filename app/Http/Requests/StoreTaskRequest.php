@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesTeamScopedTargets;
 use App\Models\Task;
 use App\Models\WorkOrder;
 use App\Support\ChecklistItems;
 use App\Support\TeamMembership;
-use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
 class StoreTaskRequest extends FormRequest
 {
+    use ResolvesTeamScopedTargets;
+
     private ?WorkOrder $workOrder = null;
 
     /**
@@ -36,7 +37,7 @@ class StoreTaskRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'workOrderId' => ['required', 'integer', $this->visibleWorkOrderRule()],
-            'assignedToId' => ['nullable', 'integer', $this->assigneeRule()],
+            'assignedToId' => ['nullable', 'integer', TeamMembership::rule($this->teamId())],
             'dueDate' => ['required', 'date'],
             'estimatedHours' => ['nullable', 'numeric', 'min:0'],
             'checklistItems' => ['nullable', 'array'],
@@ -56,43 +57,5 @@ class StoreTaskRequest extends FormRequest
         }
 
         return $this->workOrder;
-    }
-
-    public function teamId(): int
-    {
-        return (int) ($this->user()->currentTeam?->id ?? 0);
-    }
-
-    /**
-     * Work orders the current user may attach a task to: their own team's, minus
-     * anything hidden inside a private project.
-     *
-     * @return Builder<WorkOrder>
-     */
-    private function visibleWorkOrders(): Builder
-    {
-        return WorkOrder::query()
-            ->forTeam($this->teamId())
-            ->visibleTo((int) $this->user()->id);
-    }
-
-    /**
-     * A plain `exists` rule cannot express team scope or work order visibility,
-     * and the web surface must not be more permissive than the API and MCP ones.
-     */
-    private function visibleWorkOrderRule(): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail): void {
-            if (! $this->visibleWorkOrders()->whereKey($value)->exists()) {
-                $fail('The selected work order is invalid.');
-            }
-        };
-    }
-
-    private function assigneeRule(): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail): void {
-            TeamMembership::rule($this->teamId())($attribute, $value, $fail);
-        };
     }
 }

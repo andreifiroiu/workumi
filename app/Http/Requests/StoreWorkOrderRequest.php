@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesTeamScopedTargets;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
 use App\Support\TeamMembership;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
 class StoreWorkOrderRequest extends FormRequest
 {
+    use ResolvesTeamScopedTargets;
+
     private ?Project $project = null;
 
     /**
@@ -64,36 +66,6 @@ class StoreWorkOrderRequest extends FormRequest
         }
 
         return $this->project;
-    }
-
-    public function teamId(): int
-    {
-        // authorize() has already refused a user without a current team.
-        return (int) $this->user()->currentTeam->id;
-    }
-
-    /**
-     * @return Builder<Project>
-     */
-    private function visibleProjects(): Builder
-    {
-        return Project::query()
-            ->forTeam($this->teamId())
-            ->visibleTo((int) $this->user()->id);
-    }
-
-    /**
-     * A plain `exists` rule expresses neither team scope nor project privacy. The
-     * row is created with the current team's id, so an unscoped project would
-     * produce a work order whose team and project disagree.
-     */
-    private function visibleProjectRule(): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail): void {
-            if (! $this->visibleProjects()->whereKey($value)->exists()) {
-                $fail('The selected project is invalid.');
-            }
-        };
     }
 
     /**

@@ -17,6 +17,7 @@ use App\Support\MoveDestinations;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +30,10 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'partyId' => 'required|exists:parties,id',
+            // Team-scoped, not a bare exists: an unscoped party id lets a
+            // project point at another team's client. The API and MCP surfaces
+            // already scope it.
+            'partyId' => ['required', Rule::exists('parties', 'id')->where('team_id', $request->user()->currentTeam?->id)],
             'startDate' => 'required|date',
             'targetEndDate' => 'nullable|date|after_or_equal:startDate',
             'budgetHours' => 'nullable|numeric|min:0',
@@ -206,7 +210,7 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'partyId' => 'sometimes|required|exists:parties,id',
+            'partyId' => ['sometimes', 'required', Rule::exists('parties', 'id')->where('team_id', $project->team_id)],
             'status' => 'sometimes|required|string|in:active,on_hold,completed,archived',
             'startDate' => 'sometimes|required|date',
             'targetEndDate' => 'nullable|date|after_or_equal:startDate',
