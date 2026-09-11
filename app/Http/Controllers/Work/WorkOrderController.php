@@ -20,6 +20,8 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderList;
+use App\Services\FileUploadService;
+use App\Services\NoteWriter;
 use App\Services\WorkflowTransitionService;
 use App\Services\WorkItemCompletionService;
 use App\Support\MoveDestinations;
@@ -34,6 +36,11 @@ use Inertia\Response;
 
 class WorkOrderController extends Controller
 {
+    public function __construct(
+        private readonly NoteWriter $noteWriter,
+        private readonly FileUploadService $fileUploadService,
+    ) {}
+
     public function store(StoreWorkOrderRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -42,7 +49,7 @@ class WorkOrderController extends Controller
         $project = $request->project();
 
         $listId = $validated['workOrderListId'] ?? null;
-        $positionInList = $this->nextPositionInList((int) $validated['projectId'], $listId ? (int) $listId : null);
+        $positionInList = WorkOrder::nextPositionInList((int) $validated['projectId'], $listId ? (int) $listId : null);
 
         WorkOrder::create([
             'team_id' => $request->teamId(),
@@ -184,7 +191,7 @@ class WorkOrderController extends Controller
                 'mimeType' => $this->guessMimeType($doc->name),
                 'folderId' => $doc->folder_id ? (string) $doc->folder_id : null,
                 'uploadedDate' => $doc->created_at->format('Y-m-d'),
-                'content' => $doc->type === DocumentType::Note ? $this->readNoteContent($doc) : null,
+                'content' => $doc->type === DocumentType::Note ? $this->noteWriter->content($doc) : null,
             ]),
             'folders' => $this->getWorkOrderFolders($workOrder),
             'communicationThread' => $thread ? [
@@ -387,7 +394,7 @@ class WorkOrderController extends Controller
             'name' => $fileName,
             'type' => DocumentType::Reference,
             'file_url' => $fileUrl,
-            'file_size' => $this->formatFileSize($fileSize),
+            'file_size' => $this->fileUploadService->formatFileSize($fileSize),
         ]);
 
         return back();
@@ -426,27 +433,14 @@ class WorkOrderController extends Controller
             'folder_id' => 'nullable|exists:folders,id',
         ]);
 
-        $content = $validated['content'] ?? '';
-        $name = $this->normalizeNoteName($validated['name']);
-
-        DB::transaction(function () use ($request, $workOrder, $validated, $name, $content): void {
-            $document = new Document([
-                'team_id' => $workOrder->team_id,
-                'uploaded_by_id' => $request->user()->id,
-                'documentable_type' => WorkOrder::class,
-                'documentable_id' => $workOrder->id,
-                'folder_id' => $validated['folder_id'] ?? null,
-                'name' => $name,
-                'type' => DocumentType::Note,
-                'file_url' => '',
-                'file_size' => $this->formatFileSize(strlen($content)),
-            ]);
-            $document->save();
-
-            $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
-            Storage::disk('public')->put($path, $content);
-            $document->update(['file_url' => Storage::disk('public')->url($path)]);
-        });
+        $this->noteWriter->create(
+            teamId: (int) $workOrder->team_id,
+            author: $request->user(),
+            name: $validated['name'],
+            content: $validated['content'] ?? '',
+            parent: $workOrder,
+            folderId: isset($validated['folder_id']) ? (int) $validated['folder_id'] : null,
+        );
 
         return back();
     }
@@ -469,49 +463,13 @@ class WorkOrderController extends Controller
             'content' => 'nullable|string|max:1000000',
         ]);
 
-        $content = $validated['content'] ?? '';
-
-        $path = "work-orders/{$workOrder->id}/notes/note-{$document->id}.md";
-        Storage::disk('public')->put($path, $content);
-
-        $document->update([
-            'name' => $this->normalizeNoteName($validated['name']),
-            'file_size' => $this->formatFileSize(strlen($content)),
-        ]);
+        $this->noteWriter->update(
+            $document,
+            $validated['name'],
+            $validated['content'] ?? '',
+        );
 
         return back();
-    }
-
-    private function normalizeNoteName(string $name): string
-    {
-        $name = trim($name);
-
-        return str_ends_with(strtolower($name), '.md') ? $name : $name.'.md';
-    }
-
-    private function readNoteContent(Document $document): string
-    {
-        $path = str_replace(Storage::disk('public')->url(''), '', $document->file_url);
-
-        if ($path && Storage::disk('public')->exists($path)) {
-            return Storage::disk('public')->get($path);
-        }
-
-        return '';
-    }
-
-    private function formatFileSize(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB'];
-        $unitIndex = 0;
-        $size = $bytes;
-
-        while ($size >= 1024 && $unitIndex < count($units) - 1) {
-            $size /= 1024;
-            $unitIndex++;
-        }
-
-        return round($size, 1).' '.$units[$unitIndex];
     }
 
     private function guessMimeType(string $filename): string
@@ -641,7 +599,7 @@ class WorkOrderController extends Controller
             $workOrder->update([
                 'project_id' => $destination->id,
                 'work_order_list_id' => $listId,
-                'position_in_list' => $this->nextPositionInList((int) $destination->id, $listId),
+                'position_in_list' => WorkOrder::nextPositionInList((int) $destination->id, $listId),
                 // The party contact is derived from the parent project at
                 // creation and has no editor of its own, so it follows the
                 // project rather than labelling the work order with the
@@ -689,23 +647,6 @@ class WorkOrderController extends Controller
         }
 
         return back();
-    }
-
-    /**
-     * The tail of a list, or of a project's ungrouped set.
-     *
-     * Positions are spaced by 100 so a later drag can drop a row between two
-     * others without renumbering everything around it.
-     */
-    private function nextPositionInList(int $projectId, ?int $listId): int
-    {
-        $maxPosition = $listId !== null
-            ? WorkOrder::where('work_order_list_id', $listId)->max('position_in_list')
-            : WorkOrder::where('project_id', $projectId)
-                ->whereNull('work_order_list_id')
-                ->max('position_in_list');
-
-        return (int) ($maxPosition ?? 0) + 100;
     }
 
     public function bulkArchiveDelivered(Request $request, Project $project, WorkItemCompletionService $completion): RedirectResponse

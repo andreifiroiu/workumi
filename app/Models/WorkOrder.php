@@ -254,6 +254,26 @@ class WorkOrder extends Model
     }
 
     /**
+     * The position a newly created work order should take at the end of its
+     * column.
+     *
+     * Positions are spaced by 100 so a later drag can drop a row between two
+     * others without renumbering everything around it. Every creation path has
+     * to set one: `position_in_list` sorts NULL first, so a work order created
+     * without a position jumps above every existing card.
+     */
+    public static function nextPositionInList(int $projectId, ?int $listId): int
+    {
+        $maxPosition = $listId !== null
+            ? static::where('work_order_list_id', $listId)->max('position_in_list')
+            : static::where('project_id', $projectId)
+                ->whereNull('work_order_list_id')
+                ->max('position_in_list');
+
+        return (int) ($maxPosition ?? 0) + 100;
+    }
+
+    /**
      * Scope to filter work orders visible to a specific user.
      *
      * A work order inherits its project's privacy: inside a private project it

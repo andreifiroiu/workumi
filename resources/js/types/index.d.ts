@@ -1,5 +1,6 @@
 import { InertiaLinkProps } from '@inertiajs/react';
 import { LucideIcon } from 'lucide-react';
+import { CaptureResult } from './quick-capture';
 import { Organization } from './workumi';
 
 /** A user's role within their current team. */
@@ -64,6 +65,7 @@ export interface SharedData {
     locale: string;
     availableLocales: string[];
     activeTimer: ActiveTimer | null;
+    flash: { capture: CaptureResult | null };
     [key: string]: unknown;
 }
 

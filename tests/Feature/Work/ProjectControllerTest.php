@@ -24,9 +24,8 @@ test('user can view projects index', function () {
     $response = $this->actingAs($this->user)->get('/work');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) =>
-        $page->component('work/index')
-            ->has('projects', 3)
+    $response->assertInertia(fn ($page) => $page->component('work/index')
+        ->has('projects', 3)
     );
 });
 
@@ -58,10 +57,9 @@ test('user can view a project', function () {
     $response = $this->actingAs($this->user)->get("/work/projects/{$project->id}");
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) =>
-        $page->component('work/projects/[id]')
-            ->has('project')
-            ->where('project.id', (string) $project->id)
+    $response->assertInertia(fn ($page) => $page->component('work/projects/[id]')
+        ->has('project')
+        ->where('project.id', (string) $project->id)
     );
 });
 
@@ -157,4 +155,40 @@ test('unauthenticated user cannot access work section', function () {
     $response = $this->get('/work');
 
     $response->assertRedirect('/login');
+});
+
+/**
+ * A bare `exists:parties,id` let a project point at another team's client. The
+ * API and MCP surfaces already scoped it; the web dialog was the outlier.
+ */
+test('creating a project rejects a party from another team', function () {
+    $outsider = User::factory()->create();
+    $otherTeam = $outsider->createTeam(['name' => 'Other Team']);
+    $otherParty = Party::factory()->create(['team_id' => $otherTeam->id]);
+
+    $this->actingAs($this->user)->post('/work/projects', [
+        'name' => 'Cross Team Project',
+        'partyId' => $otherParty->id,
+        'startDate' => '2026-01-01',
+    ])->assertSessionHasErrors('partyId');
+
+    $this->assertDatabaseMissing('projects', ['name' => 'Cross Team Project']);
+});
+
+test('updating a project rejects a party from another team', function () {
+    $outsider = User::factory()->create();
+    $otherTeam = $outsider->createTeam(['name' => 'Other Team']);
+    $otherParty = Party::factory()->create(['team_id' => $otherTeam->id]);
+
+    $project = Project::factory()->create([
+        'team_id' => $this->team->id,
+        'party_id' => $this->party->id,
+        'owner_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)->patch("/work/projects/{$project->id}", [
+        'partyId' => $otherParty->id,
+    ])->assertSessionHasErrors('partyId');
+
+    expect($project->fresh()->party_id)->toBe($this->party->id);
 });

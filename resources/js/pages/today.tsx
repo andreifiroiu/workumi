@@ -6,7 +6,6 @@ import {
     BlockerSheet,
     DailySummaryCard,
     MetricsBar,
-    QuickCapture,
     ReviewPromptCard,
     TasksCard,
     TaskSheet,
@@ -16,7 +15,6 @@ import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { type BreadcrumbItem } from '@/types';
 import type {
-    QuickCaptureData,
     TodayApproval,
     TodayBlocker,
     TodayPageProps,
@@ -148,12 +146,6 @@ export default function Today({
         console.log('View activity:', id);
     };
 
-    // Handler for quick capture
-    const handleQuickCapture = (captureData: QuickCaptureData) => {
-        // TODO: Implement API call to create task/request/note
-        console.log('Quick capture:', captureData);
-    };
-
     // Handler for refreshing summary
     const handleRefreshSummary = () => {
         router.reload({ only: ['dailySummary'] });
@@ -222,9 +214,6 @@ export default function Today({
                     </div>
                 </div>
             </div>
-
-            {/* Quick capture floating button */}
-            <QuickCapture onQuickCapture={handleQuickCapture} />
 
             {/* Detail sheets */}
             <ApprovalSheet

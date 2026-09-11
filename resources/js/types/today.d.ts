@@ -97,17 +97,6 @@ export interface TodayMetrics {
 }
 
 // =============================================================================
-// Quick Capture Types
-// =============================================================================
-
-export type QuickCaptureType = 'request' | 'note' | 'task';
-
-export interface QuickCaptureData {
-    type: QuickCaptureType;
-    content: string;
-}
-
-// =============================================================================
 // Page Props (from Inertia)
 // =============================================================================
 
