@@ -151,11 +151,16 @@ class PublicUrls
      * The one URL path this request's page should be served at, or null when
      * the path is not a public page at all.
      *
-     * Folio is more permissive than the URL map: it matches mounts
-     * case-insensitively and serves `index.blade.php` at `/index` as well as
-     * at `/`. Each of those is a crawlable duplicate of a real page. Callers
-     * compare this against the incoming path and redirect when they differ, so
-     * there is exactly one indexable URL per page per locale.
+     * Folio is more permissive than the URL map: it lowercases the path before
+     * matching a mount (so /ES is served by the /es mount) and serves
+     * `index.blade.php` at `/index` as well as at `/`. Each of those is a
+     * crawlable duplicate of a real page. Callers compare this against the
+     * incoming path and redirect when they differ, so there is exactly one
+     * indexable URL per page per locale.
+     *
+     * Page names below the prefix are looked up on disk and so are only
+     * case-insensitive where the filesystem is; a mis-cased page name 404s on
+     * Linux, which needs no canonicalising.
      */
     public function canonicalPathFor(string $path): ?string
     {

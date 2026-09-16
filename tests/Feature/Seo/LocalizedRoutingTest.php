@@ -95,15 +95,30 @@ it('falls back to the default locale for an unsupported language code', function
         ->assertPlainCookie('language', 'en');
 });
 
-it('redirects Folio\'s case-insensitive aliases onto the canonical URL', function (string $from, string $to) {
-    // Folio matches its mounts with a lowercased path, so /ES renders the /es
-    // mount — but resolves to no page here, giving an indexable duplicate with
-    // no canonical, no hreflang and the wrong language.
+it('redirects a mis-cased locale prefix onto the canonical URL', function (string $from, string $to) {
+    // FolioManager::handle() lowercases the path before matching a mount, so
+    // /ES really is served by the /es mount on every platform. Left alone it
+    // would render an indexable duplicate in the wrong language, with no
+    // canonical and no hreflang.
     $this->get($from)->assertRedirect($to)->assertStatus(301);
 })->with([
     ['/ES', '/es'],
     ['/De/use-cases/agencies', '/de/use-cases/agencies'],
-    ['/use-cases/Agencies', '/use-cases/agencies'],
+    ['/RO', '/ro'],
+]);
+
+it('never serves a mis-cased page name as an indexable duplicate', function (string $path) {
+    // Only the mount prefix is lowercased; the page name is looked up on disk,
+    // so this 404s on a case-sensitive filesystem and is canonicalised on a
+    // case-insensitive one. Either is fine — what must never happen is a 200
+    // carrying no canonical of its own.
+    $response = $this->get($path);
+
+    expect($response->getStatusCode())->not->toBe(200);
+})->with([
+    '/use-cases/Agencies',
+    '/es/use-cases/Agencies',
+    '/Use-Cases/agencies',
 ]);
 
 it('redirects Folio\'s /index alias onto the home page', function (string $from, string $to) {
