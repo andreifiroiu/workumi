@@ -17,7 +17,7 @@ return [
 
     // Landing page
     'home' => [
-        'title' => 'Workumi &ndash; Gestion de Trabajo con IA para Equipos Pequenos',
+        'title' => 'Workumi – Gestión de Trabajo con IA para Equipos Pequeños',
         'description' => 'Gestion de trabajo con IA para equipos pequenos. Convierte el caos en operaciones estructuradas y rentables.',
         'badge' => 'Gestion de trabajo que realmente funciona para equipos pequenos',
         'headline' => 'Deja de hacer malabares. Empieza a',
@@ -47,7 +47,7 @@ return [
         'solution_3_text' => 'Crea SOPs reutilizables con listas de verificacion y pasos de validacion. Los agentes de IA los siguen, asegurando consistencia ya sea tu primer proyecto o el centesimo.',
 
         'features_title' => 'Todo lo que tu equipo pequeno necesita',
-        'features_subtitle' => 'Disenado especificamente para equipos de 2&ndash;20 que necesitan estructura sin burocracia.',
+        'features_subtitle' => 'Disenado especificamente para equipos de 2–20 que necesitan estructura sin burocracia.',
 
         'feature_1_title' => 'Ordenes de Trabajo Estructuradas',
         'feature_1_text' => 'Cada compromiso obtiene una orden de trabajo con alcance, presupuesto, entregables y un flujo de aprobacion claro: Borrador, Revision, Aprobacion, Entrega.',
@@ -83,7 +83,8 @@ return [
 
     // Agencies use case
     'agencies' => [
-        'title' => 'Workumi para Agencias &ndash; Gestion de Trabajo con IA para Equipos Creativos y de Marketing',
+        'title' => 'Workumi para Agencias – Gestión de Trabajo con IA para Equipos Creativos y de Marketing',
+        'description' => 'Workumi ayuda a las agencias pequeñas a frenar el aumento de alcance, cubrir brechas de habilidades con IA y repetir sus mejores procesos en cada proyecto.',
         'badge' => 'Para Agencias Creativas y de Marketing',
         'headline' => 'Tu equipo de 5 personas puede entregar como una agencia de 20',
         'subheadline' => 'Las agencias pequenas pierden dinero por el aumento de alcance, incumplen plazos por falta de habilidades y se agotan porque no hay procesos repetibles. Workumi soluciona los tres problemas.',
@@ -118,7 +119,8 @@ return [
 
     // Consultancies use case
     'consultancies' => [
-        'title' => 'Workumi para Consultorias &ndash; Gestion de Trabajo con IA para Equipos de TI y MSP',
+        'title' => 'Workumi para Consultorías – Gestión de Trabajo con IA para Equipos de TI y MSP',
+        'description' => 'Workumi centraliza el conocimiento de las consultorías de TI y MSP para que no pierdas contexto entre compromisos y puedas medir la rentabilidad real.',
         'badge' => 'Para Consultorias de TI y MSPs',
         'headline' => 'Deja de perder contexto entre compromisos',
         'subheadline' => 'Las consultorias funcionan con conocimiento. Cuando ese conocimiento vive en la cabeza de las personas, hilos de correo y documentos dispersos, la rentabilidad sufre. Workumi lo captura todo en un solo lugar.',
@@ -153,7 +155,8 @@ return [
 
     // Operations use case
     'operations' => [
-        'title' => 'Workumi para Operaciones &ndash; Gestion de Trabajo con IA para Equipos de Operaciones Internas',
+        'title' => 'Workumi para Operaciones – Gestión de Trabajo con IA para Equipos de Operaciones Internas',
+        'description' => 'Workumi convierte las solicitudes internas ad-hoc en trabajo estructurado, con propiedad clara, definición de terminado y tiempo medido contra el presupuesto.',
         'badge' => 'Para Equipos de Operaciones Internas y de Campo',
         'headline' => 'Convierte solicitudes desordenadas en trabajo estructurado y rastreable',
         'subheadline' => 'Los equipos de operaciones internas se ahogan en solicitudes ad-hoc, traspasos poco claros y cero responsabilidad. Workumi te da una recepcion estructurada, propiedad clara y una definicion de terminado para cada pieza de trabajo.',

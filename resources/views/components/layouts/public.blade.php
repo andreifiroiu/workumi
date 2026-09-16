@@ -4,8 +4,43 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{{ $title ?? config('app.name', 'Workumi') }}</title>
-    <meta name="description" content="{{ $description ?? __('public.home.description') }}">
+    {{-- $seo is bound by SeoServiceProvider; it is null for a page not listed in config/seo.php. --}}
+    @php
+        $metaDescription = trim($description ?? $seo?->description ?? __('public.home.description'));
+    @endphp
+    <title>{{ $title ?? $seo?->title ?? config('app.name', 'Workumi') }}</title>
+    {{-- Omitted rather than emitted empty: a blank description tag is worse than none. --}}
+    @if ($metaDescription !== '')
+        <meta name="description" content="{{ $metaDescription }}">
+    @endif
+
+    @if ($seo)
+        <link rel="canonical" href="{{ $seo->canonical }}">
+
+        @foreach ($seo->alternates as $alternateLocale => $alternateUrl)
+            <link rel="alternate" hreflang="{{ $alternateLocale }}" href="{{ $alternateUrl }}">
+        @endforeach
+        <link rel="alternate" hreflang="x-default" href="{{ $seo->xDefault() }}">
+
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $seo->siteName }}">
+        <meta property="og:title" content="{{ $seo->title }}">
+        <meta property="og:description" content="{{ $seo->description }}">
+        <meta property="og:url" content="{{ $seo->canonical }}">
+        <meta property="og:image" content="{{ $seo->image }}">
+        <meta property="og:locale" content="{{ $seo->ogLocale() }}">
+        @foreach ($seo->ogAlternateLocales() as $ogAlternateLocale)
+            <meta property="og:locale:alternate" content="{{ $ogAlternateLocale }}">
+        @endforeach
+
+        <meta name="twitter:card" content="{{ config('seo.meta.twitter_card') }}">
+        @if (config('seo.meta.twitter_site'))
+            <meta name="twitter:site" content="{{ config('seo.meta.twitter_site') }}">
+        @endif
+        <meta name="twitter:title" content="{{ $seo->title }}">
+        <meta name="twitter:description" content="{{ $seo->description }}">
+        <meta name="twitter:image" content="{{ $seo->image }}">
+    @endif
 
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -15,20 +50,26 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|ibm-plex-mono:400,500,600" rel="stylesheet" />
 
     @vite(['resources/css/app.css'])
+
+    {{-- Built in App\Services\Seo\StructuredData. A JSON-LD graph written inline here would
+         have its context key compiled as a Blade directive. See tests/Unit/BladeMarkupTest.php. --}}
+    @if ($structuredData)
+        <script type="application/ld+json">{!! $structuredData !!}</script>
+    @endif
 </head>
 <body class="bg-background text-foreground font-sans antialiased">
     {{-- Navigation --}}
     <header class="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-            <a href="/" class="flex items-center gap-2">
+            <a href="{{ $homeUrl }}" class="flex items-center gap-2">
                 <img src="/logo.svg" alt="{{ config('app.name') }}" class="h-8 w-auto">
 {{--                <span class="text-lg tracking-tight">{{ __('public.nav.tagline') }}</span>--}}
             </a>
 
             <div class="hidden items-center gap-8 md:flex">
-                <a href="/use-cases/agencies" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.agencies') }}</a>
-                <a href="/use-cases/consultancies" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.consultancies') }}</a>
-                <a href="/use-cases/operations" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.operations') }}</a>
+                @foreach ($navLinks as $navKey => $navUrl)
+                    <a href="{{ $navUrl }}" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.'.$navKey) }}</a>
+                @endforeach
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
@@ -51,8 +92,11 @@
                     </summary>
                     <div class="absolute right-0 mt-2 min-w-[10rem] overflow-hidden rounded-md border border-border bg-background py-1 shadow-md">
                         @foreach ($locales as $code => $locale)
+                            {{-- nofollow: this is a redirect endpoint, not a page. Crawlers reach
+                                 the other languages through the hreflang alternates instead. --}}
                             <a
                                 href="/language/{{ $code }}"
+                                rel="nofollow"
                                 class="flex items-center gap-2 px-3 py-1.5 text-xs transition hover:bg-secondary {{ $code === $currentLocale ? 'font-semibold text-foreground' : 'text-muted-foreground' }}"
                             >
                                 <span class="text-sm leading-none">{{ $locale['flag'] }}</span>
@@ -109,9 +153,9 @@
                     <span class="text-sm text-muted-foreground">{{ __('public.nav.copyright', ['year' => date('Y'), 'name' => config('app.name', 'Workumi')]) }}</span>
                 </div>
                 <div class="flex gap-6">
-                    <a href="/use-cases/agencies" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.agencies') }}</a>
-                    <a href="/use-cases/consultancies" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.consultancies') }}</a>
-                    <a href="/use-cases/operations" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.operations') }}</a>
+                    @foreach ($navLinks as $navKey => $navUrl)
+                        <a href="{{ $navUrl }}" class="text-sm text-muted-foreground transition hover:text-foreground">{{ __('public.nav.'.$navKey) }}</a>
+                    @endforeach
                 </div>
             </div>
         </div>

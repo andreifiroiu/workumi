@@ -1,4 +1,4 @@
-<x-layouts.public :title="__('public.home.title')">
+<x-layouts.public>
 
     {{-- Hero --}}
     <section class="relative overflow-hidden" style="background: url('/images/hero-home-bg.svg') center/cover no-repeat">

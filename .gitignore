@@ -37,3 +37,4 @@ yarn-error.log
 .zenve/snapshot.json
 .zenve/events.log
 worktrees
+/public/robots.txt
