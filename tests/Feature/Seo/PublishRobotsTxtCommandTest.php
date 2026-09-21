@@ -91,3 +91,55 @@ it('does not leave a temp file behind on failure', function () {
 
     expect(glob(sys_get_temp_dir().'/*.tmp'))->not->toContain($this->robotsPath.'.tmp');
 });
+
+it('opens the policy for the production host by default', function () {
+    // The default shipped workumi.com while the site is served from
+    // workumi.app, so the first production run failed closed. Pinning the real
+    // host means a wrong default is a red test, not a red deploy.
+    config(['seo.robots.public_hosts' => require_default_public_hosts()]);
+    config(['app.url' => 'https://workumi.app']);
+
+    expect(app(RobotsTxt::class)->policy())->toBe(RobotsTxt::POLICY_OPEN);
+
+    config(['app.url' => 'https://www.workumi.app']);
+
+    expect(app(RobotsTxt::class)->policy())->toBe(RobotsTxt::POLICY_OPEN);
+});
+
+it('names the configured allow-list when it refuses a host', function () {
+    config([
+        'app.url' => 'https://wokrumi.app',
+        'seo.robots.public_hosts' => ['workumi.app', 'www.workumi.app'],
+    ]);
+    app()->detectEnvironment(fn () => 'production');
+
+    Log::shouldReceive('error')->once();
+
+    $this->artisan('seo:publish-robots')
+        // Without the allow-list in the output, the operator cannot tell
+        // whether APP_URL is wrong or the host is merely missing.
+        ->expectsOutputToContain('workumi.app, www.workumi.app')
+        ->expectsOutputToContain('Set SEO_PUBLIC_HOSTS to include wokrumi.app')
+        ->assertFailed();
+});
+
+/**
+ * The shipped default, read without the environment override a developer
+ * machine or CI may have set.
+ *
+ * @return array<int, string>
+ */
+function require_default_public_hosts(): array
+{
+    $previous = getenv('SEO_PUBLIC_HOSTS');
+    putenv('SEO_PUBLIC_HOSTS');
+    unset($_ENV['SEO_PUBLIC_HOSTS'], $_SERVER['SEO_PUBLIC_HOSTS']);
+
+    $config = require base_path('config/seo.php');
+
+    if ($previous !== false) {
+        putenv('SEO_PUBLIC_HOSTS='.$previous);
+    }
+
+    return $config['robots']['public_hosts'];
+}

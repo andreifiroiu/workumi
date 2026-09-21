@@ -101,7 +101,7 @@ return [
 
         'public_hosts' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('SEO_PUBLIC_HOSTS', 'workumi.com,www.workumi.com'))
+            explode(',', (string) env('SEO_PUBLIC_HOSTS', 'workumi.app,www.workumi.app'))
         ))),
 
         /*
