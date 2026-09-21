@@ -1,18 +1,20 @@
-import { useState, useCallback, useMemo } from 'react';
+import { TimeLogPromptDialog } from '@/components/work/time-log-prompt-dialog';
+import { useTimeLogPrompt } from '@/hooks/use-time-log-prompt';
+import { csrfHeaders } from '@/lib/csrf';
 import {
     DndContext,
     DragOverlay,
-    rectIntersection,
     PointerSensor,
+    rectIntersection,
     useSensor,
     useSensors,
-    type DragStartEvent,
     type DragEndEvent,
+    type DragStartEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
-import { TaskKanbanColumn, type TaskStatus } from './task-kanban-column';
+import { useCallback, useMemo, useState } from 'react';
 import { TaskKanbanCard, type TaskKanbanCardProps } from './task-kanban-card';
-import { csrfHeaders } from '@/lib/csrf';
+import { TaskKanbanColumn, type TaskStatus } from './task-kanban-column';
 
 interface Task {
     id: string;
@@ -59,13 +61,18 @@ const VISIBLE_COLUMNS: { status: TaskStatus; title: string }[] = [
 export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const {
+        prompt: timeLogPrompt,
+        capture: captureTimeLogPrompt,
+        dismiss: dismissTimeLogPrompt,
+    } = useTimeLogPrompt();
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
                 distance: 8,
             },
-        })
+        }),
     );
 
     // Group tasks by status
@@ -112,7 +119,7 @@ export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
                 setActiveTask(task);
             }
         },
-        [tasks]
+        [tasks],
     );
 
     const handleDragEnd = useCallback(
@@ -141,17 +148,23 @@ export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
             setIsTransitioning(true);
 
             try {
-                const response = await fetch(`/work/tasks/${taskId}/transition`, {
-                    method: 'POST',
-                    headers: csrfHeaders(),
-                    body: JSON.stringify({ status: targetStatus }),
-                });
+                const response = await fetch(
+                    `/work/tasks/${taskId}/transition`,
+                    {
+                        method: 'POST',
+                        headers: csrfHeaders(),
+                        body: JSON.stringify({ status: targetStatus }),
+                    },
+                );
+
+                const data = await response.json().catch(() => null);
 
                 if (!response.ok) {
-                    const data = await response.json();
-                    console.error('Failed to transition task:', data.message);
+                    console.error('Failed to transition task:', data?.message);
                     return;
                 }
+
+                captureTimeLogPrompt(data);
 
                 // Reload tasks to get fresh data
                 router.reload({ only: ['tasks'] });
@@ -161,7 +174,7 @@ export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
                 setIsTransitioning(false);
             }
         },
-        [tasks, isTransitioning]
+        [tasks, isTransitioning, captureTimeLogPrompt],
     );
 
     const handleDragCancel = useCallback(() => {
@@ -204,6 +217,12 @@ export function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
                     />
                 ) : null}
             </DragOverlay>
+
+            {/* Asks for an estimate when a task was dragged to Done with nothing tracked */}
+            <TimeLogPromptDialog
+                prompt={timeLogPrompt}
+                onDismiss={dismissTimeLogPrompt}
+            />
         </DndContext>
     );
 }

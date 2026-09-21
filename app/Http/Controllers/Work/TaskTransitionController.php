@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TransitionRequest;
 use App\Models\Task;
 use App\Services\WorkflowTransitionService;
+use App\Support\TimeLogPrompt;
 use Illuminate\Http\JsonResponse;
 
 class TaskTransitionController extends Controller
@@ -52,6 +53,7 @@ class TaskTransitionController extends Controller
 
         return response()->json([
             'message' => 'Task status updated successfully.',
+            'timeLogPrompt' => $toStatus === TaskStatus::Done ? TimeLogPrompt::forTask($task) : null,
             'task' => [
                 'id' => (string) $task->id,
                 'title' => $task->title,

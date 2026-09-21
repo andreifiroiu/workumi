@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock Inertia
@@ -93,7 +93,25 @@ vi.mock('@/components/workflow', () => ({
             ))}
         </div>
     ),
-    TransitionDialog: vi.fn(() => null),
+    TransitionDialog: ({
+        isOpen,
+        targetStatus,
+        onConfirm,
+    }: {
+        isOpen: boolean;
+        targetStatus: string;
+        onConfirm: (comment?: string) => void;
+    }) =>
+        isOpen ? (
+            <div data-testid="transition-dialog" data-target={targetStatus}>
+                <button
+                    data-testid="confirm-transition"
+                    onClick={() => onConfirm()}
+                >
+                    Confirm
+                </button>
+            </div>
+        ) : null,
     TransitionHistory: ({
         transitions,
         variant,
@@ -131,6 +149,19 @@ vi.mock('@/components/work', () => ({
 
 vi.mock('@/components/time-tracking', () => ({
     HoursProgressIndicator: () => <div data-testid="hours-progress" />,
+    TimeEntryForm: ({
+        taskId,
+        defaultHours,
+    }: {
+        taskId?: number;
+        defaultHours?: number;
+    }) => (
+        <div
+            data-testid="time-entry-form"
+            data-task-id={taskId}
+            data-default-hours={defaultHours}
+        />
+    ),
 }));
 
 // Import the component after mocks are set up
@@ -318,5 +349,83 @@ describe('TaskDetail - Task Group 15 Tests', () => {
             ),
         ).toBeInTheDocument();
         expect(screen.getByText(/Jane Smith/i)).toBeInTheDocument();
+    });
+    it('asks for an estimate when the task is closed with no time logged', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                message: 'Task status updated successfully.',
+                timeLogPrompt: {
+                    taskId: '1',
+                    taskTitle: 'Test Task',
+                    estimatedHours: 2.5,
+                },
+                task: { status: 'done', statusTransitions: [] },
+            }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        render(
+            <TaskDetail
+                task={mockTask}
+                timeEntries={[]}
+                activeTimer={null}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                rejectionFeedback={null}
+            />,
+        );
+
+        fireEvent.click(screen.getByTestId('transition-done'));
+        fireEvent.click(screen.getByTestId('confirm-transition'));
+
+        await waitFor(() => {
+            expect(
+                screen.getByText(/how long did this take/i),
+            ).toBeInTheDocument();
+        });
+        expect(screen.getByTestId('time-entry-form')).toHaveAttribute(
+            'data-default-hours',
+            '2.5',
+        );
+
+        vi.unstubAllGlobals();
+    });
+
+    it('does not ask for an estimate when time is already logged', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                message: 'Task status updated successfully.',
+                timeLogPrompt: null,
+                task: { status: 'done', statusTransitions: [] },
+            }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        render(
+            <TaskDetail
+                task={mockTask}
+                timeEntries={mockTimeEntries}
+                activeTimer={null}
+                teamMembers={mockTeamMembers}
+                statusTransitions={mockStatusTransitions}
+                allowedTransitions={mockAllowedTransitions}
+                rejectionFeedback={null}
+            />,
+        );
+
+        fireEvent.click(screen.getByTestId('transition-done'));
+        fireEvent.click(screen.getByTestId('confirm-transition'));
+
+        await waitFor(() => {
+            expect(fetchMock).toHaveBeenCalled();
+        });
+        expect(
+            screen.queryByText(/how long did this take/i),
+        ).not.toBeInTheDocument();
+
+        vi.unstubAllGlobals();
     });
 });

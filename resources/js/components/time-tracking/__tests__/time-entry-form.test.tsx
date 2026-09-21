@@ -1,5 +1,5 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TimeEntryForm } from '../time-entry-form';
 
 const mockRouterPost = vi.fn();
@@ -18,6 +18,47 @@ describe('TimeEntryForm', () => {
         mockRouterPatch.mockReset();
     });
 
+    it('pre-fills hours from defaultHours and labels the buttons as asked', () => {
+        render(
+            <TimeEntryForm
+                taskId={7}
+                defaultHours={2.5}
+                submitLabel="Log time"
+                cancelLabel="Close without logging"
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByLabelText(/hours/i)).toHaveValue(2.5);
+        expect(
+            screen.getByRole('button', { name: 'Log time' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /close without logging/i }),
+        ).toBeInTheDocument();
+    });
+
+    it('calls onCancel without submitting when the secondary button is used', () => {
+        const onCancel = vi.fn();
+
+        render(
+            <TimeEntryForm taskId={7} defaultHours={2} onCancel={onCancel} />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        expect(mockRouterPost).not.toHaveBeenCalled();
+    });
+
+    it('renders no secondary button when onCancel is absent', () => {
+        render(<TimeEntryForm taskId={7} />);
+
+        expect(
+            screen.queryByRole('button', { name: /cancel/i }),
+        ).not.toBeInTheDocument();
+    });
+
     it('renders all required form fields', () => {
         render(<TimeEntryForm />);
 
@@ -25,7 +66,9 @@ describe('TimeEntryForm', () => {
         expect(screen.getByLabelText(/date/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/note/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/billable/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /log time/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /log time/i }),
+        ).toBeInTheDocument();
     });
 
     it('submits form with valid data', async () => {
@@ -59,7 +102,7 @@ describe('TimeEntryForm', () => {
                 hours: 2.5,
                 is_billable: true,
             }),
-            expect.any(Object)
+            expect.any(Object),
         );
 
         expect(onSuccess).toHaveBeenCalled();
@@ -78,7 +121,9 @@ describe('TimeEntryForm', () => {
 
         // Validation error should appear
         await waitFor(() => {
-            expect(screen.getByText(/hours must be 24 or less/i)).toBeInTheDocument();
+            expect(
+                screen.getByText(/hours must be 24 or less/i),
+            ).toBeInTheDocument();
         });
 
         // Form should not be submitted
@@ -106,7 +151,9 @@ describe('TimeEntryForm', () => {
 
         // Wait for success message
         await waitFor(() => {
-            expect(screen.getByRole('status')).toHaveTextContent(/time entry logged successfully/i);
+            expect(screen.getByRole('status')).toHaveTextContent(
+                /time entry logged successfully/i,
+            );
         });
 
         // Note input should be reset

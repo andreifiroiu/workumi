@@ -34,6 +34,7 @@ import {
 import { taskStatusLabels } from '@/components/ui/status-badge';
 import { EditTaskDialog, ProgressBar, StatusBadge } from '@/components/work';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
+import { TimeLogPromptDialog } from '@/components/work/time-log-prompt-dialog';
 import {
     TimerConfirmationDialog,
     TransitionButton,
@@ -42,6 +43,7 @@ import {
     type StatusTransition,
     type TransitionOption,
 } from '@/components/workflow';
+import { useTimeLogPrompt } from '@/hooks/use-time-log-prompt';
 import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import type { BreadcrumbItem } from '@/types';
@@ -172,6 +174,11 @@ export default function TaskDetail({
     const [localAllowedTransitions, setLocalAllowedTransitions] =
         useState(allowedTransitions);
     const [commsPanelOpen, setCommsPanelOpen] = useState(false);
+    const {
+        prompt: timeLogPrompt,
+        capture: captureTimeLogPrompt,
+        dismiss: dismissTimeLogPrompt,
+    } = useTimeLogPrompt();
     const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
 
     // Checklist management state
@@ -409,11 +416,11 @@ export default function TaskDetail({
                     },
                 );
 
-                const data = await response.json();
+                const data = await response.json().catch(() => null);
 
                 if (!response.ok) {
                     setTransitionError(
-                        data.message || 'Failed to update status',
+                        data?.message || 'Failed to update status',
                     );
                     return;
                 }
@@ -452,6 +459,7 @@ export default function TaskDetail({
 
                 setTransitionDialogOpen(false);
                 setSelectedTransition(null);
+                captureTimeLogPrompt(data);
 
                 // Reload page to get fresh data
                 router.reload({
@@ -470,7 +478,7 @@ export default function TaskDetail({
                 setIsTransitioning(false);
             }
         },
-        [selectedTransition, task.id],
+        [selectedTransition, task.id, captureTimeLogPrompt],
     );
 
     /**
@@ -1239,6 +1247,12 @@ export default function TaskDetail({
                 onCancel={handleTransitionCancel}
                 isLoading={isTransitioning}
                 error={transitionError}
+            />
+
+            {/* Asks for an estimate when the task was closed with nothing tracked */}
+            <TimeLogPromptDialog
+                prompt={timeLogPrompt}
+                onDismiss={dismissTimeLogPrompt}
             />
 
             {/* Timer Confirmation Dialog */}

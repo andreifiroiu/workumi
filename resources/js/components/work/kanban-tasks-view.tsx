@@ -6,9 +6,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { TimeLogPromptDialog } from '@/components/work/time-log-prompt-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTimeLogPrompt } from '@/hooks/use-time-log-prompt';
 import { csrfHeaders } from '@/lib/csrf';
-import type { Task } from '@/types/work';
+import type { Task, TimeLogPrompt } from '@/types/work';
 import {
     DndContext,
     DragOverlay,
@@ -74,19 +76,20 @@ const STATUS_TITLES: Record<string, string> = {
 async function transitionTask(
     taskId: string,
     status: string,
-): Promise<boolean> {
+): Promise<{ timeLogPrompt?: TimeLogPrompt | null } | null> {
     const response = await fetch(`/work/tasks/${taskId}/transition`, {
         method: 'POST',
         headers: csrfHeaders(),
         body: JSON.stringify({ status }),
     });
 
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-        const data = await response.json();
-        console.error('Failed to transition task:', data.message);
-        return false;
+        console.error('Failed to transition task:', data?.message);
+        return null;
     }
-    return true;
+    return data ?? {};
 }
 
 export function KanbanTasksView({
@@ -97,6 +100,11 @@ export function KanbanTasksView({
     const [activeTask, setActiveTask] = useState<Task | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [hideCompleted, setHideCompleted] = useState(false);
+    const {
+        prompt: timeLogPrompt,
+        capture: captureTimeLogPrompt,
+        dismiss: dismissTimeLogPrompt,
+    } = useTimeLogPrompt();
     const [mobileStatus, setMobileStatus] = useState<TaskStatus>('todo');
     // optimistic: taskId → overridden status
     const [optimisticStatuses, setOptimisticStatuses] = useState<
@@ -184,24 +192,33 @@ export function KanbanTasksView({
                 [taskId]: targetStatus,
             }));
 
+            const revert = () =>
+                setOptimisticStatuses((prev) => {
+                    const next = { ...prev };
+                    delete next[taskId];
+                    return next;
+                });
+
             setIsTransitioning(true);
             try {
-                const ok = await transitionTask(taskId, targetStatus);
-                if (ok) {
+                const result = await transitionTask(taskId, targetStatus);
+                if (result) {
+                    captureTimeLogPrompt(result);
                     router.reload({ only: ['tasks'] });
                 } else {
-                    // Revert on failure
-                    setOptimisticStatuses((prev) => {
-                        const next = { ...prev };
-                        delete next[taskId];
-                        return next;
-                    });
+                    revert();
                 }
+            } catch (error) {
+                // fetch() itself rejects when the network is down. Without this the
+                // optimistic move was never undone and the card sat in Done for a
+                // transition that never reached the server.
+                console.error('Error transitioning task:', error);
+                revert();
             } finally {
                 setIsTransitioning(false);
             }
         },
-        [isTransitioning],
+        [isTransitioning, captureTimeLogPrompt],
     );
 
     const handleDragEnd = useCallback(
@@ -287,6 +304,16 @@ export function KanbanTasksView({
                 Tasks will appear here once they are created within work orders.
             </p>
         </div>
+    );
+
+    // Asks for an estimate when a task was closed with nothing tracked. Rendered by both
+    // the mobile and desktop trees below — the mobile branch returns early, so a dialog
+    // mounted only in the desktop tree would leave the prompt captured but never shown.
+    const timeLogPromptDialog = (
+        <TimeLogPromptDialog
+            prompt={timeLogPrompt}
+            onDismiss={dismissTimeLogPrompt}
+        />
     );
 
     // Mobile: status-pill selector + single full-width column with explicit move actions
@@ -429,6 +456,8 @@ export function KanbanTasksView({
                         </div>
                     </>
                 )}
+
+                {timeLogPromptDialog}
             </div>
         );
     }
@@ -508,6 +537,8 @@ export function KanbanTasksView({
                     />
                 ) : null}
             </DragOverlay>
+
+            {timeLogPromptDialog}
         </DndContext>
     );
 }
