@@ -45,15 +45,25 @@ class PublishRobotsTxtCommand extends Command
          * index must not be able to exit 0 and look green. A production host
          * that really is meant to be private passes --allow-closed.
          */
-        $message = "Wrote a CLOSED policy (Disallow: /) for {$host}: it is not in seo.robots.public_hosts.";
+        /** @var array<int, string> $publicHosts */
+        $publicHosts = config('seo.robots.public_hosts', []);
+
+        // Naming the allow-list is the whole diagnosis: the operator can see at
+        // a glance whether APP_URL is wrong or the host is simply missing.
+        $allowed = $publicHosts === [] ? '(empty)' : implode(', ', $publicHosts);
+
+        $message = "Wrote a CLOSED policy (Disallow: /) for {$host}: it is not in seo.robots.public_hosts [{$allowed}].";
 
         if (app()->isProduction() && ! $this->option('allow-closed')) {
             $this->components->error($message.' This host will be de-indexed.');
-            $this->components->error('Fix APP_URL or SEO_PUBLIC_HOSTS, or pass --allow-closed if this is deliberate.');
+            $this->components->error(
+                "Set SEO_PUBLIC_HOSTS to include {$host} (or fix APP_URL), then re-run. "
+                .'Pass --allow-closed if this host really should not be indexed.'
+            );
 
             Log::error('robots.txt published with a closed policy on a production host.', [
                 'host' => $host,
-                'public_hosts' => config('seo.robots.public_hosts'),
+                'public_hosts' => $publicHosts,
             ]);
 
             return self::FAILURE;
