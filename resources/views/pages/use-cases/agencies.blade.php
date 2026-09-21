@@ -1,4 +1,4 @@
-<x-layouts.public :title="__('public.agencies.title')">
+<x-layouts.public>
 
     {{-- Hero --}}
     <section class="py-20 md:py-28">

@@ -17,7 +17,7 @@ return [
 
     // Page d'accueil
     'home' => [
-        'title' => 'Workumi &ndash; Gestion du travail par IA pour petites équipes',
+        'title' => 'Workumi – Gestion du travail par IA pour petites équipes',
         'description' => 'Gestion du travail propulsée par l\'IA pour les petites équipes. Transformez le chaos en opérations structurées et rentables.',
         'badge' => 'La gestion du travail qui fonctionne vraiment pour les petites équipes',
         'headline' => 'Arrêtez de jongler. Commencez à',
@@ -83,7 +83,8 @@ return [
 
     // Cas d'usage agences
     'agencies' => [
-        'title' => 'Workumi pour les agences &ndash; Gestion du travail par IA pour les équipes créatives et marketing',
+        'title' => 'Workumi pour les agences – Gestion du travail par IA pour les équipes créatives et marketing',
+        'description' => 'Workumi aide les petites agences créatives à contenir le dépassement de périmètre, combler les manques de compétences par l\'IA et répéter leurs process.',
         'badge' => 'Pour les agences créatives et marketing',
         'headline' => 'Votre équipe de 5 peut livrer comme une agence de 20',
         'subheadline' => 'Les petites agences perdent de l\'argent à cause du dépassement de périmètre, ratent des délais par manque de compétences et s\'épuisent faute de processus répétables. Workumi règle ces trois problèmes.',
@@ -118,7 +119,8 @@ return [
 
     // Cas d'usage cabinets de conseil
     'consultancies' => [
-        'title' => 'Workumi pour les cabinets de conseil &ndash; Gestion du travail par IA pour les équipes IT et MSP',
+        'title' => 'Workumi pour les cabinets de conseil – Gestion du travail par IA pour les équipes IT et MSP',
+        'description' => 'Workumi centralise le savoir des cabinets de conseil IT et MSP : plus de contexte perdu entre les missions, et une rentabilité enfin mesurable.',
         'badge' => 'Pour les cabinets de conseil IT et MSP',
         'headline' => 'Arrêtez de perdre le contexte entre les missions',
         'subheadline' => 'Les cabinets de conseil fonctionnent grâce au savoir. Quand ce savoir reste dans les têtes, les fils d\'e-mails et des documents éparpillés, la rentabilité en souffre. Workumi centralise tout au même endroit.',
@@ -153,7 +155,8 @@ return [
 
     // Cas d'usage opérations
     'operations' => [
-        'title' => 'Workumi pour les opérations &ndash; Gestion du travail par IA pour les équipes internes',
+        'title' => 'Workumi pour les opérations – Gestion du travail par IA pour les équipes internes',
+        'description' => 'Workumi transforme les demandes internes ad-hoc en travail structuré : propriété claire, définition de terminé et temps suivi sur chaque budget.',
         'badge' => 'Pour les équipes internes et terrain',
         'headline' => 'Transformez les demandes désordonnées en travail structuré et traçable',
         'subheadline' => 'Les équipes opérationnelles internes croulent sous les demandes ad-hoc, les transferts flous et l\'absence de responsabilité. Workumi vous offre un processus d\'entrée structuré, une propriété claire et une définition de terminé pour chaque tâche.',

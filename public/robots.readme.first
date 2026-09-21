@@ -1,0 +1,17 @@
+robots.txt is not in git.
+
+Its contents depend on which host this installation answers as: only the hosts
+listed in `seo.robots.public_hosts` are served a policy that permits indexing,
+and every other host is served `Disallow: /`. A single committed file could
+only ever be right for one of them.
+
+It is written at deploy time by:
+
+    php artisan seo:publish-robots
+
+That command belongs in the deployment script of every environment, after
+`composer install`. Until it has run on a host, `/robots.txt` is answered by
+the route in routes/web.php, which serves the identical body — slower, but
+never a 404, which a crawler reads as "no rules at all".
+
+Edit config/seo.php to change the policy, never this directory.

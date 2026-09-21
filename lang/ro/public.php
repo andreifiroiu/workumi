@@ -17,7 +17,7 @@ return [
 
     // Pagina principală
     'home' => [
-        'title' => 'Workumi &ndash; Management al muncii cu AI pentru echipe mici',
+        'title' => 'Workumi – Management al muncii cu AI pentru echipe mici',
         'description' => 'Management al muncii cu AI pentru echipe mici. Transformă haosul în operațiuni structurate și profitabile.',
         'badge' => 'Management al muncii care funcționează cu adevărat pentru echipe mici',
         'headline' => 'Nu mai jongla. Începe să',
@@ -83,7 +83,8 @@ return [
 
     // Cazul de utilizare pentru agenții
     'agencies' => [
-        'title' => 'Workumi pentru agenții &ndash; Management al muncii cu AI pentru echipe creative și de marketing',
+        'title' => 'Workumi pentru agenții – Management al muncii cu AI pentru echipe creative și de marketing',
+        'description' => 'Workumi ajută agențiile mici de creație și marketing să oprească extinderea domeniului, să acopere lacunele de competențe cu AI și să repete procesele bune.',
         'badge' => 'Pentru agenții creative și de marketing',
         'headline' => 'Echipa ta de 5 persoane poate livra ca o agenție de 20',
         'subheadline' => 'Agențiile mici pierd bani din cauza extinderii domeniului, ratează termene din cauza lacunelor de competențe și se epuizează pentru că nu au procese repetabile. Workumi rezolvă toate trei.',
@@ -118,7 +119,8 @@ return [
 
     // Cazul de utilizare pentru consultanță
     'consultancies' => [
-        'title' => 'Workumi pentru consultanță &ndash; Management al muncii cu AI pentru echipe IT și MSP',
+        'title' => 'Workumi pentru consultanță – Management al muncii cu AI pentru echipe IT și MSP',
+        'description' => 'Workumi adună cunoștințele consultanțelor IT și MSP într-un singur loc: fără context pierdut între angajamente și cu profitabilitate măsurabilă.',
         'badge' => 'Pentru consultanțe IT și MSP-uri',
         'headline' => 'Nu mai pierde contextul între angajamente',
         'subheadline' => 'Consultanțele funcționează pe bază de cunoștințe. Când acele cunoștințe rămân în mintea oamenilor, în fire de email și în documente împrăștiate, profitabilitatea suferă. Workumi le centralizează pe toate într-un singur loc.',
@@ -153,7 +155,8 @@ return [
 
     // Cazul de utilizare pentru operațiuni
     'operations' => [
-        'title' => 'Workumi pentru operațiuni &ndash; Management al muncii cu AI pentru echipe interne de operațiuni',
+        'title' => 'Workumi pentru operațiuni – Management al muncii cu AI pentru echipe interne de operațiuni',
+        'description' => 'Workumi transformă cererile interne ad-hoc în muncă structurată: proprietate clară, definiție a finalizării și timp urmărit față de fiecare buget.',
         'badge' => 'Pentru echipe interne de operațiuni și teren',
         'headline' => 'Transformă cererile dezordonate în muncă structurată și urmăribilă',
         'subheadline' => 'Echipele interne de operațiuni se îneacă în cereri ad-hoc, predări neclare și zero responsabilitate. Workumi îți oferă un flux structurat de primire, proprietate clară și o definiție a finalizării pentru fiecare element de lucru.',

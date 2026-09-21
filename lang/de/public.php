@@ -17,17 +17,17 @@ return [
 
     // Landing page
     'home' => [
-        'title' => 'Workumi &ndash; KI-gestütztes Arbeitsmanagement für kleine Teams',
+        'title' => 'Workumi – KI-gestütztes Arbeitsmanagement für kleine Teams',
         'description' => 'KI-gestütztes Arbeitsmanagement für kleine Teams. Verwandle Chaos in strukturierte, profitable Abläufe.',
         'badge' => 'Arbeitsmanagement, das wirklich für kleine Teams funktioniert',
         'headline' => 'Schluss mit Jonglieren. Anfangen',
         'headline_accent' => 'zu liefern.',
-        'subheadline' => 'Workumi gibt kleinen Teams die Struktur eines Großunternehmens &ndash; ohne den Overhead. KI-Agenten übernehmen die Routinearbeit, damit du dich auf das Wesentliche konzentrieren kannst.',
+        'subheadline' => 'Workumi gibt kleinen Teams die Struktur eines Großunternehmens – ohne den Overhead. KI-Agenten übernehmen die Routinearbeit, damit du dich auf das Wesentliche konzentrieren kannst.',
         'cta_primary' => 'Kostenlos starten',
         'cta_secondary' => 'So funktioniert es',
 
         'problem_title' => 'Kommt dir das bekannt vor?',
-        'problem_subtitle' => 'Kleine Teams stehen vor großen Herausforderungen &ndash; ohne die Ressourcen großer Unternehmen.',
+        'problem_subtitle' => 'Kleine Teams stehen vor großen Herausforderungen – ohne die Ressourcen großer Unternehmen.',
         'problem_label' => 'Das Problem',
         'solution_label' => 'Die Lösung',
 
@@ -44,15 +44,15 @@ return [
         'problem_3_title' => 'Wissen nur in den Köpfen der Leute',
         'problem_3_text' => 'Wenn jemand geht oder beschäftigt ist, nimmt er seinen Prozess mit. Es gibt keine SOPs, keine Checklisten und keine Konsistenz.',
         'solution_3_title' => 'Playbooks, die eure Arbeitsweise festhalten',
-        'solution_3_text' => 'Erstelle wiederverwendbare SOPs mit Checklisten und Validierungsschritten. KI-Agenten befolgen sie und sorgen für Konsistenz &ndash; egal ob es dein erstes oder hundertstes Projekt ist.',
+        'solution_3_text' => 'Erstelle wiederverwendbare SOPs mit Checklisten und Validierungsschritten. KI-Agenten befolgen sie und sorgen für Konsistenz – egal ob es dein erstes oder hundertstes Projekt ist.',
 
         'features_title' => 'Alles, was dein kleines Team braucht',
-        'features_subtitle' => 'Speziell entwickelt für Teams von 2&ndash;20 Personen, die Struktur ohne Bürokratie brauchen.',
+        'features_subtitle' => 'Speziell entwickelt für Teams von 2–20 Personen, die Struktur ohne Bürokratie brauchen.',
 
         'feature_1_title' => 'Strukturierte Arbeitsaufträge',
         'feature_1_text' => 'Jeder Auftrag erhält einen Arbeitsauftrag mit Umfang, Budget, Liefergegenständen und einem klaren Freigabeworkflow: Entwurf, Prüfung, Freigabe, Lieferung.',
         'feature_2_title' => 'KI-Agenten',
-        'feature_2_text' => 'KI-Agenten agieren als teilzeitliche Teammitglieder &ndash; sie entwerfen Kommunikation, triagieren Anfragen und befolgen eure Playbooks, damit nichts durchrutscht.',
+        'feature_2_text' => 'KI-Agenten agieren als teilzeitliche Teammitglieder – sie entwerfen Kommunikation, triagieren Anfragen und befolgen eure Playbooks, damit nichts durchrutscht.',
         'feature_3_title' => 'Profitabilitätsberichte',
         'feature_3_text' => 'Echtzeitberichte nach Projekt, Arbeitsauftrag, Kunde und Teammitglied. Kenne deine Margen, bevor die Rechnung rausgeht.',
         'feature_4_title' => 'Playbooks & SOPs',
@@ -83,7 +83,8 @@ return [
 
     // Agencies use case
     'agencies' => [
-        'title' => 'Workumi für Agenturen &ndash; KI-Arbeitsmanagement für Kreativ- & Marketing-Teams',
+        'title' => 'Workumi für Agenturen – KI-Arbeitsmanagement für Kreativ- & Marketing-Teams',
+        'description' => 'Workumi hilft kleinen Kreativ- und Marketing-Agenturen, Scope Creep zu stoppen, Kompetenzlücken mit KI-Agenten zu schließen und Prozesse zu wiederholen.',
         'badge' => 'Für Kreativ- & Marketing-Agenturen',
         'headline' => 'Dein 5-Personen-Team kann liefern wie eine 20-Personen-Agentur',
         'subheadline' => 'Kleine Agenturen verlieren Geld durch Scope Creep, verpassen Deadlines wegen Kompetenzlücken und brennen aus, weil es keine wiederholbaren Prozesse gibt. Workumi löst alle drei Probleme.',
@@ -91,7 +92,7 @@ return [
 
         'pain_title' => 'Der Agenturkampf ist real',
         'pain_1_title' => 'Kompetenzlücken versenken Projekte',
-        'pain_1_text' => 'Du gewinnst ein Projekt, das Texterstellung, Design und Entwicklung braucht &ndash; aber du hast nur zwei von drei. Das Scramble, die Lücke zu füllen, frisst deine Marge.',
+        'pain_1_text' => 'Du gewinnst ein Projekt, das Texterstellung, Design und Entwicklung braucht – aber du hast nur zwei von drei. Das Scramble, die Lücke zu füllen, frisst deine Marge.',
         'pain_2_title' => 'Scope Creep killt Margen',
         'pain_2_text' => 'Kunden bitten um „noch eine Kleinigkeit" und niemand erfasst die Kosten. Bis zur Rechnungsstellung hast du 40 % mehr Arbeit geleistet als angeboten.',
         'pain_3_title' => 'Keine SOPs, keine Konsistenz',
@@ -100,7 +101,7 @@ return [
         'solutions_title' => 'Wie Workumi Agenturen zum Erfolg verhilft',
         'sol_1_label' => 'KI-Teammitglieder',
         'sol_1_title' => 'Kompetenzlücken mit KI-Agenten füllen',
-        'sol_1_text' => 'KI-Agenten agieren als teilzeitliche Teammitglieder &ndash; sie entwerfen Texte, triagieren Kundenanfragen und bereiten Statusupdates vor. Sie befolgen eure Playbooks und eskalieren an Menschen, wenn Urteilsvermögen gefragt ist.',
+        'sol_1_text' => 'KI-Agenten agieren als teilzeitliche Teammitglieder – sie entwerfen Texte, triagieren Kundenanfragen und bereiten Statusupdates vor. Sie befolgen eure Playbooks und eskalieren an Menschen, wenn Urteilsvermögen gefragt ist.',
         'sol_1_placeholder' => 'Agent-Workflow-Illustration',
         'sol_2_label' => 'Margenschutz',
         'sol_2_title' => 'Scope Creep erkennen, bevor er den Gewinn auffrisst',
@@ -118,7 +119,8 @@ return [
 
     // Consultancies use case
     'consultancies' => [
-        'title' => 'Workumi für Beratungen &ndash; KI-Arbeitsmanagement für IT- & MSP-Teams',
+        'title' => 'Workumi für Beratungen – KI-Arbeitsmanagement für IT- & MSP-Teams',
+        'description' => 'Workumi bündelt das Wissen von IT- und MSP-Beratungen an einem Ort: kein Kontextverlust zwischen Aufträgen und endlich messbare Profitabilität.',
         'badge' => 'Für IT-Beratungen & MSPs',
         'headline' => 'Hör auf, Kontext zwischen Aufträgen zu verlieren',
         'subheadline' => 'Beratungen leben von Wissen. Wenn dieses Wissen nur in den Köpfen der Leute, in E-Mail-Verläufen und verstreuten Dokumenten existiert, leidet die Profitabilität. Workumi erfasst alles an einem Ort.',
@@ -130,12 +132,12 @@ return [
         'pain_2_title' => 'Kontext über Tools verstreut',
         'pain_2_text' => 'Kundenanforderungen sind in E-Mails, Zeiterfassung in einem System, Projektstatus in einem anderen. Ein klares Bild eines Auftrags zusammenzustellen dauert Stunden.',
         'pain_3_title' => 'Profitabilitätsblindheit',
-        'pain_3_text' => 'Du bietest Festpreisaufträge an, aber erfasst die Zeit nur grob. Am Ende weißt du nicht, ob du Geld verdient hast &ndash; du hoffst es nur.',
+        'pain_3_text' => 'Du bietest Festpreisaufträge an, aber erfasst die Zeit nur grob. Am Ende weißt du nicht, ob du Geld verdient hast – du hoffst es nur.',
 
         'solutions_title' => 'Wie Workumi Beratungen zum Erfolg führt',
         'sol_1_label' => 'SOP-Engine',
         'sol_1_title' => 'Stammwissen in Unternehmenswissen verwandeln',
-        'sol_1_text' => 'Erstelle Playbooks, die die Prozesse deiner besten Berater festhalten. Checklisten, Validierungsschritte und Qualitäts-Gates sorgen für Konsistenz bei jedem Auftrag &ndash; unabhängig davon, wer eingesetzt ist.',
+        'sol_1_text' => 'Erstelle Playbooks, die die Prozesse deiner besten Berater festhalten. Checklisten, Validierungsschritte und Qualitäts-Gates sorgen für Konsistenz bei jedem Auftrag – unabhängig davon, wer eingesetzt ist.',
         'sol_1_placeholder' => 'SOP-Playbook-Ansicht',
         'sol_2_label' => 'Kontextbezogene Kommunikation',
         'sol_2_title' => 'Jedes Gespräch an die Arbeit gebunden',
@@ -143,7 +145,7 @@ return [
         'sol_2_placeholder' => 'Kommunikationsverlauf-Ansicht',
         'sol_3_label' => 'Echtzeit-Budgets',
         'sol_3_title' => 'Kenne deine Margen vor der Rechnung',
-        'sol_3_text' => 'Sieh erfasste Zeit gegen das Budget für jeden Arbeitsauftrag. Profitabilitätsberichte aufgeschlüsselt nach Projekt, Kunde und Teammitglied &ndash; damit du frühzeitig gegensteuern und zukünftige Aufträge korrekt bepreisen kannst.',
+        'sol_3_text' => 'Sieh erfasste Zeit gegen das Budget für jeden Arbeitsauftrag. Profitabilitätsberichte aufgeschlüsselt nach Projekt, Kunde und Teammitglied – damit du frühzeitig gegensteuern und zukünftige Aufträge korrekt bepreisen kannst.',
         'sol_3_placeholder' => 'Profitabilitäts-Dashboard',
 
         'cta_title' => 'Baue eine Beratung, die skaliert, ohne Qualität zu verlieren',
@@ -153,7 +155,8 @@ return [
 
     // Operations use case
     'operations' => [
-        'title' => 'Workumi für den Betrieb &ndash; KI-Arbeitsmanagement für interne Ops-Teams',
+        'title' => 'Workumi für den Betrieb – KI-Arbeitsmanagement für interne Ops-Teams',
+        'description' => 'Workumi macht aus Ad-hoc-Anfragen strukturierte Arbeit: klare Zuständigkeiten, eine Definition of Done und erfasste Zeit gegen jedes Budget.',
         'badge' => 'Für interne Ops- & Außendienst-Teams',
         'headline' => 'Verwandle chaotische Anfragen in strukturierte, nachverfolgbare Arbeit',
         'subheadline' => 'Interne Ops-Teams ertrinken in Ad-hoc-Anfragen, unklaren Übergaben und null Verantwortlichkeit. Workumi gibt dir eine strukturierte Aufnahme, klare Zuständigkeiten und eine Definition of Done für jedes Arbeitsstück.',
@@ -178,7 +181,7 @@ return [
         'sol_2_placeholder' => 'Freigabe-Workflow-Stufen',
         'sol_3_label' => 'CRM-Optional',
         'sol_3_title' => 'Funktioniert mit oder ohne deine bestehenden Tools',
-        'sol_3_text' => 'Workumi ersetzt nicht dein CRM oder Ticketing-System &ndash; es arbeitet daneben. Nutze es als internes Ops-Rückgrat und behalte kundenorientierte Tools bei. Oder nutze es als All-in-One-Lösung.',
+        'sol_3_text' => 'Workumi ersetzt nicht dein CRM oder Ticketing-System – es arbeitet daneben. Nutze es als internes Ops-Rückgrat und behalte kundenorientierte Tools bei. Oder nutze es als All-in-One-Lösung.',
         'sol_3_placeholder' => 'Integrationsdiagramm',
 
         'cta_title' => 'Gib deinem Ops-Team die Struktur, die es verdient',

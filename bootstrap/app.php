@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureTeamAdmin;
 use App\Http\Middleware\EnsureUserHasTeam;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SeoDefaultsMiddleware;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
 
         $middleware->validateCsrfTokens(except: ['/mcp', 'webhooks/mailgun/inbound']);
+
+        // Global rather than per-group: the paths that must not be indexed span
+        // the web group, the api group and Fortify's own routes.
+        $middleware->append(SeoDefaultsMiddleware::class);
 
         $middleware->web(append: [
             SetLocale::class,

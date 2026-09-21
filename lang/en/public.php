@@ -84,6 +84,7 @@ return [
     // Agencies use case
     'agencies' => [
         'title' => 'Workumi for Agencies — AI Work Management for Creative & Marketing Teams',
+        'description' => 'Workumi helps small creative and marketing agencies stop scope creep, cover skill gaps with AI agents, and run every project on a repeatable playbook.',
         'badge' => 'For Creative & Marketing Agencies',
         'headline' => 'Your 5-person team can deliver like a 20-person agency',
         'subheadline' => 'Small agencies lose money to scope creep, miss deadlines from skill gaps, and burn out because there are no repeatable processes. Workumi fixes all three.',
@@ -119,6 +120,7 @@ return [
     // Consultancies use case
     'consultancies' => [
         'title' => 'Workumi for Consultancies — AI Work Management for IT & MSP Teams',
+        'description' => 'Workumi keeps consultancy knowledge out of inboxes and in one place, so IT and MSP teams hold context between engagements and price work profitably.',
         'badge' => 'For IT Consultancies & MSPs',
         'headline' => 'Stop losing context between engagements',
         'subheadline' => 'Consultancies run on knowledge. When that knowledge lives in people\'s heads, email threads, and scattered docs, profitability suffers. Workumi captures it all in one place.',
@@ -154,6 +156,7 @@ return [
     // Operations use case
     'operations' => [
         'title' => 'Workumi for Operations — AI Work Management for Internal Ops Teams',
+        'description' => 'Workumi turns ad-hoc internal requests into structured work with clear ownership, a definition of done, and time tracked against every budget.',
         'badge' => 'For Internal Ops & Field Teams',
         'headline' => 'Turn messy requests into structured, trackable work',
         'subheadline' => 'Internal ops teams drown in ad-hoc requests, unclear handoffs, and zero accountability. Workumi gives you a structured intake, clear ownership, and a definition of done for every piece of work.',

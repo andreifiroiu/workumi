@@ -1,9 +1,17 @@
 <?php
 
+use App\Providers\AgentServiceProvider;
+use App\Providers\AppServiceProvider;
+use App\Providers\FolioServiceProvider;
+use App\Providers\FortifyServiceProvider;
+use App\Providers\SeoServiceProvider;
+use App\Providers\WorkumiMcpServiceProvider;
+
 return [
-    App\Providers\AgentServiceProvider::class,
-    App\Providers\AppServiceProvider::class,
-    App\Providers\FolioServiceProvider::class,
-    App\Providers\FortifyServiceProvider::class,
-    App\Providers\WorkumiMcpServiceProvider::class,
+    AgentServiceProvider::class,
+    AppServiceProvider::class,
+    FolioServiceProvider::class,
+    FortifyServiceProvider::class,
+    SeoServiceProvider::class,
+    WorkumiMcpServiceProvider::class,
 ];
