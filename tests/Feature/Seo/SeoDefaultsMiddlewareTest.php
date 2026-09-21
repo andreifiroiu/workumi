@@ -67,26 +67,45 @@ it('covers every non-public GET route with a noindex pattern', function () {
     );
 });
 
-it('disallows in robots.txt everything it marks noindex', function () {
+it('classifies every noindex path as disallowed or deliberately crawlable', function () {
     config(['seo.robots.public_hosts' => ['workumi.com']]);
 
     $body = app(RobotsTxt::class)->body();
 
     /** @var array<int, string> $patterns */
     $patterns = config('seo.noindex_paths');
+    /** @var array<int, string> $noindexOnly */
+    $noindexOnly = config('seo.robots.noindex_only');
 
-    $missing = [];
+    $unclassified = [];
 
     foreach ($patterns as $pattern) {
+        // A prefix check, because that is robots.txt's own matching rule:
+        // `Disallow: /api/` is what `Disallow: /api` would cover anyway.
         $prefix = '/'.rtrim(str_replace('*', '', $pattern), '/');
 
-        if (! str_contains($body, 'Disallow: '.$prefix)) {
-            $missing[] = $pattern;
+        $disallowed = str_contains($body, 'Disallow: '.$prefix);
+        $deliberatelyCrawlable = in_array($pattern, $noindexOnly, true);
+
+        // Exactly one must be true. Both means the Disallow is suppressing the
+        // noindex it was paired with; neither means the path was never
+        // classified and is silently crawlable.
+        if ($disallowed === $deliberatelyCrawlable) {
+            $unclassified[] = $pattern.($disallowed ? ' (both)' : ' (neither)');
         }
     }
 
-    expect($missing)->toBe([], 'noindex patterns with no matching robots.txt Disallow line');
+    expect($unclassified)->toBe([]);
 });
+
+it('leaves the secret-bearing paths fetchable so their noindex is readable', function (string $path) {
+    config(['seo.robots.public_hosts' => ['workumi.com']]);
+
+    // Blocking these in robots.txt would stop a crawler ever reading the
+    // noindex header, and Google indexes a blocked URL it finds linked — which
+    // for these would put the share token itself into the search index.
+    expect(app(RobotsTxt::class)->body())->not->toContain('Disallow: '.$path);
+})->with(['/shared', '/storage', '/invitation', '/log-viewer']);
 
 it('marks the authenticated app noindex', function (string $path) {
     $user = createTeamOwner();
