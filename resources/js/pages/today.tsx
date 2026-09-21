@@ -11,6 +11,8 @@ import {
     TaskSheet,
     UpcomingDeadlinesCard,
 } from '@/components/today';
+import { TimeLogPromptDialog } from '@/components/work/time-log-prompt-dialog';
+import { useTimeLogPrompt } from '@/hooks/use-time-log-prompt';
 import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { type BreadcrumbItem } from '@/types';
@@ -39,6 +41,11 @@ export default function Today({
     const [selectedApproval, setSelectedApproval] =
         useState<TodayApproval | null>(null);
     const [selectedTask, setSelectedTask] = useState<TodayTask | null>(null);
+    const {
+        prompt: timeLogPrompt,
+        capture: captureTimeLogPrompt,
+        dismiss: dismissTimeLogPrompt,
+    } = useTimeLogPrompt();
     const [selectedBlocker, setSelectedBlocker] = useState<TodayBlocker | null>(
         null,
     );
@@ -82,6 +89,7 @@ export default function Today({
             });
 
             if (response.ok) {
+                captureTimeLogPrompt(await response.json().catch(() => null));
                 setSelectedTask(null);
                 router.reload({ only: ['tasks'] });
             }
@@ -108,6 +116,7 @@ export default function Today({
             });
 
             if (response.ok) {
+                captureTimeLogPrompt(await response.json().catch(() => null));
                 setSelectedTask(null);
                 router.reload({ only: ['tasks'] });
             }
@@ -233,6 +242,12 @@ export default function Today({
                 onClose={() => setSelectedBlocker(null)}
                 onResolveBlocker={handleResolveBlocker}
                 onEscalateBlocker={handleEscalateBlocker}
+            />
+
+            {/* Asks for an estimate when a task was closed with nothing tracked */}
+            <TimeLogPromptDialog
+                prompt={timeLogPrompt}
+                onDismiss={dismissTimeLogPrompt}
             />
         </AppLayout>
     );

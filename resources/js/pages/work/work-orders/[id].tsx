@@ -53,6 +53,7 @@ import {
 } from '@/components/work';
 import { PromoteToWorkOrderDialog } from '@/components/work/promote-to-work-order-dialog';
 import { TaskKanbanBoard } from '@/components/work/task-kanban';
+import { TimeLogPromptDialog } from '@/components/work/time-log-prompt-dialog';
 import {
     AssignmentConfirmationDialog,
     RaciSelector,
@@ -75,13 +76,18 @@ import {
     useRejectSuggestion,
     useTriggerPMCopilot,
 } from '@/hooks/use-pm-copilot';
+import { useTimeLogPrompt } from '@/hooks/use-time-log-prompt';
 import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { calculateDefaultDueDate } from '@/lib/date-utils';
 import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
 import type { BreadcrumbItem } from '@/types';
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
-import type { BudgetType, MoveDestinationProject } from '@/types/work';
+import type {
+    BudgetType,
+    MoveDestinationProject,
+    TimeLogPrompt,
+} from '@/types/work';
 import {
     closestCenter,
     DndContext,
@@ -568,6 +574,11 @@ export default function WorkOrderDetail({
     const [completingTaskId, setCompletingTaskId] = useState<string | null>(
         null,
     );
+    const {
+        prompt: timeLogPrompt,
+        capture: captureTimeLogPrompt,
+        dismiss: dismissTimeLogPrompt,
+    } = useTimeLogPrompt();
 
     // Task drag-and-drop state
     const [localTasks, setLocalTasks] = useState(tasks);
@@ -1382,13 +1393,16 @@ export default function WorkOrderDetail({
                 },
             );
 
+            const data = await response.json().catch(() => null);
+
             if (!response.ok) {
-                const data = await response.json();
                 setTaskTransitionError(
-                    data.message || 'Failed to update task status',
+                    data?.message || 'Failed to update task status',
                 );
                 return;
             }
+
+            captureTimeLogPrompt(data);
 
             // Close dialog and reload page data
             setTaskTransitionDialogOpen(false);
@@ -1405,7 +1419,7 @@ export default function WorkOrderDetail({
         } finally {
             setIsTaskTransitioning(false);
         }
-    }, [selectedTask, selectedTaskTransition]);
+    }, [selectedTask, selectedTaskTransition, captureTimeLogPrompt]);
 
     const handleTaskDeleteConfirm = useCallback(() => {
         if (!selectedTask) return;
@@ -1472,7 +1486,11 @@ export default function WorkOrderDetail({
 
             const transitionTo = async (
                 status: string,
-            ): Promise<{ ok: boolean; message?: string }> => {
+            ): Promise<{
+                ok: boolean;
+                message?: string;
+                data?: { timeLogPrompt?: TimeLogPrompt | null };
+            }> => {
                 const response = await fetch(
                     `/work/tasks/${taskId}/transition`,
                     {
@@ -1486,11 +1504,12 @@ export default function WorkOrderDetail({
                     },
                 );
 
+                const data = await response.json().catch(() => null);
+
                 if (!response.ok) {
-                    const data = await response.json();
-                    return { ok: false, message: data.message };
+                    return { ok: false, message: data?.message };
                 }
-                return { ok: true };
+                return { ok: true, data };
             };
 
             try {
@@ -1510,6 +1529,8 @@ export default function WorkOrderDetail({
                 // Then transition to 'done'
                 const result = await transitionTo('done');
                 if (result.ok) {
+                    captureTimeLogPrompt(result.data);
+
                     // Reorder: move the completed task after all non-done/non-archived tasks
                     const updatedTasks = localTasks.map((t) =>
                         t.id === taskId ? { ...t, status: 'done' } : t,
@@ -1546,7 +1567,7 @@ export default function WorkOrderDetail({
                 setCompletingTaskId(null);
             }
         },
-        [localTasks, workOrder.id],
+        [localTasks, workOrder.id, captureTimeLogPrompt],
     );
 
     // Helper functions for assignment confirmation dialog
@@ -2955,6 +2976,12 @@ export default function WorkOrderDetail({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Asks for an estimate when a task was closed with nothing tracked */}
+            <TimeLogPromptDialog
+                prompt={timeLogPrompt}
+                onDismiss={dismissTimeLogPrompt}
+            />
 
             {/* Task Status Change Dialog */}
             <Dialog

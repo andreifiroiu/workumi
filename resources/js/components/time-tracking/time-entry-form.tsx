@@ -1,17 +1,17 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { router } from '@inertiajs/react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import InputError from '@/components/input-error';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Loader2, Clock, Save } from 'lucide-react';
 import type { TimeEntry } from '@/types/work';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from '@inertiajs/react';
+import { Clock, Loader2, Save } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const timeEntrySchema = z.object({
     hours: z
@@ -31,10 +31,29 @@ type TimeEntryFormValues = {
 };
 
 interface TimeEntryFormProps {
-    taskId?: number;
+    taskId?: number | string;
     entry?: TimeEntry;
     onSuccess?: () => void;
     className?: string;
+    /** Seeds the hours field when logging new time, e.g. from the task's estimate. */
+    defaultHours?: number;
+    /** Overrides the submit button's idle label. */
+    submitLabel?: string;
+    /** When given, a secondary button beside submit that dismisses the form without saving. */
+    onCancel?: () => void;
+    cancelLabel?: string;
+}
+
+/**
+ * Inertia hands validation failures back as a field => message bag. Without this the form
+ * rendered only react-hook-form's client-side errors, so anything the server rejected --
+ * an unauthorised task, a stale id -- stopped the spinner and said nothing at all.
+ */
+function firstErrorMessage(errors: Record<string, string>): string {
+    return (
+        Object.values(errors)[0] ??
+        'Could not save the time entry. Please try again.'
+    );
 }
 
 function getTodayDate(): string {
@@ -46,9 +65,19 @@ function formatDateForInput(dateString: string): string {
     return date.toISOString().split('T')[0];
 }
 
-export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntryFormProps) {
+export function TimeEntryForm({
+    taskId,
+    entry,
+    onSuccess,
+    className,
+    defaultHours,
+    submitLabel,
+    onCancel,
+    cancelLabel = 'Cancel',
+}: TimeEntryFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [serverError, setServerError] = useState<string | null>(null);
     const isEditMode = !!entry;
 
     const defaultValues: TimeEntryFormValues = entry
@@ -59,7 +88,7 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
               is_billable: entry.is_billable,
           }
         : {
-              hours: '',
+              hours: defaultHours ?? '',
               date: getTodayDate(),
               note: '',
               is_billable: true,
@@ -91,6 +120,7 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
         (data: TimeEntryFormValues) => {
             setIsSubmitting(true);
             setSuccessMessage(null);
+            setServerError(null);
 
             if (isEditMode && entry) {
                 router.patch(
@@ -104,14 +134,19 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
                     {
                         preserveScroll: true,
                         onSuccess: () => {
-                            setSuccessMessage('Time entry updated successfully');
+                            setSuccessMessage(
+                                'Time entry updated successfully',
+                            );
                             setTimeout(() => setSuccessMessage(null), 3000);
                             onSuccess?.();
+                        },
+                        onError: (errors) => {
+                            setServerError(firstErrorMessage(errors));
                         },
                         onFinish: () => {
                             setIsSubmitting(false);
                         },
-                    }
+                    },
                 );
             } else {
                 router.post(
@@ -136,14 +171,17 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
                             setTimeout(() => setSuccessMessage(null), 3000);
                             onSuccess?.();
                         },
+                        onError: (errors) => {
+                            setServerError(firstErrorMessage(errors));
+                        },
                         onFinish: () => {
                             setIsSubmitting(false);
                         },
-                    }
+                    },
                 );
             }
         },
-        [taskId, entry, isEditMode, reset, onSuccess]
+        [taskId, entry, isEditMode, reset, onSuccess],
     );
 
     return (
@@ -152,6 +190,15 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
             className={cn('space-y-4', className)}
             aria-label={isEditMode ? 'Edit time entry form' : 'Time entry form'}
         >
+            {serverError && (
+                <div
+                    role="alert"
+                    className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-400"
+                >
+                    {serverError}
+                </div>
+            )}
+
             {successMessage && (
                 <div
                     role="status"
@@ -178,7 +225,9 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
                             value={field.value === '' ? '' : field.value}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                field.onChange(val === '' ? '' : parseFloat(val));
+                                field.onChange(
+                                    val === '' ? '' : parseFloat(val),
+                                );
                             }}
                             onBlur={field.onBlur}
                             name={field.name}
@@ -231,19 +280,45 @@ export function TimeEntryForm({ taskId, entry, onSuccess, className }: TimeEntry
                 />
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
-                {isSubmitting ? (
-                    <>
-                        <Loader2 className="size-4 animate-spin" />
-                        <span>{isEditMode ? 'Saving...' : 'Logging...'}</span>
-                    </>
-                ) : (
-                    <>
-                        {isEditMode ? <Save className="size-4" /> : <Clock className="size-4" />}
-                        <span>{isEditMode ? 'Save Changes' : 'Log Time'}</span>
-                    </>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                {onCancel && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onCancel}
+                        disabled={isSubmitting}
+                        className="w-full"
+                    >
+                        {cancelLabel}
+                    </Button>
                 )}
-            </Button>
+                <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="size-4 animate-spin" />
+                            <span>
+                                {isEditMode ? 'Saving...' : 'Logging...'}
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            {isEditMode ? (
+                                <Save className="size-4" />
+                            ) : (
+                                <Clock className="size-4" />
+                            )}
+                            <span>
+                                {submitLabel ??
+                                    (isEditMode ? 'Save Changes' : 'Log Time')}
+                            </span>
+                        </>
+                    )}
+                </Button>
+            </div>
         </form>
     );
 }

@@ -78,11 +78,12 @@ class TimeEntryController extends Controller
         ]);
 
         $user = $request->user();
-        $team = $user->currentTeam;
         $task = Task::findOrFail($validated['taskId']);
 
+        $this->authorize('update', $task);
+
         TimeEntry::create([
-            'team_id' => $team->id,
+            'team_id' => $task->team_id,
             'user_id' => $user->id,
             'task_id' => $validated['taskId'],
             'hours' => $validated['hours'],

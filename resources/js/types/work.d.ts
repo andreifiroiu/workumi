@@ -322,6 +322,16 @@ export interface TimeEntry {
     };
 }
 
+/**
+ * Returned by the endpoints that close a task when that task has no time logged
+ * against it, so the UI can ask for an estimate of the hours spent.
+ */
+export interface TimeLogPrompt {
+    taskId: string;
+    taskTitle: string;
+    estimatedHours: number | null;
+}
+
 // =============================================================================
 // Pagination Types
 // =============================================================================
