@@ -56,9 +56,19 @@ export interface StatusTransition {
     commentCategory: CommentCategory | null;
 }
 
+/**
+ * Creation record for the item, shown as the oldest entry in the history
+ */
+export interface CreatedEvent {
+    userName: string;
+    createdAt: string;
+}
+
 export interface TransitionHistoryProps {
-    /** Array of status transitions to display */
+    /** Array of status transitions to display, newest first */
     transitions: StatusTransition[];
+    /** When provided, a "created" entry is rendered after the transitions */
+    createdEvent?: CreatedEvent;
     /** Whether transitions are for a task or work order */
     variant: 'task' | 'work_order';
     /** Additional className for the container */
@@ -434,11 +444,46 @@ function TransitionHistoryItem({ transition, variant, isLast }: TransitionHistor
 }
 
 /**
+ * CreatedHistoryItem displays the creation of the task or work order.
+ */
+function CreatedHistoryItem({
+    createdEvent,
+    variant,
+}: {
+    createdEvent: CreatedEvent;
+    variant: 'task' | 'work_order';
+}) {
+    return (
+        <li role="listitem" className="relative flex gap-3" data-created-event>
+            <Avatar className="relative z-10 size-8 shrink-0">
+                <AvatarFallback className="text-xs">
+                    {getInitials(createdEvent.userName)}
+                </AvatarFallback>
+            </Avatar>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                    <span className="text-foreground text-sm font-medium">
+                        {createdEvent.userName}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                        {formatTimestamp(createdEvent.createdAt)}
+                    </span>
+                </div>
+                <span className="text-muted-foreground text-sm">
+                    created this {variant === 'task' ? 'task' : 'work order'}
+                </span>
+            </div>
+        </li>
+    );
+}
+
+/**
  * TransitionHistory displays a chronological list of status transitions.
  * Rejection feedback is prominently displayed with distinct styling.
  */
-function TransitionHistory({ transitions, variant, className }: TransitionHistoryProps) {
-    if (transitions.length === 0) {
+function TransitionHistory({ transitions, createdEvent, variant, className }: TransitionHistoryProps) {
+    if (transitions.length === 0 && !createdEvent) {
         return (
             <div
                 className={cn(
@@ -460,9 +505,12 @@ function TransitionHistory({ transitions, variant, className }: TransitionHistor
                         key={transition.id}
                         transition={transition}
                         variant={variant}
-                        isLast={index === transitions.length - 1}
+                        isLast={!createdEvent && index === transitions.length - 1}
                     />
                 ))}
+                {createdEvent && (
+                    <CreatedHistoryItem createdEvent={createdEvent} variant={variant} />
+                )}
             </ul>
         </div>
     );
