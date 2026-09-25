@@ -146,6 +146,7 @@ class WorkOrderController extends Controller
                 'sopName' => $workOrder->sop_name,
                 'createdBy' => (string) $workOrder->created_by_id,
                 'createdByName' => $workOrder->createdBy?->name ?? 'Unknown',
+                'createdAt' => $workOrder->created_at?->toIso8601String(),
                 'accountableId' => $workOrder->accountable_id,
                 'accountableName' => $workOrder->accountable?->name,
                 'responsibleId' => $workOrder->responsible_id,

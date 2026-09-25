@@ -81,6 +81,24 @@ test('user can view a work order', function () {
     $response->assertInertia(fn ($page) => $page->component('work/work-orders/[id]')
         ->has('workOrder')
         ->where('workOrder.id', (string) $workOrder->id)
+        ->where('workOrder.createdByName', $this->user->name)
+        ->where('workOrder.createdAt', $workOrder->created_at->toIso8601String())
+    );
+});
+
+test('work order view tolerates a missing created_at timestamp', function () {
+    $workOrder = WorkOrder::factory()->create([
+        'team_id' => $this->team->id,
+        'project_id' => $this->project->id,
+        'created_by_id' => $this->user->id,
+    ]);
+    WorkOrder::query()->whereKey($workOrder->id)->update(['created_at' => null]);
+
+    $response = $this->actingAs($this->user)->get("/work/work-orders/{$workOrder->id}");
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page->component('work/work-orders/[id]')
+        ->where('workOrder.createdAt', null)
     );
 });
 

@@ -176,6 +176,7 @@ interface WorkOrderWithRaci {
     partyContactId: string | null;
     createdBy: string;
     createdByName: string;
+    createdAt: string | null;
     accountableId?: number | null;
     accountableName?: string | null;
     responsibleId?: number | null;
@@ -2320,6 +2321,16 @@ export default function WorkOrderDetail({
                                         <TransitionHistory
                                             transitions={localTransitions}
                                             variant="work_order"
+                                            createdEvent={
+                                                workOrder.createdAt
+                                                    ? {
+                                                          userName:
+                                                              workOrder.createdByName,
+                                                          createdAt:
+                                                              workOrder.createdAt,
+                                                      }
+                                                    : undefined
+                                            }
                                         />
                                     </div>
                                 </div>

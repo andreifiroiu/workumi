@@ -147,6 +147,34 @@ describe('TransitionHistory', () => {
         expect(screen.getByText(/no activity yet/i)).toBeInTheDocument();
     });
 
+    it('renders the created entry after the transitions', () => {
+        render(
+            <TransitionHistory
+                transitions={mockTransitions}
+                createdEvent={{ userName: 'Ada Lovelace', createdAt: '2024-01-01T09:00:00Z' }}
+                variant="work_order"
+            />
+        );
+
+        const historyItems = screen.getAllByRole('listitem');
+        expect(historyItems).toHaveLength(5);
+        expect(within(historyItems[4]).getByText('Ada Lovelace')).toBeInTheDocument();
+        expect(within(historyItems[4]).getByText(/created this work order/i)).toBeInTheDocument();
+    });
+
+    it('renders only the created entry instead of the empty state when there are no transitions', () => {
+        render(
+            <TransitionHistory
+                transitions={[]}
+                createdEvent={{ userName: 'Ada Lovelace', createdAt: '2024-01-01T09:00:00Z' }}
+                variant="task"
+            />
+        );
+
+        expect(screen.queryByText(/no activity yet/i)).not.toBeInTheDocument();
+        expect(screen.getByText(/created this task/i)).toBeInTheDocument();
+    });
+
     describe('due-date changes', () => {
         it('renders a "changed due date" variant for a date → date change', () => {
             const transition = dueDateTransition({

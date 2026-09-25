@@ -32,6 +32,7 @@ const mockWorkOrder = {
     partyContactId: null,
     createdBy: '1',
     createdByName: 'Admin User',
+    createdAt: '2024-01-01T09:00:00Z',
     accountableId: 1,
     accountableName: 'Admin User',
     responsibleId: 2,
