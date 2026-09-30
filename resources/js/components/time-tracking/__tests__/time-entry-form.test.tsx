@@ -38,6 +38,17 @@ describe('TimeEntryForm', () => {
         ).toBeInTheDocument();
     });
 
+    it.each([2, 1.5, 0.75, 1.3])(
+        'lets the browser accept %s hours',
+        (hours) => {
+            render(<TimeEntryForm taskId={7} defaultHours={hours} />);
+
+            const input = screen.getByLabelText(/hours/i) as HTMLInputElement;
+
+            expect(input.validity.valid).toBe(true);
+        },
+    );
+
     it('calls onCancel without submitting when the secondary button is used', () => {
         const onCancel = vi.fn();
 
