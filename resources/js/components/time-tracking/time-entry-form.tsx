@@ -217,7 +217,7 @@ export function TimeEntryForm({
                         <Input
                             id="hours"
                             type="number"
-                            step="0.25"
+                            step="0.01"
                             min="0.01"
                             max="24"
                             placeholder="0.00"
