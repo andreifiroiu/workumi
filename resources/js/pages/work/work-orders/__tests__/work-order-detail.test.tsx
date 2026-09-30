@@ -750,6 +750,83 @@ describe('WorkOrderDetail - Header Actions', () => {
         ).not.toBeInTheDocument();
         expect(await screen.findByText('Unarchive')).toBeInTheDocument();
     });
+
+    it('links the export item to the markdown download', async () => {
+        renderPage();
+
+        await openHeaderMenu();
+        const link = (
+            await screen.findByText('Export Tasks to Markdown')
+        ).closest('a')!;
+
+        expect(link).toHaveAttribute(
+            'href',
+            '/work/work-orders/1/tasks/export',
+        );
+        expect(link).toHaveAttribute('download');
+    });
+
+    it('uploads the chosen file to the import endpoint', async () => {
+        renderPage();
+        const user = userEvent.setup();
+        const file = new File(['- Task'], 'tasks.md', {
+            type: 'text/markdown',
+        });
+
+        await user.upload(screen.getByTestId('import-tasks-input'), file);
+
+        expect(router.post).toHaveBeenCalledWith(
+            '/work/work-orders/1/tasks/import',
+            { file },
+            expect.objectContaining({ forceFormData: true }),
+        );
+    });
+
+    it('confirms how many tasks were imported and skipped', async () => {
+        vi.mocked(router.post).mockImplementationOnce(
+            (_url, _data, options) => {
+                options?.onSuccess?.({
+                    props: {
+                        flash: { taskImport: { imported: 3, skipped: 1 } },
+                    },
+                } as never);
+            },
+        );
+        renderPage();
+        const user = userEvent.setup();
+
+        await user.upload(
+            screen.getByTestId('import-tasks-input'),
+            new File(['- Task'], 'tasks.md', { type: 'text/markdown' }),
+        );
+
+        expect(
+            await screen.findByText(
+                'Added 3 tasks as To Do. 1 line was not a task or indented under one, and was skipped.',
+            ),
+        ).toBeInTheDocument();
+    });
+
+    it('shows the server error when an import fails', async () => {
+        vi.mocked(router.post).mockImplementationOnce(
+            (_url, _data, options) => {
+                options?.onError?.({
+                    file: 'No tasks were found in that file.',
+                });
+            },
+        );
+        renderPage();
+        const user = userEvent.setup();
+
+        await user.upload(
+            screen.getByTestId('import-tasks-input'),
+            new File([''], 'empty.md', { type: 'text/markdown' }),
+        );
+
+        expect(
+            await screen.findByText('No tasks were found in that file.'),
+        ).toBeInTheDocument();
+    });
 });
 
 describe('WorkOrderDetail - Task Actions', () => {

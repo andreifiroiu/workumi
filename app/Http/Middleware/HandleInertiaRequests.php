@@ -92,6 +92,7 @@ class HandleInertiaRequests extends Middleware
             // the store action redirects back rather than returning the record.
             'flash' => [
                 'capture' => fn () => $request->session()->get('capture'),
+                'taskImport' => fn () => $request->session()->get('taskImport'),
             ],
         ];
     }

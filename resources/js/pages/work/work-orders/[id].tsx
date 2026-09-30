@@ -1,3 +1,5 @@
+import ExportWorkOrderTasks from '@/actions/App/Http/Controllers/Work/WorkOrderTaskExportController';
+import ImportWorkOrderTasks from '@/actions/App/Http/Controllers/Work/WorkOrderTaskImportController';
 import { BudgetFieldsGroup } from '@/components/budget';
 import { DraftClientUpdateButton } from '@/components/client-comms';
 import { CommunicationsPanel } from '@/components/communications';
@@ -81,7 +83,7 @@ import AppLayout from '@/layouts/app-layout';
 import { getCsrfToken } from '@/lib/csrf';
 import { calculateDefaultDueDate } from '@/lib/date-utils';
 import { ProjectDocumentsSection } from '@/pages/work/projects/components/project-documents-section';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, SharedData, TaskImportResult } from '@/types';
 import type { PlanAlternative, PMCopilotMode } from '@/types/pm-copilot.d';
 import type {
     BudgetType,
@@ -113,6 +115,7 @@ import {
     Calendar,
     CheckCircle2,
     Clock,
+    Download,
     Edit,
     ExternalLink,
     FileText,
@@ -127,11 +130,12 @@ import {
     Plus,
     RefreshCw,
     Trash2,
+    Upload,
     User,
     Users,
     X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /**
  * Team member type
@@ -507,6 +511,13 @@ function SortableTaskCard({
  */
 const EDIT_WORK_ORDER_FIELDS = ['title'];
 
+function describeTaskImport({ imported, skipped }: TaskImportResult): string {
+    const created = `Added ${imported} ${imported === 1 ? 'task' : 'tasks'} as To Do.`;
+    if (skipped === 0) return created;
+
+    return `${created} ${skipped} ${skipped === 1 ? 'line was' : 'lines were'} not a task or indented under one, and ${skipped === 1 ? 'was' : 'were'} skipped.`;
+}
+
 export default function WorkOrderDetail({
     workOrder,
     tasks,
@@ -528,6 +539,13 @@ export default function WorkOrderDetail({
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
     const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+    const importTasksInputRef = useRef<HTMLInputElement>(null);
+    const [isImportingTasks, setIsImportingTasks] = useState(false);
+    const [importTasksStatus, setImportTasksStatus] = useState<
+        | { kind: 'success'; result: TaskImportResult }
+        | { kind: 'error'; message: string }
+        | null
+    >(null);
     const [createDeliverableDialogOpen, setCreateDeliverableDialogOpen] =
         useState(false);
     const [editDeliverableDialogOpen, setEditDeliverableDialogOpen] =
@@ -938,6 +956,39 @@ export default function WorkOrderDetail({
             editDeliverableForm.data.acceptanceCriteria.filter(
                 (_, i) => i !== index,
             ),
+        );
+    };
+
+    const handleImportTasksFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+
+        setImportTasksStatus(null);
+        setIsImportingTasks(true);
+        router.post(
+            ImportWorkOrderTasks.url({ workOrder: Number(workOrder.id) }),
+            { file },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    const result = (page.props as unknown as SharedData).flash
+                        .taskImport;
+                    if (result) {
+                        setImportTasksStatus({ kind: 'success', result });
+                    }
+                },
+                onError: (errors) =>
+                    setImportTasksStatus({
+                        kind: 'error',
+                        message:
+                            errors.file ??
+                            Object.values(errors)[0] ??
+                            'The tasks could not be imported.',
+                    }),
+                onFinish: () => setIsImportingTasks(false),
+            },
         );
     };
 
@@ -1647,6 +1698,57 @@ export default function WorkOrderDetail({
                     </div>
                 )}
 
+                <input
+                    ref={importTasksInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".md,.markdown,.txt,text/markdown,text/plain"
+                    onChange={handleImportTasksFile}
+                    data-testid="import-tasks-input"
+                />
+                {importTasksStatus && (
+                    <div className="px-6 pt-6">
+                        <Alert
+                            variant={
+                                importTasksStatus.kind === 'error'
+                                    ? 'destructive'
+                                    : 'default'
+                            }
+                        >
+                            {importTasksStatus.kind === 'error' ? (
+                                <AlertTriangle className="h-4 w-4" />
+                            ) : (
+                                <CheckCircle2 className="h-4 w-4" />
+                            )}
+                            <AlertTitle>
+                                {importTasksStatus.kind === 'error'
+                                    ? 'Import failed'
+                                    : 'Tasks imported'}
+                            </AlertTitle>
+                            <AlertDescription>
+                                <div className="flex items-start justify-between gap-4">
+                                    <p>
+                                        {importTasksStatus.kind === 'error'
+                                            ? importTasksStatus.message
+                                            : describeTaskImport(
+                                                  importTasksStatus.result,
+                                              )}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setImportTasksStatus(null)
+                                        }
+                                        aria-label="Dismiss"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="border-b border-sidebar-border/70 px-4 py-4 sm:px-6 sm:py-6 dark:border-sidebar-border">
                     <div className="mb-4 flex flex-wrap items-center gap-3 sm:gap-4">
@@ -1729,6 +1831,28 @@ export default function WorkOrderDetail({
                                     >
                                         <FolderInput className="mr-2 h-4 w-4" />
                                         Move to Project…
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <a
+                                            href={ExportWorkOrderTasks.url({
+                                                workOrder: Number(workOrder.id),
+                                            })}
+                                            download
+                                        >
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Export Tasks to Markdown
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        disabled={isImportingTasks}
+                                        onClick={() =>
+                                            importTasksInputRef.current?.click()
+                                        }
+                                    >
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        {isImportingTasks
+                                            ? 'Importing Tasks…'
+                                            : 'Import Tasks from File…'}
                                     </DropdownMenuItem>
                                     {workOrder.status !== 'archived' && (
                                         <DropdownMenuItem

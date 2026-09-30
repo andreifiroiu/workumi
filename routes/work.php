@@ -17,6 +17,8 @@ use App\Http\Controllers\Work\TimeEntryController;
 use App\Http\Controllers\Work\WorkController;
 use App\Http\Controllers\Work\WorkOrderController;
 use App\Http\Controllers\Work\WorkOrderListController;
+use App\Http\Controllers\Work\WorkOrderTaskExportController;
+use App\Http\Controllers\Work\WorkOrderTaskImportController;
 use App\Http\Controllers\Work\WorkOrderTransitionController;
 use App\Http\Controllers\WorkOrderAgentSettingsController;
 use App\Http\Controllers\WorkOrderRaciController;
@@ -73,6 +75,8 @@ Route::middleware(['auth', 'verified'])->prefix('work')->group(function () {
     Route::post('/work-orders/{workOrder}/deliver-and-archive', [WorkOrderController::class, 'deliverAndArchive'])->name('work-orders.deliver-and-archive');
     Route::post('/work-orders/{workOrder}/restore', [WorkOrderController::class, 'restore'])->name('work-orders.restore');
     Route::post('/work-orders/{workOrder}/move', [WorkOrderController::class, 'move'])->name('work-orders.move');
+    Route::get('/work-orders/{workOrder}/tasks/export', WorkOrderTaskExportController::class)->name('work-orders.tasks.export');
+    Route::post('/work-orders/{workOrder}/tasks/import', WorkOrderTaskImportController::class)->name('work-orders.tasks.import');
     Route::post('/work-orders/{workOrder}/files', [WorkOrderController::class, 'uploadFile'])->name('work-orders.files.upload');
     Route::delete('/work-orders/{workOrder}/files/{document}', [WorkOrderController::class, 'deleteFile'])->name('work-orders.files.delete');
     Route::post('/work-orders/{workOrder}/notes', [WorkOrderController::class, 'storeNote'])->name('work-orders.notes.store');
