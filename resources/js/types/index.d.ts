@@ -6,6 +6,11 @@ import { Organization } from './workumi';
 /** A user's role within their current team. */
 export type TeamRoleCode = 'owner' | 'admin' | 'member' | 'viewer';
 
+export interface TaskImportResult {
+    imported: number;
+    skipped: number;
+}
+
 export interface AuthTeam {
     id: number;
     /** Team membership role. Not to be confused with `User.role`, a job title. */
@@ -65,7 +70,10 @@ export interface SharedData {
     locale: string;
     availableLocales: string[];
     activeTimer: ActiveTimer | null;
-    flash: { capture: CaptureResult | null };
+    flash: {
+        capture: CaptureResult | null;
+        taskImport: TaskImportResult | null;
+    };
     [key: string]: unknown;
 }
 
