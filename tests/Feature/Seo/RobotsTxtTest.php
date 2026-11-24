@@ -31,7 +31,7 @@ it('allows the public pages on an allow-listed host', function () {
 
 it('disallows the authenticated app', function (string $path) {
     expect(app(RobotsTxt::class)->body())->toContain('Disallow: '.$path);
-})->with(['/today', '/work', '/settings', '/login', '/register', '/api/', '/mcp', '/log-viewer']);
+})->with(['/today', '/work', '/settings', '/account', '/login', '/register', '/api/', '/mcp']);
 
 it('disallows training-corpus crawlers outright', function (string $agent) {
     $body = app(RobotsTxt::class)->body();

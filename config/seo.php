@@ -105,14 +105,16 @@ return [
         ))),
 
         /*
-         * Paths no crawler should fetch.
+         * Paths no crawler should fetch, to save crawl budget.
          *
-         * Most are the authenticated app and the auth endpoints, which redirect
-         * to /login for a crawler: wasted crawl budget and a login page in the
-         * index. Two are not auth-gated at all and matter more — /shared/ serves
-         * documents behind a share token and /storage/ serves uploads, and a
-         * share link pasted anywhere that leaks a referer or renders a preview
-         * is how those reach a crawler.
+         * These are the authenticated app and the auth endpoints, which just
+         * redirect to /login for a crawler. They are already public knowledge —
+         * Wayfinder compiles the route map into the JS bundle every visitor
+         * downloads — so naming them here discloses nothing, and a URL-only
+         * listing for one of them is harmless.
+         *
+         * Anything whose URL must never reach the index belongs in
+         * `noindex_only` below instead, NOT here. See the note there.
          *
          * Kept in step with the route table by SeoDefaultsMiddlewareTest, which
          * walks every registered GET route rather than a hand-copied list.
@@ -132,9 +134,7 @@ return [
             '/folders',
             '/forgot-password',
             '/inbox',
-            '/invitation/',
             '/language/',
-            '/log-viewer',
             '/login',
             '/logout',
             '/mcp',
@@ -146,13 +146,37 @@ return [
             '/review',
             '/sanctum/',
             '/settings',
-            '/shared/',
-            '/storage/',
             '/today',
             '/two-factor-challenge',
             '/up',
             '/user/',
             '/work',
+        ],
+
+        /*
+         * Paths that carry `noindex` but deliberately no robots.txt `Disallow`.
+         *
+         * The two directives do not stack — they conflict. A disallowed crawler
+         * never fetches the page, so it never reads the `X-Robots-Tag: noindex`,
+         * and Google will still index a blocked URL (URL only, no snippet) when
+         * it finds a link pointing at it.
+         *
+         * For a URL whose path contains a secret that is the worst outcome: the
+         * share token lands in the search index while the document behind it
+         * stays reachable. Letting the crawler fetch once, read the header and
+         * drop the URL entirely is strictly safer.
+         *
+         * /log-viewer is here for a different reason — it is the one path in
+         * this config that is not already in the public JS bundle, so naming an
+         * admin tool in a world-readable file would hand out a free hint.
+         *
+         * Patterns use Request::is() syntax, matching `noindex_paths`.
+         */
+        'noindex_only' => [
+            'invitation/*',
+            'log-viewer*',
+            'shared/*',
+            'storage/*',
         ],
 
         /*
